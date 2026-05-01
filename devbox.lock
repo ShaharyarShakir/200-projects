@@ -1,0 +1,105 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "fnm@latest": {
+      "last_modified": "2026-02-23T15:40:43Z",
+      "resolved": "github:NixOS/nixpkgs/80d901ec0377e19ac3f7bb8c035201e2e098cc97#fnm",
+      "source": "devbox-search",
+      "version": "1.38.1",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/8rairdyaw9krqirza3sn05dkaxg68kch-fnm-1.38.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/8rairdyaw9krqirza3sn05dkaxg68kch-fnm-1.38.1"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/cz1141z281azqf7ix8rz36slyxgwdk4g-fnm-1.38.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/cz1141z281azqf7ix8rz36slyxgwdk4g-fnm-1.38.1"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/ldfkqxhhkv6323ymp8rchiiarqz2iq77-fnm-1.38.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/ldfkqxhhkv6323ymp8rchiiarqz2iq77-fnm-1.38.1"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/2li09bajw9j90a3fh887ys3qp08nsabv-fnm-1.38.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/2li09bajw9j90a3fh887ys3qp08nsabv-fnm-1.38.1"
+        }
+      }
+    },
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2026-03-06T04:25:18Z",
+      "resolved": "github:NixOS/nixpkgs/e38213b91d3786389a446dfce4ff5a8aaf6012f2?lastModified=1772771118"
+    },
+    "mise@latest": {
+      "last_modified": "2026-03-04T00:49:39Z",
+      "resolved": "github:NixOS/nixpkgs/0fd2db475afdde93c9e4b1625aafb8eb41b99807#mise",
+      "source": "devbox-search",
+      "version": "2026.2.20",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/dnj05cpwgilhzk1dnjlcsi293ylcgpfq-mise-2026.2.20",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/dnj05cpwgilhzk1dnjlcsi293ylcgpfq-mise-2026.2.20"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/a5g2g4clc18j8qx9hvmb7w1a61ps4p35-mise-2026.2.20",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/a5g2g4clc18j8qx9hvmb7w1a61ps4p35-mise-2026.2.20"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/pzf758m703wjb710rs2q0hmhd2z8gh1k-mise-2026.2.20",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/pzf758m703wjb710rs2q0hmhd2z8gh1k-mise-2026.2.20"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/v5zifbwpld337n9qsydbnhxvzbk3c352-mise-2026.2.20",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/v5zifbwpld337n9qsydbnhxvzbk3c352-mise-2026.2.20"
+        }
+      }
+    }
+  }
+}
