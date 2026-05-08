@@ -1,0 +1,21 @@
+@use '../util/' as u;
+
+.projects {
+    &__item {
+        display: grid;
+        gap: 16px;
+        @include u.breakpoint(medium){
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            align-items: center;
+        }
+    }
+
+    &__image {
+        border-radius: 12px;
+    }
+    &__button{
+        display: flex;
+        gap: 20px;
+    }
+}
