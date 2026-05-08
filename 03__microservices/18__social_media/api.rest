@@ -1,0 +1,38 @@
+POST http://localhost:3000/v1/auth/register
+Content-Type: application/json
+
+{
+    "username": "newuser",
+    "email": "new@gmail.com",
+    "password": "securepassword",
+    "confirmPassword": "securepassword"
+}
+
+###
+POST http://localhost:3000/v1/auth/login
+Content-Type: application/json
+
+{
+    "email": "new@gmail.com",
+    "password": "securepassword"
+}
+
+###
+POST http://localhost:3000/v1/posts/create-post
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTA1ZTdhMmZmMjA3MzUxNzk3ZTgwNjMiLCJ1c2VybmFtZSI6Im5ld3VzZXIiLCJpYXQiOjE3NjIxNDMxNjYsImV4cCI6MTc2MjE0MzQ2Nn0.IiPl7D07y414fozWyzujZ8XNSkCckrIx4hms1M_CP4M
+
+{
+     "content": "This is an example post content."
+}
+
+###
+GET http://localhost:3000/v1/posts/get-posts
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTA1ZTdhMmZmMjA3MzUxNzk3ZTgwNjMiLCJ1c2VybmFtZSI6Im5ld3VzZXIiLCJpYXQiOjE3NjIxNDM1NzEsImV4cCI6MTc2MjE0Mzg3MX0.qeDYpKW8tS8xN20qyCZS6jEUt2pE4cDzfdidkscK8lY
+
+
+###
+POST http://localhost:3000/v1/media/upload
+Content-Type: multipart/form-data
+Authorization: Bearer
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTA1ZTdhMmZmMjA3MzUxNzk3ZTgwNjMiLCJ1c2VybmFtZSI6Im5ld3VzZXIiLCJpYXQiOjE3NjIzMTM0NDIsImV4cCI6MTc2MjMxMzc0Mn0.dWr7L14qsESlbhWM6SR_1WwBh_AQ6accQAmXuyk14Qc
