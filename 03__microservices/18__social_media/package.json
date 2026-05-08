@@ -1,0 +1,25 @@
+{
+  "name": "social_media",
+  "version": "1.0.0",
+  "description": "Microservices social media app using Nx + pnpm",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.20.0",
+  "devDependencies": {
+    "nx": "22.0.1"
+  },
+  "scripts": {
+    "dev": "pnpm nx run social-media:dev",
+    "dev:all": "pnpm nx run-many --target=dev --parallel",
+    "dev:gateway": "pnpm nx run api-gateway:dev",
+    "dev:identity": "pnpm nx run identity-service:dev",
+    "dev:post": "pnpm nx run post-service:dev",
+    "dev:media": "pnpm nx run media-service:dev",
+    "dev:search": "pnpm nx run search-service:dev"
+
+  },
+  "dependencies": {
+    "winston": "^3.18.3"
+  }
+}
