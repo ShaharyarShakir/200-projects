@@ -1,0 +1,70 @@
+services:
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      REDIS_URI: ${REDIS_URI}
+      RABBITMQ_URI: ${RABBITMQ_URI}
+      NODE_ENV: ${NODE_ENV}
+
+  identity-service:
+    build:
+      context: .
+      dockerfile: identity-service/Dockerfile
+    container_name: identity-service
+    ports:
+      - "3001:3000"
+    environment:
+      REDIS_URI: ${REDIS_URI}
+      RABBITMQ_URI: ${RABBITMQ_URI}
+      NODE_ENV: ${NODE_ENV}
+
+  media-service:
+    build:
+      context: .
+      dockerfile: media-service/Dockerfile
+    container_name: media-service
+    environment:
+      REDIS_URI: ${REDIS_URI}
+      RABBITMQ_URI: ${RABBITMQ_URI}
+      NODE_ENV: ${NODE_ENV}
+
+  post-service:
+    build:
+      context: .
+      dockerfile: post-service/Dockerfile
+    container_name: post-service
+    ports:
+      - "3003:3000"
+    environment:
+      REDIS_URI: ${REDIS_URI}
+      RABBITMQ_URI: ${RABBITMQ_URI}
+      NODE_ENV: ${NODE_ENV}
+  search-service:
+    build:
+      context: .
+      dockerfile: search-service/Dockerfile
+    container_name: search-service
+    ports:
+      - "3004:3000"
+    environment:
+      REDIS_URI: ${REDIS_URI}
+      RABBITMQ_URI: ${RABBITMQ_URI}
+      NODE_ENV: ${NODE_ENV}
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
