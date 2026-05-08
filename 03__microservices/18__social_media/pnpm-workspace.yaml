@@ -1,0 +1,9 @@
+packages:
+  - "."
+  - "api-gateway"
+  - "identity-service"
+  - "post-service"
+  - "media-service"
+  - "search-service"
+  - "packages/*"
+
