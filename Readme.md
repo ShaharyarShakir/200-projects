@@ -1,3 +1,9 @@
 # Repo for projects 
-- 20 Projects in JS
-- 20 Projects in Tailwindcss
+- Js Projects
+- Tailwindcss
+- React
+- React Native
+- Golang
+- NextJS
+- Express
+- Nestjs
