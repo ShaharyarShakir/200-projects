@@ -1,0 +1,13 @@
+{
+  "name": "api-gateway",
+  "sourceRoot": "api-gateway/src",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nodemon src/server.js",
+        "cwd": "api-gateway"
+      }
+    }
+  }
+}
