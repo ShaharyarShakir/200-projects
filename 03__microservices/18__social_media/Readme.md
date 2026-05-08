@@ -1,0 +1,1 @@
+- use pnpm nx reset => if it does not recognize the project
