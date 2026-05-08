@@ -1,0 +1,167 @@
+:root {
+	--a: 0;
+	--bg-grey: #121212;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	background-color: black;
+	color: white;
+}
+
+.left {
+	width: 25vw;
+}
+
+.right {
+	width: 75vw;
+}
+
+.home,
+.library {
+	padding: 15px;
+	margin: 8px;
+}
+
+.home ul li {
+	list-style: none;
+	width: 15px;
+	display: flex;
+	gap: 12px;
+	margin-top: 10px;
+}
+
+.library {
+	min-height: 70vh;
+	position: relative;
+}
+
+.heading {
+	display: flex;
+	width: 100%;
+	gap: 10px;
+	padding-top: 14px;
+	padding: 23px 14px;
+	font-weight: bold;
+	align-items: center;
+	font-size: 13px;
+}
+
+.heading img {
+	width: 25px;
+}
+
+.footer {
+	display: flex;
+	flex-wrap: wrap;
+	font-size: 13px;
+	color: grey;
+	gap: 13px;
+	position: absolute;
+	bottom: 0;
+	padding: 8px 6px;
+}
+
+.footer a {
+	text-decoration: none;
+	color: grey;
+}
+
+.footer a:hover {
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.right {
+	position: relative;
+	margin: 8px;
+}
+
+.header {
+	display: flex;
+	justify-content: space-between;
+	padding: 6px;
+}
+
+.cardContainer {
+	margin: 30px;
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+	overflow-y: auto;
+	max-height: 60vh;
+}
+
+.card {
+	width: 200px;
+	padding: 10px;
+	border-radius: 5px;
+	background-color: #252525;
+	position: relative;
+	transition: all 0.9s;
+}
+
+.card:hover {
+	background-color: rgb(105, 103, 103);
+	cursor: pointer;
+	--a: 1;
+}
+
+.card>* {
+	padding-top: 10px;
+}
+
+.card img {
+	width: 100%;
+	object-fit: contain;
+}
+
+.button>* {
+	margin-inline: 10px;
+}
+
+.signup {
+	background-color: black;
+	color: white;
+	border: none;
+	outline: none;
+	cursor: pointer;
+	font-weight: bold;
+}
+
+.signup:hover {
+	font-size: 0.9rem;
+}
+
+.login {
+	background-color: white;
+	color: black;
+	border: 2px solid white;
+	border-radius: 21px;
+	outline: none;
+	padding: 10px 16px;
+	cursor: pointer;
+	font-weight: bold;
+}
+
+.login:hover {
+	padding-inline: 11px;
+}
+
+.playbar {
+	position: absolute;
+	bottom: 0;
+	background-color: green;
+	width: 98%;
+	padding: 12px;
+}
+
+.songButtons {
+	display: flex;
+	justify-content: center;
+	gap: 4px;
+}
