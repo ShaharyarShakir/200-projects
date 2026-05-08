@@ -1,0 +1,68 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+.logo-lock {
+  background: url(asserts/images/Lock.png) no-repeat 50% 50%;
+  background-size: 60px;
+  height: 60px;
+  margin-top: 30px;
+}
+.text-1 span{
+    
+}
+.text-1,
+.text-2 {
+  text-align: center;
+  margin-top: 20px;
+}
+.text-1 p {
+  font-size: 18px;
+  direction: ltr;
+  text-size-adjust: 100%;
+  margin: 0 420px 0 400px;
+}
+
+.text-2 b {
+  font-size: 18px;
+  direction: ltr;
+  text-size-adjust: 100%;
+  margin: 0 420px 0 400px;
+}
+.end {
+  text-align: center;
+  margin-left: 300px;
+}
+.small-lock i {
+  color: #ffb53f;
+  font-size: 10px;
+}
+button {
+  margin-left: 400px;
+  margin-bottom: 100px;
+}
+button:hover{
+    cursor: pointer;
+    scale: 1.05;
+}
+form {
+  text-align: center;
+}
+.credit-info {
+  display: flex;
+}
+.end-text {
+  font-size: 10px;
+}
+.card-1,
+.card-info-1,
+.right-arrow {
+  margin: 10px 0 10px 10px;
+}
+
+.right-arrow i {
+  margin-left: 100px;
+  margin-right: 10px;
+
+  font-size: 30px;
+}
