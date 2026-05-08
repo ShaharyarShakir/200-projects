@@ -1,0 +1,29 @@
+@use '../util/' as u;
+.header{
+    &__wrapper{
+        padding-block: 20px;
+        @include u.breakpoint(large){
+            padding-block: 40px;
+        }
+    }
+    &__home{
+        display: grid;
+        place-items: center;
+        width: u.rem(46);
+        height: u.rem(46);
+        font-size: u.rem(24);
+        border-radius: 10px;
+        font-weight: 900;
+        background: var(--color-accent);
+        color: var(--color-bg);
+        transition: background 150ms ease-in-out;
+        @include u.breakpoint(large){
+            width: u.rem(60);
+            height: u.rem(60);
+            font-size: u.rem(28);
+        }
+        &:hover{
+            background: var(--color-text);
+        }
+    }
+}
