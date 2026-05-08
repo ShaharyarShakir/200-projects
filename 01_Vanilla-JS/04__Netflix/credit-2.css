@@ -1,0 +1,31 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+.left{
+    margin: 40px 0 20px 380px;
+}
+.left span img{
+    width: 50px;
+}
+.input-line{
+    margin: 20px 380px 0 380px;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    text-align: left;
+    gap: 10px;
+}
+.input-line :nth-child(1) input{
+    width: 400px;
+    height: 2.4rem;
+}
+.input-line :nth-child(2) input{
+    width: 200px;
+    height: 2.4rem;
+}
+.input-line :nth-child(3) input{
+    width: 400px;
+    height: 2.4rem;
+}
