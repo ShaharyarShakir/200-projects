@@ -1,0 +1,37 @@
+@use '../util/' as u;
+
+.hero {
+    display: grid;
+    gap: 30px;
+    align-items: center;
+
+    @include u.breakpoint(medium) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include u.breakpoint(large) {
+        grid-template-columns: 3fr 2fr;
+    }
+
+    &__wrapper {
+        padding-block-start: 20px;
+
+        @include u.breakpoint(large) {
+            padding-block-start: 40px;
+        }
+    }
+
+    &__text {
+        p:last-child {
+            margin-block-end: 0;
+        }
+    }
+
+    &__image {
+        max-width: u.rem(460);
+
+        img {
+            border-radius: 20px;
+        }
+    }
+}
