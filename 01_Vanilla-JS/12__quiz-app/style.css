@@ -1,0 +1,43 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #1d1821;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.quiz-container {
+  background: #fff;
+  padding: 20px 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #ccc;
+  width: 400px;
+}
+
+h1 {
+  font-size: 24px;
+  text-align: center;
+}
+
+#optionsForm label {
+  display: block;
+  margin: 10px 0;
+}
+
+button {
+  margin-top: 15px;
+  padding: 10px;
+  width: 100%;
+}
+
+#score {
+  margin-top: 20px;
+  font-weight: bold;
+  text-align: center;
+}
+
+#review {
+  margin-top: 20px;
+  font-size: 14px;
+}
