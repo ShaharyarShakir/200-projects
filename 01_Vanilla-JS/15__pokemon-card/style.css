@@ -1,0 +1,140 @@
+/* Base Page Styling */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #121212;
+  margin: 0;
+  padding: 2rem;
+  text-align: center;
+  color: white;
+}
+
+.app {
+  max-width: 500px;
+  margin: auto;
+}
+
+/* Title */
+h1 {
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+}
+
+/* Input and Button Styling */
+.search {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+input {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border: 2px solid #444;
+  border-radius: 8px;
+  background-color: #222;
+  color: white;
+  outline: none;
+}
+
+input::placeholder {
+  color: #888;
+}
+
+input:focus {
+  border-color: #6c63ff;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(to right, cyan, magenta);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background: linear-gradient(to right, purple, red);
+}
+
+/* Card Container */
+#cardContainer {
+  margin-top: 2rem;
+}
+
+/* Pokémon Card */
+.card {
+  position: relative;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  padding: 1.5rem;
+  text-align: center;
+  overflow: hidden;
+  color: white;
+  transition: transform 0.3s ease-in-out;
+}
+
+.card:hover {
+  transform: scale(1.03);
+}
+
+.card img {
+  width: 150px;
+  height: 150px;
+  margin-bottom: 1rem;
+}
+
+.card h2 {
+  margin-bottom: 0.5rem;
+  text-transform: capitalize;
+  font-size: 1.6rem;
+}
+
+/* Types */
+.types {
+  margin-bottom: 1rem;
+}
+
+.types span {
+  display: inline-block;
+  margin: 0 6px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  color: white;
+  font-weight: bold;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid #fff2;
+}
+
+/* Abilities & Stats */
+.abilities, .stats {
+  text-align: left;
+  margin-top: 1rem;
+  padding: 0 1rem;
+}
+
+.abilities h4,
+.stats h4 {
+  margin-bottom: 0.3rem;
+  color: #ccc;
+}
+
+.abilities p,
+.stats p {
+  margin: 0.2rem 0;
+  color: #eee;
+  font-size: 0.95rem;
+}
+
+/* Error Message */
+#errorMessage {
+  color: #ff4b5c;
+  margin-top: 1rem;
+  font-weight: bold;
+}
