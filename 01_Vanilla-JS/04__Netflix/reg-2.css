@@ -1,0 +1,54 @@
+* {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+.container-center-1 {
+  justify-content: center;
+  margin: 20px 0 0 40px;
+}
+.container-center-1 span {
+  margin: 20px 0 0 380px;
+}
+.container-center-1 h1 {
+  margin: 20px 400px 0 380px;
+  color: rgb(27, 26, 26);
+}
+.container-center-1 p {
+  margin: 20px 550px 0 380px;
+}
+.input-tag,
+.input-tag-1 {
+  margin: 10px 400px 0 380px;
+}
+.input-tag input {
+  width: 400px;
+  height: 30px;
+  padding: 15px;
+}
+.container-center-1 a button {
+  margin: 10px 400px 0 380px;
+  margin-top: 20px;
+  width: 28rem;
+  text-align: center;
+  
+  height: 4rem;
+  font-size: 30px;
+  font-weight: 400;
+  background-color: red;
+  color: aliceblue;
+  border: none;
+  border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -o-border-radius: 5px;
+}
+.container-center-1 a button:hover {
+  cursor: pointer;
+  background-color: rgb(238, 64, 64);
+}
+input[type="checkbox"] {
+  width: 2rem;
+height: 1.1rem;
+}
