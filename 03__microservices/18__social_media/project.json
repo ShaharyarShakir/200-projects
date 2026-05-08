@@ -1,0 +1,20 @@
+{
+  "name": "social-media",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx run identity-service:dev",
+          "nx run api-gateway:dev",
+	  "nx run post-service:dev",
+	  "nx run media-service:dev",
+	  "nx run search-service:dev"
+
+
+        ],
+        "parallel": true
+      }
+    }
+  }
+}
