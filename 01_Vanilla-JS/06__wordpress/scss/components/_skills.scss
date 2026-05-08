@@ -1,0 +1,39 @@
+@use '../util/' as u;
+
+.skills {
+    justify-items: center;
+
+    &__wrapper {}
+
+    &__tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        max-width: u.rem(576);
+
+        @include u.breakpoint(large) {
+            gap: 12px;
+        }
+
+    }
+
+    &__tag {
+        font-size: u.rem(16);
+        font-weight: 700;
+        padding: 10px 20px;
+        background: var(--color-accent2);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: background 150ms ease-in-out;
+
+        @include u.breakpoint(large) {
+            font-size: u.rem(18);
+            padding: 14px 24px;
+
+        }
+        &:hover{
+            background: var(--color-accent2-hover);
+        }
+    }
+}
