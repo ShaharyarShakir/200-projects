@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "affected": {
+    "defaultBase": "main"
+  },
+  "workspaceLayout": {
+    "appsDir": ".",
+    "libsDir": "packages"
+  },
+  "defaultProject": "social-media",
+  "projects": {
+    "social-media": ".",
+    "api-gateway": "api-gateway",
+    "identity-service": "identity-service",
+    "media-service": "media-service",
+    "post-service": "post-service",
+    "search-service": "search-service",
+    "@social/shared": "packages/shared"
+  }
+}
+
