@@ -1,0 +1,13 @@
+{
+  "name": "identity-service",
+  "sourceRoot": "identity-service/src",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nodemon src/server.js",
+        "cwd": "identity-service"
+      }
+    }
+  }
+}
