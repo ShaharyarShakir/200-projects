@@ -1,0 +1,13 @@
+{
+  "name": "post-service",
+  "sourceRoot": "post-service/src",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nodemon src/server.js",
+        "cwd": "post-service"
+      }
+    }
+  }
+}
