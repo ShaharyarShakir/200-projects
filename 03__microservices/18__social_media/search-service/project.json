@@ -1,0 +1,13 @@
+{
+  "name": "search-service",
+  "sourceRoot": "search-service/src",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nodemon src/server.js",
+        "cwd": "search-service"
+      }
+    }
+  }
+}
