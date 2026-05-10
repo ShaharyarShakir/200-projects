@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "module": "NodeNext",
+    "target": "es2019",
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@generated/*": ["src/generated/prisma/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "prisma/**/*.ts"
+  ]
+}
