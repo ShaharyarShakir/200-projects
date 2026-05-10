@@ -1,0 +1,26 @@
+{
+  "name": "@pet-market/pet-market-be-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "implicitDependencies": [
+      "@pet-market/pet-market-be"
+    ],
+    "targets": {
+      "e2e": {
+        "executor": "@nx/jest:jest",
+        "outputs": [
+          "{projectRoot}/test-output/jest/coverage"
+        ],
+        "options": {
+          "jestConfig": "apps/pet-market-be-e2e/jest.config.ts",
+          "passWithNoTests": true
+        },
+        "dependsOn": [
+          "@pet-market/pet-market-be:build",
+          "@pet-market/pet-market-be:serve"
+        ]
+      }
+    }
+  }
+}
