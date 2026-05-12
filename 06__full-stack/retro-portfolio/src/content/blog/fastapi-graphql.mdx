@@ -1,0 +1,167 @@
+---
+title: "FastAPI + Strawberry GraphQL: The Best of Both Worlds"
+excerpt: "How I combine FastAPI for REST and Strawberry GraphQL for flexible client queries in the same Python service — without the usual complexity."
+date: 2025-01-15
+tag: fullstack
+featured: false
+readTime: 7
+github: https://github.com/ShaharyarShakir/fastapi-graphql-template
+---
+
+import Callout from '../../componnets/blog/mdx/Callout.tsx'
+import Step from '../../componnets/blog/mdx/Step.tsx'
+
+REST APIs are predictable. GraphQL is flexible. Most projects need both — REST for internal services and webhooks, GraphQL for client-facing queries where the frontend team wants control over shape.
+
+Here's the pattern I've settled on: FastAPI as the ASGI foundation, Strawberry for the GraphQL layer, sharing the same Pydantic models and database session.
+
+## Why Not Just Pick One?
+
+GraphQL is brilliant for client-facing APIs where different clients (web, mobile, third-party) need different shapes of the same data. But REST is still better for:
+
+- Webhooks (POST with a known payload)
+- File uploads
+- Internal service-to-service calls
+- Simple CRUD where GraphQL's overhead isn't worth it
+
+The answer isn't to choose — it's to run both from the same app.
+
+<Callout type="tip" client:visible>
+  Strawberry is the best Python GraphQL library for FastAPI. It's type-safe, uses Python dataclasses/type hints natively, and has first-class async support. Avoid Graphene — the developer experience is significantly worse.
+</Callout>
+
+## Project Setup
+
+<Step number={1} title="Install dependencies">
+  ```bash
+  pip install fastapi strawberry-graphql[fastapi] sqlalchemy asyncpg uvicorn
+  ```
+</Step>
+
+<Step number={2} title="Define your domain models">
+  Use Pydantic for REST and Strawberry types for GraphQL — share the same SQLAlchemy ORM models underneath:
+
+  ```python
+  # models/user.py
+  from sqlalchemy import Column, Integer, String
+  from database import Base
+
+  class User(Base):
+      __tablename__ = "users"
+      id       = Column(Integer, primary_key=True)
+      name     = Column(String, nullable=False)
+      email    = Column(String, unique=True, nullable=False)
+      role     = Column(String, default="member")
+  ```
+</Step>
+
+<Step number={3} title="Create the Strawberry GraphQL schema">
+  ```python
+  # graphql/schema.py
+  import strawberry
+  from typing import List, Optional
+  from sqlalchemy import select
+  from database import async_session
+  from models.user import User as UserModel
+
+  @strawberry.type
+  class User:
+      id:    int
+      name:  str
+      email: str
+      role:  str
+
+  @strawberry.type
+  class Query:
+      @strawberry.field
+      async def users(
+          self,
+          role: Optional[str] = None,
+          limit: int = 20,
+      ) -> List[User]:
+          async with async_session() as db:
+              q = select(UserModel)
+              if role:
+                  q = q.where(UserModel.role == role)
+              result = await db.execute(q.limit(limit))
+              return [
+                  User(id=u.id, name=u.name, email=u.email, role=u.role)
+                  for u in result.scalars()
+              ]
+
+  schema = strawberry.Schema(query=Query)
+  ```
+</Step>
+
+## Mounting Both in FastAPI
+
+This is the key bit — both routers share the same FastAPI `app`:
+
+```python
+# main.py
+from fastapi import FastAPI
+from strawberry.fastapi import GraphQLRouter
+from graphql.schema import schema
+from api import users_router, health_router
+
+app = FastAPI(title="YK API", version="2.0.0")
+
+# ── REST routes ───────────────────────────────────────────────────
+app.include_router(health_router, prefix="/health", tags=["health"])
+app.include_router(users_router,  prefix="/api/v1/users", tags=["users"])
+
+# ── GraphQL (Strawberry) ──────────────────────────────────────────
+graphql_app = GraphQLRouter(schema, graphiql=True)   # graphiql=False in production
+app.include_router(graphql_app, prefix="/graphql")
+```
+
+Now your app exposes:
+
+| Endpoint | Type | Use |
+|----------|------|-----|
+| `GET /health` | REST | Load balancer health check |
+| `POST /api/v1/users` | REST | Webhook, internal calls |
+| `POST /graphql` | GraphQL | All client-facing queries |
+| `GET /graphql` | GraphiQL | Interactive explorer (dev only) |
+
+<Callout type="info" client:visible>
+  Set `graphiql=True` only in development. In production, disable it — the GraphiQL UI exposes your schema to anyone who finds the URL.
+</Callout>
+
+## Shared Authentication
+
+Both layers can share the same auth middleware via FastAPI's dependency injection:
+
+```python
+# deps.py
+from fastapi import Depends, HTTPException, Header
+from typing import Annotated
+
+async def get_current_user(
+    authorization: Annotated[str | None, Header()] = None
+) -> dict:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    token = authorization.split(" ")[1]
+    # Verify JWT...
+    return decode_jwt(token)
+
+# Use in REST
+@router.get("/me")
+async def me(user = Depends(get_current_user)):
+    return user
+
+# Use in GraphQL via context
+@strawberry.type
+class Query:
+    @strawberry.field
+    async def me(self, info: strawberry.types.Info) -> User:
+        user = info.context["user"]  # injected by GraphQLRouter context_getter
+        return user
+```
+
+## Wrapping Up
+
+The pattern is simple: FastAPI owns routing, middleware, and REST endpoints. Strawberry plugs in as a single router at `/graphql`. They share database sessions, auth, and models — no duplication.
+
+The result is an API that's flexible for client teams and predictable for infrastructure. Exactly what a full-stack DevOps engineer needs.
