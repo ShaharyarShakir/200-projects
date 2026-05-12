@@ -1,0 +1,33 @@
+---
+// Hero.astro — static shell, React islands hydrate client-side
+import HeroText from "../hero/HeroText";
+import HeroRight from "../hero/HeroRight";
+---
+
+<section
+    id="hero"
+    class="relative border-[#1e1e1e] border-b w-full"
+    style="min-height: calc(100vh - 56px);"
+>
+    <div
+        class="grid grid-cols-2 h-full"
+        style="min-height: calc(100vh - 56px);"
+    >
+        <!-- Left: animated text — React island, hydrates immediately -->
+        <HeroText client:load />
+
+        <!-- Right: Three.js scene + terminal — React island -->
+        <HeroRight client:load />
+    </div>
+</section>
+
+<!--
+  Scroll indicator — pure CSS, no JS needed
+-->
+<div
+    class="bottom-6 left-12 absolute flex items-center gap-3 text-[#333] text-[10px] uppercase tracking-[3px] animate-bounce"
+    aria-hidden="true"
+>
+    <span class="block bg-[#333] w-px h-6"></span>
+    Scroll
+</div>
