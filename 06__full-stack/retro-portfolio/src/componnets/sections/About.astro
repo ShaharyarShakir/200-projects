@@ -1,0 +1,23 @@
+---
+// src/components/sections/About.astro
+import AboutHeader     from '../about/AboutHeader'
+import AboutStats      from '../about/AboutStats'
+import AboutBio        from '../about/AboutBio'
+import AboutExperience from '../about/AboutExp'
+---
+ 
+<section id="about" class="border-b border-[#1e1e1e]">
+ 
+  <!-- Animated section heading -->
+  <AboutHeader client:visible />
+ 
+  <!-- Full-width stat counters -->
+  <AboutStats client:visible />
+ 
+  <!-- Two-column: bio / experience -->
+  <div class="grid grid-cols-1 md:grid-cols-2">
+    <AboutBio        client:visible />
+    <AboutExperience client:visible />
+  </div>
+ 
+</section>
