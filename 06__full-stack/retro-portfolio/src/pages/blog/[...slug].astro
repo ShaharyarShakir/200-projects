@@ -1,0 +1,31 @@
+---
+import { render } from "astro:content";
+import BlogPostLayout from "../../layouts/BlogPostLayout.astro";
+import { getAllBlogPosts } from "../../content/blogCollections";
+
+export async function getStaticPaths() {
+    const posts = await getAllBlogPosts(import.meta.env.DEV);
+
+    return posts.map((post) => ({
+        params: { slug: post.id },
+    }));
+}
+
+const slugParam = Astro.params.slug;
+if (!slugParam) {
+    throw new Error("Missing blog slug parameter.");
+}
+
+const slug = Array.isArray(slugParam) ? slugParam.join("/") : slugParam;
+const allPosts = await getAllBlogPosts(import.meta.env.DEV);
+const post = allPosts.find((entry) => entry.id === slug);
+if (!post) {
+    throw new Error(`Blog post not found for slug: ${slug}`);
+}
+
+const { Content } = await render(post);
+---
+
+<BlogPostLayout post={post}>
+    <Content />
+</BlogPostLayout>
