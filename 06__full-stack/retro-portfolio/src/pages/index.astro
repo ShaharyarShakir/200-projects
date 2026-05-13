@@ -1,0 +1,18 @@
+---
+// src/pages/index.astro
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../componnets/sections/Hero.astro";
+// Future sections imported here as we build them:
+// import Stack from '../components/sections/Stack.astro'
+// import About from '../components/sections/About.astro'
+// import Projects from '../components/sections/Projects.astro'
+import Blog from "../componnets/sections/Blog.astro";
+import AboutPreview from "../componnets/sections/AboutPreview.astro";
+// import Contact from '../components/sections/Contact.astro'
+---
+
+<BaseLayout title="YK.DEV — DevOps · MLOps · Full-Stack">
+	<Hero />
+	<AboutPreview />
+	<Blog />
+</BaseLayout>
