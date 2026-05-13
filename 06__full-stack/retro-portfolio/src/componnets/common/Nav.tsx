@@ -6,7 +6,7 @@ import gsap from 'gsap'
 const NAV_LINKS = [
     { href: '/', label: 'Home', num: '00' },
     { href: '/#stack', label: 'Stack', num: '01' },
-    { href: '/#about', label: 'About', num: '02' },
+    { href: '/about', label: 'About', num: '02' },
     { href: '/#projects', label: 'Projects', num: '03' },
     { href: '/blog', label: 'Blog', num: '04' },
     { href: '/#contact', label: 'Contact', num: '05' },
@@ -47,7 +47,19 @@ export default function Nav() {
     useGSAP(() => {
         if (!logoRef.current || !linksRef.current || !rightRef.current) return
 
-        const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+        const tl = gsap.timeline({
+            defaults: { ease: 'power3.out' },
+            onComplete: () => {
+                // Drop inline opacity/transform so hydration/remount never leaves logo /
+                // “Hire me” stuck off-screen (from() x offsets). Do not clear navRef —
+                // scroll-hide uses the same transform.
+                const strip: HTMLElement[] = []
+                if (logoRef.current) strip.push(logoRef.current)
+                strip.push(...Array.from(linksRef.current!.children) as HTMLElement[])
+                strip.push(...Array.from(rightRef.current!.children) as HTMLElement[])
+                gsap.set(strip, { clearProps: 'opacity,transform' })
+            },
+        })
 
         tl.from(navRef.current, {
             y: -56,
@@ -76,7 +88,7 @@ export default function Nav() {
 
     // ── Hide / reveal nav on scroll ──────────────────────────────────
     useEffect(() => {
-        let lastY = 0
+        let lastY = window.scrollY
         let ticking = false
 
         const onScroll = () => {
@@ -214,24 +226,39 @@ export default function Nav() {
                                                 window.location.href = href
                                             }
                                         }}
-                                        className="group relative flex items-center gap-1.5 bg-transparent px-3 py-1.5 border-none text-[10px] uppercase tracking-[2px] transition-colors duration-150 cursor-pointer"
-                                        style={{ color: isActive ? '#f0ede6' : '#555' }}
+                                        className={`
+                                            group relative flex items-center gap-1.5 bg-transparent px-3 py-1.5 border-none
+                                            text-[10px] uppercase tracking-[2px] cursor-pointer
+                                            transition-colors duration-150
+                                            ${isActive ? 'text-[#f0ede6]' : 'text-[#555] hover:text-[#f0ede6]'}
+                                        `}
                                         aria-current={isActive ? 'page' : undefined}
                                     >
                                         {/* Number */}
                                         <span
-                                            className="text-[8px] transition-colors duration-150"
-                                            style={{ color: isActive ? '#c8f135' : '#333' }}
+                                            className={`
+                                                inline-block origin-center font-mono text-[8px] transition-all duration-200 ease-out
+                                                ${isActive
+                                                    ? 'text-[#c8f135]'
+                                                    : 'text-[#333]'
+                                                }
+                                                group-hover:scale-[1.18] group-hover:text-[#c8f135]
+                                                group-hover:[text-shadow:0_0_10px_rgba(200,241,53,0.75),0_0_22px_rgba(200,241,53,0.35)]
+                                            `}
                                         >
                                             {num}
                                         </span>
 
                                         {label}
 
-                                        {/* Active underline */}
+                                        {/* Underline: active or hover */}
                                         <span
-                                            className="right-3 bottom-0 left-3 absolute bg-[#c8f135] h-px origin-left transition-transform duration-200"
-                                            style={{ transform: isActive ? 'scaleX(1)' : 'scaleX(0)' }}
+                                            className={`
+                                                absolute bottom-0 left-3 right-3 h-px origin-left bg-[#c8f135]
+                                                transition-transform duration-200 ease-out
+                                                ${isActive ? 'scale-x-100' : 'scale-x-0'}
+                                                group-hover:scale-x-100
+                                            `}
                                             aria-hidden="true"
                                         />
                                     </button>
