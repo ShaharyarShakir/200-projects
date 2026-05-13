@@ -6,11 +6,12 @@ import ScrollTrigger from 'gsap/ScrollTrigger'
 
 // ── Types ─────────────────────────────────────────────────────────
 export interface BlogPost {
+    collection: 'blog' | 'devops' | 'fullstack' | 'mlops' | 'mobile' | 'series'
     slug: string
     title: string
     excerpt: string
     date: string       // pre-formatted: "MAY 2025"
-    tag: 'devops' | 'mlops' | 'fullstack' | 'mobile'
+    tag: 'devops' | 'mlops' | 'fullstack' | 'mobile' | 'machine-learning'
     readTime?: number
     featured?: boolean
 }
@@ -23,10 +24,11 @@ interface BlogListProps {
 
 // ── Tag config ────────────────────────────────────────────────────
 const TAG_CONFIG = {
-    devops: { label: 'DevOps', color: '#c8f135' },
-    mlops: { label: 'MLOps', color: '#7b61ff' },
-    fullstack: { label: 'Full-Stack', color: '#e63222' },
-    mobile: { label: 'Mobile', color: '#3ddc84' },
+    devops: { label: 'DEVOPS', color: '#c8f135' },
+    mlops: { label: 'MLOPS', color: '#7b61ff' },
+    fullstack: { label: 'FULL-STACK', color: '#e63222' },
+    mobile: { label: 'MOBILE', color: '#3ddc84' },
+    'machine-learning': { label: 'MACHINE-LEARNING', color: '#4f8cff' },
 }
 
 // ── Tag pill ──────────────────────────────────────────────────────
@@ -34,7 +36,7 @@ function TagPill({ tag }: { tag: BlogPost['tag'] }) {
     const { label, color } = TAG_CONFIG[tag]
     return (
         <span
-            className="px-2.5 py-1 border font-mono text-[9px] uppercase tracking-[1.5px] whitespace-nowrap"
+            className="inline-block bg-transparent px-2.5 py-1 border font-mono text-[9px] uppercase tracking-[1.5px] whitespace-nowrap"
             style={{ borderColor: color, color }}
         >
             {label}
@@ -46,45 +48,31 @@ function TagPill({ tag }: { tag: BlogPost['tag'] }) {
 function PostRow({ post }: { post: BlogPost }) {
     return (
         <a
-            href={`/blog/${post.slug}`}
-            className="group items-start gap-8 grid grid-cols-[80px_1fr_auto] hover:bg-[#0f0f0f] px-12 py-7 border-[#1e1e1e] border-b no-underline transition-colors duration-150 blog-row"
+            href={`/blog/${post.collection}/${post.slug}`}
+            className="group grid grid-cols-1 md:grid-cols-[minmax(72px,92px)_1fr_auto] gap-x-8 md:gap-x-12 gap-y-3 md:gap-y-0 md:items-center hover:bg-[#080808]/50 px-12 py-7 md:py-8 border-[#1e1e1e] border-b no-underline transition-colors duration-150 blog-row"
         >
-            {/* Date */}
-            <span className="pt-0.5 font-mono text-[#333] text-[10px] uppercase tracking-[1px]">
+            <span className="font-mono text-[#555] text-[10px] uppercase tracking-[1px] md:pt-0">
                 {post.date}
             </span>
 
-            {/* Title + excerpt */}
-            <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-3 mb-1.5">
+            <div className="min-w-0 md:order-none order-2">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                     {post.featured && (
-                        <span className="font-mono text-[#c8f135] text-[9px] uppercase tracking-[2px]">
-                            ★ Featured
+                        <span className="font-mono text-[#c8f135] text-[9px] uppercase tracking-[2px] shrink-0">
+                            ★
                         </span>
                     )}
-                    <p className="font-mono font-bold text-[#f0ede6] text-[14px] group-hover:text-[#c8f135] leading-snug transition-colors duration-150">
+                    <p className="font-mono font-bold text-[#f0ede6] text-[14px] md:text-[15px] group-hover:text-[#c8f135] leading-snug transition-colors duration-150">
                         {post.title}
                     </p>
                 </div>
-                <p className="font-mono text-[#555] text-[11px] line-clamp-2 leading-[1.7]">
+                <p className="mt-1.5 font-mono text-[#555] text-[11px] md:text-[12px] line-clamp-2 leading-[1.65]">
                     {post.excerpt}
                 </p>
-                {post.readTime && (
-                    <p className="mt-2 font-mono text-[#333] text-[10px] tracking-[1px]">
-                        {post.readTime} min read
-                    </p>
-                )}
             </div>
 
-            {/* Tag + arrow */}
-            <div className="flex flex-col items-end gap-3 pt-0.5">
+            <div className="flex justify-start md:justify-end md:order-none order-3 md:pt-0 pt-1">
                 <TagPill tag={post.tag} />
-                <span
-                    className="text-[#333] text-[14px] group-hover:text-[#c8f135] transition-all group-hover:translate-x-0.5 duration-150"
-                    aria-hidden="true"
-                >
-                    →
-                </span>
             </div>
         </a>
     )
@@ -162,37 +150,44 @@ export default function BlogList({ posts, totalPostCount }: BlogListProps) {
                 ref={headerRef}
                 className="flex justify-between items-start gap-8 px-12 pt-16 pb-10 border-[#1e1e1e] border-b"
             >
-                <div>
+                <div className="flex-1 min-w-0">
                     <p className="mb-3 font-mono text-[#333] text-[10px] uppercase tracking-[3px]">
                         — Writing
                     </p>
-                    <h2 className="flex flex-wrap items-baseline gap-3 text-[#f0ede6] leading-none tracking-tight">
-                        <span className="font-mono text-2xl text-[#c8f135] tabular-nums">
-                            {String(archiveTotal).padStart(2, '0')}
-                        </span>
-                        <span className="text-[64px]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
-                            Field Notes
-                        </span>
-                    </h2>
-                    <p className="mt-4 font-mono text-[#333] text-[10px] uppercase tracking-[2px]">
-                        {posts.length < archiveTotal
-                            ? `Showing ${posts.length} of ${archiveTotal} articles`
-                            : `${archiveTotal} article${archiveTotal === 1 ? '' : 's'}`}
-                    </p>
+                    <div className="flex w-full items-center gap-3 flex-col md:flex-row justify-between">
+                        <h2 className="flex items-baseline gap-3 text-[#f0ede6] leading-none tracking-tight">
+                            <span className="flex items-baseline gap-3">
+                                <span className="font-mono text-2xl text-[#c8f135] tabular-nums">
+                                    {String(archiveTotal).padStart(2, '0')}
+                                </span>
+                                <span className="text-[64px]" style={{ fontFamily: "'Bebas Neue', sans-serif" }}>
+                                    Field Notes
+                                </span>
+                            </span>
+                        </h2>
+                        <p className="flex items-baseline gap-2 font-mono text-[#c8f135] text-[10px] uppercase tracking-[4px] whitespace-nowrap">
+                            <span aria-hidden="true">|</span>
+                            <span className="tabular-nums">{String(archiveTotal).padStart(2, '0')}</span>
+                            <span>{archiveTotal === 1 ? 'Article' : 'Articles'}</span>
+                        </p>
+                    </div>
                 </div>
 
-                <a
-                    href="/blog"
-                    className="group shrink-0 flex items-center gap-2 bg-[#0f0f0f] hover:bg-[#1a1a1a] px-4 py-2.5 border border-[#333] hover:border-[#c8f135] font-mono text-[#f0ede6] text-[10px] hover:text-[#c8f135] no-underline uppercase tracking-[2px] transition-colors duration-150"
-                >
-                    View all
-                    <span
-                        className="transition-transform group-hover:translate-x-0.5 duration-150"
-                        aria-hidden="true"
+                <div className="flex items-center gap-6">
+                 
+                    <a
+                        href="/blog"
+                        className="group shrink-0 flex items-center gap-2 bg-[#0f0f0f] hover:bg-[#1a1a1a] px-4 py-2.5 border border-[#333] hover:border-[#c8f135] font-mono text-[#f0ede6] text-[10px] hover:text-[#c8f135] no-underline uppercase tracking-[2px] transition-colors duration-150"
                     >
-                        →
-                    </span>
-                </a>
+                        View all
+                        <span
+                            className="transition-transform group-hover:translate-x-0.5 duration-150"
+                            aria-hidden="true"
+                        >
+                            →
+                        </span>
+                    </a>
+                </div>
             </div>
 
             {/* ── Post list ── */}
