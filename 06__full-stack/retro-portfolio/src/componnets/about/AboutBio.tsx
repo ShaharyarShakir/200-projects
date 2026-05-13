@@ -1,38 +1,15 @@
-// src/components/about/AboutBio.tsx
+
 import { useRef } from 'react'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
+import { PILLARS } from '../../utils/pillar-data'
+import type { AboutBioProps } from '../../types/types'
 
-// ── Data ──────────────────────────────────────────────────────────
-const PILLARS = [
-  {
-    num: '01',
-    title: 'Infrastructure First',
-    body: "If the foundation isn't solid, nothing on top of it will be. I design for failure before I design for features — SLOs, runbooks, and observability aren't afterthoughts.",
-  },
-  {
-    num: '02',
-    title: 'ML in Production',
-    body: "There's a huge gap between a notebook that works and an ML system that serves millions of requests reliably. I build the pipelines, feature stores, and serving infra that bridge that gap.",
-  },
-  {
-    num: '03',
-    title: 'Full-Stack Ownership',
-    body: "I don't stop at the API boundary. From Postgres schema to React Native screen, I take ownership of the whole delivery surface — web, mobile, and the infrastructure underneath.",
-  },
-]
-
-interface AboutBioProps {
-  /** Home teaser: only the // Who I am block (no pillars). */
-  introOnly?: boolean
-}
-
-// ── Component ─────────────────────────────────────────────────────
 export default function AboutBio({ introOnly = false }: AboutBioProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const bioRef       = useRef<HTMLDivElement>(null)
-  const pillarsRef   = useRef<HTMLDivElement>(null)
+  const bioRef = useRef<HTMLDivElement>(null)
+  const pillarsRef = useRef<HTMLDivElement>(null)
 
   useGSAP(() => {
     gsap.registerPlugin(ScrollTrigger)
@@ -79,26 +56,26 @@ export default function AboutBio({ introOnly = false }: AboutBioProps) {
 
       {/* ── Bio ── */}
       <div ref={bioRef} className="flex flex-col gap-4">
-        <p className="text-[10px] tracking-[3px] text-[#333] uppercase font-mono">
+        <p className="font-mono text-[#333] text-[10px] uppercase tracking-[3px]">
           // Who I am
         </p>
 
-        <p className="text-[13px] text-[#666] leading-[2] font-mono">
-          I'm <span className="text-[#f0ede6] font-bold">Shaharyar Shakir</span> — a DevOps &
+        <p className="font-mono text-[#666] text-[13px] leading-loose">
+          I'm <span className="font-bold text-[#f0ede6]">Shaharyar Shakir</span> — a DevOps &
           MLOps engineer with full-stack and React Native capabilities.
           I work across the entire delivery lifecycle: from designing
           Kubernetes-based infrastructure and ML pipelines, to shipping
           production web apps and mobile products.
         </p>
 
-        <p className="text-[13px] text-[#555] leading-[2] font-mono">
+        <p className="font-mono text-[#555] text-[13px] leading-loose">
           My work sits at the intersection of infrastructure reliability,
           machine learning productionization, and modern product engineering.
           I care about systems that are observable, reproducible, and actually
           enjoyable to operate at 3am when something breaks.
         </p>
 
-        <p className="text-[13px] text-[#555] leading-[2] font-mono">
+        <p className="font-mono text-[#555] text-[13px] leading-loose">
           Based in <span className="text-[#f0ede6]">Pakistan</span> · Open to remote
           roles globally.
         </p>
@@ -106,17 +83,17 @@ export default function AboutBio({ introOnly = false }: AboutBioProps) {
 
       {!introOnly && (
         <div ref={pillarsRef} className="flex flex-col">
-          <p className="text-[10px] tracking-[3px] text-[#333] uppercase font-mono mb-4">
+          <p className="mb-4 font-mono text-[#333] text-[10px] uppercase tracking-[3px]">
             // How I work
           </p>
 
           {PILLARS.map(({ num, title, body }) => (
             <div
               key={num}
-              className="pillar-item flex gap-5 py-5 border-t border-[#1e1e1e]"
+              className="flex gap-5 py-5 border-[#1e1e1e] border-t pillar-item"
             >
               <span
-                className="text-[#c8f135] font-mono text-[22px] leading-none mt-0.5 flex-shrink-0"
+                className="mt-0.5 font-mono text-[#c8f135] text-[22px] leading-none shrink-0"
                 style={{ fontFamily: "'Bebas Neue', sans-serif" }}
                 aria-hidden="true"
               >
@@ -124,10 +101,10 @@ export default function AboutBio({ introOnly = false }: AboutBioProps) {
               </span>
 
               <div>
-                <p className="text-[12px] text-[#f0ede6] font-mono font-bold mb-1.5 tracking-[1px]">
+                <p className="mb-1.5 font-mono font-bold text-[#f0ede6] text-[12px] tracking-[1px]">
                   {title}
                 </p>
-                <p className="text-[12px] text-[#555] font-mono leading-[1.8]">
+                <p className="font-mono text-[#555] text-[12px] leading-[1.8]">
                   {body}
                 </p>
               </div>
