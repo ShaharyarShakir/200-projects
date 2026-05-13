@@ -10,6 +10,22 @@ export default function HeroText() {
         const tl = gsap.timeline({
             defaults: { ease: 'power3.out' },
             delay: 0.2,
+            onComplete: () => {
+                const root = containerRef.current
+                if (!root) return
+                const selectors = [
+                    '.hero-tag',
+                    '.hero-name .line',
+                    '.hero-role',
+                    '.hero-bio',
+                    '.hero-cta > *',
+                    '.hero-stats > *',
+                ]
+                const els = selectors.flatMap((sel) =>
+                    Array.from(root.querySelectorAll<HTMLElement>(sel)),
+                )
+                gsap.set(els, { clearProps: 'opacity,transform' })
+            },
         })
 
         tl.from('.hero-tag', { y: 16, opacity: 0, duration: 0.5 })
@@ -80,27 +96,47 @@ export default function HeroText() {
             {/* Bottom block */}
             <div>
                 {/* CTA buttons */}
-                <div className="flex gap-3 mb-10 hero-cta">
+                <div className="flex flex-wrap gap-3 mb-10 hero-cta">
                     <button
-                        className="bg-[#c8f135] hover:bg-transparent px-6 py-2.5 border border-[#c8f135] font-mono text-[#0a0a0a] text-[11px] hover:text-[#c8f135] uppercase tracking-[2px] transition-all duration-150"
+                        type="button"
+                        className="
+                            inline-flex flex-col items-center justify-center gap-0
+                            min-w-[148px] px-8 py-4 rounded-sm
+                            bg-transparent border border-[#f0ede6]/85
+                            font-mono text-[#f0ede6] text-[10px] uppercase tracking-[0.22em]
+                            leading-[1.35] text-center
+                            transition-all duration-200
+                            hover:border-[#c8f135] hover:text-[#c8f135]
+                        "
                     >
-                        View Projects
+                        <span className="block">VIEW</span>
+                        <span className="block">PROJECTS</span>
                     </button>
                     <button
-                        className="bg-transparent hover:bg-[#f0ede6] px-6 py-2.5 border border-[#333] font-mono text-[#f0ede6] text-[11px] hover:text-[#0a0a0a] uppercase tracking-[2px] transition-all duration-150"
+                        type="button"
+                        className="
+                            inline-flex flex-col items-center justify-center gap-0
+                            min-w-[148px] px-8 py-4 rounded-sm
+                            bg-transparent border border-[#f0ede6]/85
+                            font-mono text-[#f0ede6] text-[10px] uppercase tracking-[0.22em]
+                            leading-[1.35] text-center
+                            transition-all duration-200
+                            hover:border-[#c8f135] hover:text-[#c8f135]
+                        "
                     >
-                        Get in Touch
+                        <span className="block">GET IN</span>
+                        <span className="block">TOUCH</span>
                     </button>
                 </div>
 
                 {/* Stats */}
-                <div className="flex gap-0 pt-8 border-[#1e1e1e] border-t hero-stats">
+                <div className="flex gap-8 pt-8 border-[#1e1e1e] border-t hero-stats">
                     <div className="pr-10 border-[#1e1e1e] border-r">
                         <p
                             className="mb-1 text-[#c8f135] text-[42px] leading-none"
                             style={{ fontFamily: "'Bebas Neue', sans-serif" }}
                         >
-                            5+
+                            1+
                         </p>
                         <p className="text-[#555] text-[10px] uppercase tracking-[2px]">Years Exp</p>
                     </div>
