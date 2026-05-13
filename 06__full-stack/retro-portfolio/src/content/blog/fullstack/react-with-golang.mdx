@@ -1,0 +1,442 @@
+---
+title: "Setting Up Golang with React"
+excerpt: "Learn how to build a full-stack application using Golang and React for modern web development."
+date: 2026-05-12
+tag: "fullstack"
+featured: true
+readTime: 10
+github: "https://github.com/example/golang-react-app"
+---
+
+# Setting Up Golang with React
+
+Modern web applications often need a fast backend and a responsive frontend. Combining Golang (Go) with React creates a powerful full-stack setup that is fast, scalable, and developer-friendly.
+
+In this guide, you’ll learn how to:
+
+- Set up a Golang backend
+- Create a React frontend
+- Connect both applications together
+- Handle API requests
+- Run everything locally
+
+By the end, you’ll have a working full-stack application powered by Go and React.
+
+---
+
+## Why Use Golang with React?
+
+Before diving into setup, here’s why this stack is becoming increasingly popular.
+
+### Benefits of Golang
+
+- Extremely fast performance
+- Built-in concurrency support
+- Simple syntax
+- Strong standard library
+- Excellent for APIs and microservices
+
+### Benefits of React
+
+- Component-based architecture
+- Fast rendering with Virtual DOM
+- Large ecosystem
+- Easy state management
+- Great developer experience
+
+Together, React handles the frontend UI while Go powers the backend API.
+
+---
+
+## Project Structure
+
+A clean project structure helps keep frontend and backend organized.
+
+```bash
+fullstack-app/
+│
+├── backend/
+│   ├── main.go
+│   └── go.mod
+│
+└── frontend/
+```
+
+---
+
+## Prerequisites
+
+Make sure you have these installed:
+
+- Go
+- Node.js
+- npm or yarn
+- Git
+- A code editor like VS Code
+
+Official downloads:
+
+- https://go.dev
+- https://nodejs.org
+- https://react.dev
+
+---
+
+## Step 1: Create the Golang Backend
+
+### Initialize the Backend
+
+Create a backend folder:
+
+```bash
+mkdir backend
+cd backend
+```
+
+Initialize a Go module:
+
+```bash
+go mod init fullstack-app
+```
+
+Install the router package:
+
+```bash
+go get github.com/gorilla/mux
+```
+
+---
+
+### Create `main.go`
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+
+	"github.com/gorilla/mux"
+)
+
+type Message struct {
+	Text string `json:"text"`
+}
+
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	message := Message{
+		Text: "Hello from Golang backend!",
+	}
+
+	json.NewEncoder(w).Encode(message)
+}
+
+func main() {
+	r := mux.NewRouter()
+
+	r.HandleFunc("/api/message", homeHandler).Methods("GET")
+
+	log.Println("Server running on port 8080")
+	http.ListenAndServe(":8080", r)
+}
+```
+
+---
+
+### Run the Backend
+
+Start the Go server:
+
+```bash
+go run main.go
+```
+
+You should see:
+
+```bash
+Server running on port 8080
+```
+
+Visit:
+
+```txt
+http://localhost:8080/api/message
+```
+
+Response:
+
+```json
+{
+  "text": "Hello from Golang backend!"
+}
+```
+
+---
+
+## Step 2: Create the React Frontend
+
+Open another terminal and create the frontend:
+
+```bash
+npx create-react-app frontend
+```
+
+Move into the frontend directory:
+
+```bash
+cd frontend
+```
+
+Start the React app:
+
+```bash
+npm start
+```
+
+React will run on:
+
+```txt
+http://localhost:3000
+```
+
+---
+
+## Step 3: Connect React to Golang
+
+Now let’s fetch data from the Go API.
+
+Open:
+
+```txt
+frontend/src/App.js
+```
+
+Replace the content with:
+
+```jsx
+import { useEffect, useState } from "react";
+
+function App() {
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/message")
+      .then((res) => res.json())
+      .then((data) => setMessage(data.text))
+      .catch((err) => console.error(err));
+  }, []);
+
+  return (
+    <div style={{ padding: "40px" }}>
+      <h1>React + Golang</h1>
+      <p>{message}</p>
+    </div>
+  );
+}
+
+export default App;
+```
+
+---
+
+## Step 4: Fix CORS Issues
+
+Since React and Go run on different ports, you may encounter CORS errors.
+
+Install the CORS middleware:
+
+```bash
+go get github.com/rs/cors
+```
+
+Update `main.go`:
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
+)
+
+type Message struct {
+	Text string `json:"text"`
+}
+
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	message := Message{
+		Text: "Hello from Golang backend!",
+	}
+
+	json.NewEncoder(w).Encode(message)
+}
+
+func main() {
+	r := mux.NewRouter()
+
+	r.HandleFunc("/api/message", homeHandler).Methods("GET")
+
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:3000"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE"},
+	})
+
+	handler := c.Handler(r)
+
+	log.Println("Server running on port 8080")
+	http.ListenAndServe(":8080", handler)
+}
+```
+
+Restart the backend server.
+
+Now React should successfully communicate with Go.
+
+---
+
+## Step 5: Build for Production
+
+When your application is ready for deployment, build the React app:
+
+```bash
+npm run build
+```
+
+This creates a production-ready `build/` folder.
+
+You can serve these static files directly from Go.
+
+---
+
+## Step 6: Serve React with Golang
+
+Update `main.go`:
+
+```go
+package main
+
+import (
+	"net/http"
+)
+
+func main() {
+	fs := http.FileServer(http.Dir("./frontend/build"))
+
+	http.Handle("/", fs)
+
+	http.ListenAndServe(":8080", nil)
+}
+```
+
+Now Go serves both:
+
+- Backend APIs
+- React frontend
+
+This simplifies deployment significantly.
+
+---
+
+## Recommended Development Workflow
+
+During development:
+
+| Service | Port |
+|---|---|
+| React | 3000 |
+| Go API | 8080 |
+
+During production:
+
+- Build React
+- Serve static files from Go
+- Deploy a single binary + frontend assets
+
+---
+
+## Useful Tools for This Stack
+
+### Backend Tools
+
+- Gin
+- Fiber
+- Postman
+
+### Frontend Tools
+
+- Vite
+- Redux
+- Tailwind CSS
+
+---
+
+## Common Problems and Solutions
+
+### Port Already in Use
+
+Change the port in either React or Go.
+
+Example:
+
+```go
+http.ListenAndServe(":5000", handler)
+```
+
+---
+
+### CORS Errors
+
+Make sure:
+
+- Backend allows frontend origin
+- Correct ports are configured
+- Middleware is properly applied
+
+---
+
+### API Not Fetching
+
+Check:
+
+- Backend server is running
+- Endpoint URL is correct
+- Browser console for errors
+
+---
+
+## Final Thoughts
+
+Using Golang with React gives developers the best of both worlds:
+
+- A blazing-fast backend
+- A modern interactive frontend
+- Clean separation of concerns
+- Easy deployment architecture
+
+This stack works well for:
+
+- SaaS applications
+- Dashboards
+- REST APIs
+- Real-time systems
+- Enterprise applications
+
+As your application grows, you can expand the setup with:
+
+- Authentication
+- Databases
+- Docker
+- Kubernetes
+- CI/CD pipelines
+- WebSockets
+
+If you’re looking for a modern full-stack architecture that balances performance and developer productivity, Go and React are an excellent combination.
