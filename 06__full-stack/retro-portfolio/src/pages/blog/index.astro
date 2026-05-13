@@ -1,0 +1,178 @@
+---
+// src/pages/blog/index.astro — archive list (reference: date | title+excerpt | tag)
+
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getAllBlogPosts } from "../../content/blogCollections";
+
+const allPosts = await getAllBlogPosts(import.meta.env.DEV);
+
+const sorted = allPosts.sort((a, b) => {
+    if (a.data.featured && !b.data.featured) return -1;
+    if (!a.data.featured && b.data.featured) return 1;
+    return b.data.date.getTime() - a.data.date.getTime();
+});
+
+const TAG_COLORS: Record<string, string> = {
+    devops: "#c8f135",
+    mlops: "#7b61ff",
+    fullstack: "#e63222",
+    mobile: "#3ddc84",
+};
+
+const TAG_LABELS: Record<string, string> = {
+    devops: "DEVOPS",
+    mlops: "MLOPS",
+    fullstack: "FULL-STACK",
+    mobile: "MOBILE",
+};
+
+const categories = Object.keys(TAG_LABELS);
+const selectedCategoryParam = Astro.url.searchParams.get("category");
+const selectedCategory = categories.includes(selectedCategoryParam ?? "")
+    ? selectedCategoryParam
+    : null;
+
+const filteredPosts = selectedCategory
+    ? sorted.filter((post) => post.data.tag === selectedCategory)
+    : sorted;
+
+const categoryCounts = categories.reduce<Record<string, number>>((acc, category) => {
+    acc[category] = sorted.filter((post) => post.data.tag === category).length;
+    return acc;
+}, {});
+
+const pageDescription =
+    "Writing on DevOps, MLOps, Full-Stack and React Native by Shaharyar Shakir.";
+---
+
+<BaseLayout title="Writing — YK.DEV" description={pageDescription}>
+    <div class="w-full px-6 md:px-10">
+        <!-- Page header -->
+        <header class="pt-14 pb-10 md:pb-12 border-[#1e1e1e] border-b">
+            <p
+                class="mb-3 font-mono text-[#555] text-[10px] uppercase tracking-[3px]"
+            >
+                Writing
+            </p>
+            <div class="flex w-full flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <h1
+                    class="flex flex-wrap items-baseline gap-3 md:gap-4 text-[#f0ede6] leading-none tracking-tight"
+                >
+                    <span class="font-mono text-2xl text-[#c8f135] tabular-nums"
+                        >{String(filteredPosts.length).padStart(2, "0")}</span
+                    >
+                    <span
+                        class="text-[56px] md:text-[72px]"
+                        style="font-family: 'Bebas Neue', sans-serif;">Field Notes</span
+                    >
+                </h1>
+                <p class="flex items-baseline gap-2 font-mono text-[#c8f135] text-[10px] uppercase tracking-[4px] whitespace-nowrap">
+                    <span aria-hidden="true">|</span>
+                    <span class="tabular-nums">{String(filteredPosts.length).padStart(2, "0")}</span>
+                    <span>{filteredPosts.length === 1 ? "Article" : "Articles"}</span>
+                </p>
+            </div>
+            <p class="mt-4 max-w-[480px] text-[#555] text-[12px] leading-[1.85]">
+                Thoughts on DevOps, MLOps, Full-Stack engineering and React Native
+                — from real production experience.
+            </p>
+
+            <div class="flex flex-wrap items-center gap-2 mt-6">
+                <a
+                    href="/blog"
+                    class={`inline-block px-2.5 py-1 border font-mono text-[9px] uppercase tracking-[1.5px] whitespace-nowrap no-underline transition-colors duration-150 ${
+                        !selectedCategory
+                            ? "border-[#c8f135] text-[#c8f135]"
+                            : "border-[#333] text-[#555] hover:border-[#777] hover:text-[#aaa]"
+                    }`}
+                >
+                    All ({sorted.length})
+                </a>
+                {
+                    categories.map((category) => {
+                        const active = selectedCategory === category;
+                        const color = TAG_COLORS[category] ?? "#c8f135";
+                        const label = TAG_LABELS[category] ?? category.toUpperCase();
+                        return (
+                            <a
+                                href={`/blog?category=${category}`}
+                                class={`inline-block px-2.5 py-1 border font-mono text-[9px] uppercase tracking-[1.5px] whitespace-nowrap no-underline transition-colors duration-150 ${
+                                    active
+                                        ? ""
+                                        : "border-[#333] text-[#555] hover:border-[#777] hover:text-[#aaa]"
+                                }`}
+                                style={active ? `border-color: ${color}; color: ${color};` : undefined}
+                            >
+                                {label} ({categoryCounts[category] ?? 0})
+                            </a>
+                        );
+                    })
+                }
+            </div>
+        </header>
+
+        <!-- Post list -->
+        <div class="pb-24">
+            {
+                filteredPosts.map((post) => {
+                    const color =
+                        TAG_COLORS[post.data.tag] ?? "#c8f135";
+                    const tagLabel =
+                        TAG_LABELS[post.data.tag] ??
+                        post.data.tag.toUpperCase();
+                    const date = post.data.date
+                        .toLocaleDateString("en-US", {
+                            month: "short",
+                            year: "numeric",
+                        })
+                        .toUpperCase();
+                    const postHref = `/blog/${post.collection}/${post.id}`;
+                    return (
+                        <a
+                            href={postHref}
+                            class="group grid grid-cols-1 md:grid-cols-[minmax(72px,92px)_1fr_auto] gap-x-8 md:gap-x-12 gap-y-3 md:gap-y-0 md:items-center py-7 md:py-8 border-[#1e1e1e] border-b no-underline transition-colors duration-150 hover:bg-[#080808]/50"
+                        >
+                            <span class="font-mono text-[#555] text-[10px] uppercase tracking-[1px] md:pt-0">
+                                {date}
+                            </span>
+
+                            <div class="min-w-0 md:order-none order-2">
+                                <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                                    {post.data.featured && (
+                                        <span class="font-mono text-[#c8f135] text-[9px] uppercase tracking-[2px] shrink-0">
+                                            ★
+                                        </span>
+                                    )}
+                                    <p class="font-mono font-bold text-[#f0ede6] text-[14px] md:text-[15px] leading-snug group-hover:text-[#c8f135] transition-colors duration-150">
+                                        {post.data.title}
+                                    </p>
+                                </div>
+                                <p class="mt-1.5 font-mono text-[#555] text-[11px] md:text-[12px] line-clamp-2 leading-[1.65]">
+                                    {post.data.excerpt}
+                                </p>
+                            </div>
+
+                            <div class="flex justify-start md:justify-end md:order-none order-3 md:pt-0 pt-1">
+                                <span
+                                    class="inline-block px-2.5 py-1 border font-mono text-[9px] uppercase tracking-[1.5px] whitespace-nowrap bg-transparent"
+                                    style={`border-color: ${color}; color: ${color};`}
+                                >
+                                    {tagLabel}
+                                </span>
+                            </div>
+                        </a>
+                    );
+                })
+            }
+            {
+                filteredPosts.length === 0 && (
+                    <div class="py-12 border-[#1e1e1e] border-b">
+                        <p class="font-mono text-[#555] text-[11px] uppercase tracking-[2px]">
+                            No posts found in this category.
+                        </p>
+                    </div>
+                )
+            }
+        </div>
+    </div>
+</BaseLayout>
