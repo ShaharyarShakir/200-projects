@@ -1,0 +1,500 @@
+---
+title: "TensorFlow Lite Setup with React Native Expo"
+excerpt: "Learn how to integrate TensorFlow Lite into a React Native Expo application for on-device machine learning."
+date: 2026-05-12
+tag: "mlops"
+featured: true
+readTime: 9
+github: "https://github.com/example/expo-tflite-app"
+---
+
+# TensorFlow Lite Setup with React Native Expo
+
+Machine learning on mobile devices is becoming increasingly popular. With TensorFlow Lite and React Native Expo, developers can build intelligent applications capable of image classification, object detection, text recognition, and more — directly on-device.
+
+In this guide, you'll learn how to:
+
+- Set up TensorFlow Lite in an Expo app
+- Configure native dependencies
+- Load TensorFlow Lite models
+- Run inference on mobile devices
+- Build a simple AI-powered application
+
+By the end, you'll have a working React Native Expo project using TensorFlow Lite.
+
+---
+
+## Why Use TensorFlow Lite with Expo?
+
+TensorFlow Lite is optimized for mobile and edge devices. It allows machine learning models to run efficiently without relying on cloud APIs.
+
+### Benefits of TensorFlow Lite
+
+- Fast on-device inference
+- Reduced latency
+- Offline support
+- Lower battery consumption
+- Cross-platform compatibility
+
+### Why Expo?
+
+Expo simplifies React Native development by providing:
+
+- Easier project setup
+- Fast development workflow
+- Native APIs
+- OTA updates
+- Simplified builds
+
+Together, Expo and TensorFlow Lite provide a powerful mobile AI stack.
+
+---
+
+## Prerequisites
+
+Before starting, make sure you have:
+
+- Node.js installed
+- Expo CLI installed
+- Android Studio or Xcode
+- A physical device or emulator
+- Basic React Native knowledge
+
+Install Expo CLI globally:
+
+```bash
+npm install -g expo-cli
+```
+
+---
+
+## Create a New Expo Project
+
+Initialize a new Expo app:
+
+```bash
+npx create-expo-app expo-tflite-app
+```
+
+Move into the project directory:
+
+```bash
+cd expo-tflite-app
+```
+
+Start the development server:
+
+```bash
+npx expo start
+```
+
+---
+
+## Install TensorFlow Dependencies
+
+Install TensorFlow.js and React Native bindings:
+
+```bash
+npm install @tensorflow/tfjs
+```
+
+Install React Native TensorFlow support:
+
+```bash
+npm install @tensorflow/tfjs-react-native
+```
+
+Install Expo utilities:
+
+```bash
+npx expo install expo-gl expo-gl-cpp expo-camera
+```
+
+Install additional dependencies:
+
+```bash
+npm install jpeg-js
+```
+
+---
+
+## Configure Metro Bundler
+
+TensorFlow Lite models use `.tflite` files, which must be added to Metro configuration.
+
+Create or update `metro.config.js`:
+
+```js
+const { getDefaultConfig } = require("expo/metro-config");
+
+const config = getDefaultConfig(__dirname);
+
+config.resolver.assetExts.push("tflite");
+
+module.exports = config;
+```
+
+---
+
+## Initialize TensorFlow
+
+Open `App.js` and initialize TensorFlow:
+
+```jsx
+import React, { useEffect } from "react";
+import { View, Text } from "react-native";
+import * as tf from "@tensorflow/tfjs";
+import "@tensorflow/tfjs-react-native";
+
+export default function App() {
+  useEffect(() => {
+    async function prepare() {
+      await tf.ready();
+      console.log("TensorFlow Ready");
+    }
+
+    prepare();
+  }, []);
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Text>TensorFlow Lite with Expo</Text>
+    </View>
+  );
+}
+```
+
+Run the application:
+
+```bash
+npx expo start
+```
+
+You should see:
+
+```bash
+TensorFlow Ready
+```
+
+---
+
+## Add a TensorFlow Lite Model
+
+Create an `assets/models` directory:
+
+```bash
+mkdir -p assets/models
+```
+
+Place your `.tflite` model inside:
+
+```txt
+assets/models/model.tflite
+```
+
+Example use cases:
+
+- Image classification
+- Face detection
+- Object detection
+- OCR
+- Pose estimation
+
+---
+
+## Load the TensorFlow Lite Model
+
+Install TensorFlow Lite runtime:
+
+```bash
+npm install react-native-fast-tflite
+```
+
+Because TensorFlow Lite requires native modules, Expo Go alone is not sufficient. You must use Expo Development Builds.
+
+Install Expo Dev Client:
+
+```bash
+npx expo install expo-dev-client
+```
+
+Generate native projects:
+
+```bash
+npx expo prebuild
+```
+
+---
+
+## Configure Android Permissions
+
+Open:
+
+```txt
+android/app/src/main/AndroidManifest.xml
+```
+
+Add camera permission if needed:
+
+```xml
+<uses-permission android:name="android.permission.CAMERA" />
+```
+
+---
+
+## Load the Model in React Native
+
+Example TensorFlow Lite model loading:
+
+```jsx
+import React, { useEffect } from "react";
+import { View, Text } from "react-native";
+import { loadTensorflowModel } from "react-native-fast-tflite";
+
+export default function App() {
+  useEffect(() => {
+    async function loadModel() {
+      const model = await loadTensorflowModel(
+        require("./assets/models/model.tflite")
+      );
+
+      console.log("Model Loaded", model);
+    }
+
+    loadModel();
+  }, []);
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <Text>TensorFlow Lite Ready</Text>
+    </View>
+  );
+}
+```
+
+---
+
+## Run the Development Build
+
+For Android:
+
+```bash
+npx expo run:android
+```
+
+For iOS:
+
+```bash
+npx expo run:ios
+```
+
+This creates a native development build capable of running TensorFlow Lite.
+
+---
+
+## Running Inference
+
+Example inference workflow:
+
+```jsx
+const output = await model.run(inputTensor);
+console.log(output);
+```
+
+Typical inference steps:
+
+1. Capture image or sensor data
+2. Convert data into tensors
+3. Run inference
+4. Process model output
+5. Display predictions
+
+---
+
+## Using the Camera with TensorFlow Lite
+
+Install Expo Camera:
+
+```bash
+npx expo install expo-camera
+```
+
+Basic camera setup:
+
+```jsx
+import { CameraView, useCameraPermissions } from "expo-camera";
+```
+
+Common AI mobile features include:
+
+- Real-time object detection
+- Barcode scanning
+- Face filters
+- Pose tracking
+- Gesture recognition
+
+---
+
+## Recommended Folder Structure
+
+```bash
+expo-tflite-app/
+│
+├── assets/
+│   └── models/
+│       └── model.tflite
+│
+├── components/
+├── screens/
+├── hooks/
+├── utils/
+│
+├── App.js
+└── metro.config.js
+```
+
+---
+
+## Common Problems and Fixes
+
+### Expo Go Does Not Support Native Modules
+
+TensorFlow Lite requires native code.
+
+Use:
+
+```bash
+npx expo prebuild
+```
+
+and run a development build instead of Expo Go.
+
+---
+
+### Model File Not Found
+
+Ensure:
+
+- `.tflite` extension is added in `metro.config.js`
+- Correct file path is used
+- Metro cache is cleared
+
+Clear cache:
+
+```bash
+npx expo start --clear
+```
+
+---
+
+### Android Build Errors
+
+Try:
+
+```bash
+cd android
+./gradlew clean
+```
+
+Then rebuild the app.
+
+---
+
+### iOS CocoaPods Issues
+
+Run:
+
+```bash
+cd ios
+pod install
+```
+
+---
+
+## Best TensorFlow Lite Models for Mobile Apps
+
+Popular lightweight models include:
+
+- MobileNet
+- EfficientNet Lite
+- YOLO Nano
+- MoveNet
+- BlazeFace
+
+You can download pre-trained models from:
+
+- https://www.tensorflow.org/lite/models
+- https://tfhub.dev
+
+---
+
+## Performance Optimization Tips
+
+### Use Quantized Models
+
+Quantized models:
+
+- Reduce app size
+- Improve inference speed
+- Lower memory usage
+
+---
+
+### Resize Input Images
+
+Large images slow inference.
+
+Recommended sizes:
+
+- 224×224
+- 320×320
+
+depending on your model.
+
+---
+
+### Use GPU Acceleration
+
+TensorFlow Lite supports:
+
+- GPU delegates
+- NNAPI
+- Metal acceleration
+
+for faster inference on supported devices.
+
+---
+
+## Final Thoughts
+
+TensorFlow Lite with React Native Expo enables developers to build intelligent mobile applications with real-time machine learning capabilities.
+
+This setup is ideal for:
+
+- AI-powered mobile apps
+- Computer vision projects
+- Offline ML applications
+- Smart camera apps
+- Real-time recognition systems
+
+As your application grows, you can expand it with:
+
+- Real-time video processing
+- Cloud synchronization
+- Edge AI optimization
+- Custom TensorFlow training
+- On-device personalization
+
+By combining TensorFlow Lite with Expo, developers can create powerful cross-platform AI applications with a modern React Native workflow.
