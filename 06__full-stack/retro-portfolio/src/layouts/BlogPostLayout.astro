@@ -1,0 +1,376 @@
+---
+// src/layouts/BlogPostLayout.astro
+// Used by every [slug].astro page via the layout frontmatter property.
+
+import type { BlogEntry } from "../content/blogCollections";
+import "../styles/global.css";
+
+interface Props {
+    post: BlogEntry;
+}
+
+const { post } = Astro.props;
+const { title, excerpt, date, tag, readTime, github, featured } = post.data;
+
+// Format date for display
+const displayDate = date.toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+});
+
+const TAG_COLORS: Record<string, string> = {
+    devops: "#c8f135",
+    mlops: "#7b61ff",
+    fullstack: "#e63222",
+    mobile: "#3ddc84",
+};
+const tagColor = TAG_COLORS[tag] ?? "#c8f135";
+---
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content={excerpt} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={excerpt} />
+        <meta property="og:type" content="article" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;700&display=swap"
+            rel="stylesheet"
+        />
+        <title>{title} — YK.DEV</title>
+    </head>
+
+    <body class="bg-[#0a0a0a] font-mono text-[#f0ede6] antialiased">
+        <!-- Reading progress bar -->
+        <div
+            id="reading-bar"
+            class="top-0 left-0 z-50 fixed bg-[#c8f135] w-0 h-[2px]"
+            aria-hidden="true"
+        >
+        </div>
+
+        <!-- Top nav bar -->
+        <header
+            class="top-0 z-40 sticky flex justify-between items-center bg-[#0a0a0a]/90 backdrop-blur-sm px-8 border-[#1e1e1e] border-b h-14"
+        >
+            <a
+                href="/#blog"
+                class="group flex items-center gap-2 text-[#555] text-[10px] hover:text-[#c8f135] no-underline uppercase tracking-[2px] transition-colors duration-150"
+            >
+                <span
+                    class="transition-transform group-hover:-translate-x-0.5 duration-150"
+                    aria-hidden="true">←</span
+                >
+                Back
+            </a>
+
+            <a
+                href="/"
+                class="hover:opacity-70 text-[#c8f135] text-lg no-underline tracking-[4px] transition-opacity"
+                style="font-family: 'Bebas Neue', sans-serif;"
+            >
+                YK.DEV
+            </a>
+
+            <div class="flex items-center gap-2">
+                {
+                    readTime && (
+                        <span class="font-mono text-[#333] text-[10px] tracking-[1px]">
+                            {readTime} min read
+                        </span>
+                    )
+                }
+            </div>
+        </header>
+
+        <main class="post-shell">
+            <div class="post-shell__inner">
+                <div class="post-shell__pad">
+            <!-- ── Post header ── -->
+            <div class="mb-12 pt-16 pb-10 border-[#1e1e1e] border-b">
+                <!-- Tag + featured badge -->
+                <div class="flex items-center gap-3 mb-6">
+                    <span
+                        class="px-2.5 py-1 border font-mono text-[9px] uppercase tracking-[1.5px]"
+                        style={`border-color: ${tagColor}; color: ${tagColor};`}
+                    >
+                        {tag}
+                    </span>
+                    {
+                        featured && (
+                            <span class="font-mono text-[#c8f135] text-[9px] uppercase tracking-[2px]">
+                                ★ Featured
+                            </span>
+                        )
+                    }
+                </div>
+
+                <!-- Title -->
+                <h1
+                    class="mb-6 text-[#f0ede6] text-[52px] leading-[1.0] tracking-tight"
+                    style="font-family: 'Bebas Neue', sans-serif;"
+                >
+                    {title}
+                </h1>
+
+                <!-- Excerpt -->
+                <p
+                    class="mb-8 max-w-[600px] text-[#555] text-[13px] leading-[1.9]"
+                >
+                    {excerpt}
+                </p>
+
+                <!-- Meta row -->
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div class="flex items-center gap-6">
+                        <span
+                            class="font-mono text-[#333] text-[10px] uppercase tracking-[1px]"
+                        >
+                            {displayDate}
+                        </span>
+                        {
+                            readTime && (
+                                <span class="font-mono text-[#333] text-[10px] tracking-[1px]">
+                                    {readTime} min read
+                                </span>
+                            )
+                        }
+                    </div>
+                    {
+                        github && (
+                            <a
+                                href={github}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="flex items-center gap-1.5 font-mono text-[#555] text-[10px] hover:text-[#c8f135] no-underline uppercase tracking-[1px] transition-colors duration-150"
+                            >
+                                View on GitHub ↗
+                            </a>
+                        )
+                    }
+                </div>
+            </div>
+
+            <!-- ── MDX content ── -->
+            <article class="blog-content">
+                <slot />
+            </article>
+
+            <!-- ── Post footer ── -->
+            <div
+                class="flex justify-between items-center mt-16 pt-8 border-[#1e1e1e] border-t"
+            >
+                <a
+                    href="/#blog"
+                    class="group flex items-center gap-2 text-[#555] text-[11px] hover:text-[#c8f135] no-underline uppercase tracking-[2px] transition-colors duration-150"
+                >
+                    <span
+                        class="transition-transform group-hover:-translate-x-0.5 duration-150"
+                        >←</span
+                    >
+                    All posts
+                </a>
+                <span class="font-mono text-[#333] text-[10px]">// YK.DEV</span>
+            </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Reading progress script -->
+        <script>
+            const bar = document.getElementById("reading-bar")!;
+            const article = document.querySelector(".blog-content")!;
+
+            const update = () => {
+                const { top, height } = article.getBoundingClientRect();
+                const scrolled = Math.max(0, -top);
+                const total = height - window.innerHeight;
+                const pct =
+                    total > 0 ? Math.min(100, (scrolled / total) * 100) : 0;
+                bar.style.width = `${pct}%`;
+            };
+
+            window.addEventListener("scroll", update, { passive: true });
+            update();
+        </script>
+    </body>
+</html>
+
+<!--
+  ── MDX prose styles ──────────────────────────────────────────────
+  Scoped to .blog-content so they don't leak into the rest of the page.
+-->
+<style is:global>
+    .post-shell {
+        width: 100%;
+        padding-bottom: 6rem;
+        display: flex;
+        justify-content: center;
+    }
+
+    .post-shell__inner {
+        width: min(780px, 100%);
+        border-left: 1px solid #1e1e1e;
+        border-right: 1px solid #1e1e1e;
+    }
+
+    .post-shell__pad {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    .blog-content {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 13px;
+        line-height: 1.9;
+        color: #888;
+    }
+
+    /* Headings */
+    .blog-content h2 {
+        font-family: "Bebas Neue", sans-serif;
+        font-size: 36px;
+        color: #f0ede6;
+        letter-spacing: 1px;
+        margin: 2.5rem 0 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #1e1e1e;
+    }
+    .blog-content h3 {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 14px;
+        font-weight: 700;
+        color: #f0ede6;
+        letter-spacing: 1px;
+        margin: 2rem 0 0.75rem;
+    }
+    .blog-content h4 {
+        font-size: 12px;
+        font-weight: 700;
+        color: #c8f135;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin: 1.5rem 0 0.5rem;
+    }
+
+    /* Paragraphs */
+    .blog-content p {
+        margin-bottom: 1.25rem;
+    }
+
+    /* Links */
+    .blog-content a {
+        color: #c8f135;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        transition: opacity 0.15s;
+    }
+    .blog-content a:hover {
+        opacity: 0.7;
+    }
+
+    /* Inline code */
+    .blog-content :not(pre) > code {
+        background: #111;
+        border: 1px solid #1e1e1e;
+        color: #c8f135;
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 2px;
+    }
+
+    /* Code blocks — Astro uses Shiki by default */
+    .blog-content pre {
+        background: #0d0d0d !important;
+        border: 1px solid #1e1e1e;
+        border-left: 3px solid #c8f135;
+        padding: 1.25rem 1.5rem;
+        overflow-x: auto;
+        font-size: 12px;
+        line-height: 1.8;
+        margin: 1.5rem 0;
+    }
+    .blog-content pre code {
+        background: none;
+        border: none;
+        padding: 0;
+        color: inherit;
+    }
+
+    /* Blockquote */
+    .blog-content blockquote {
+        border-left: 3px solid #c8f135;
+        padding: 0.75rem 1.25rem;
+        margin: 1.5rem 0;
+        background: rgba(200, 241, 53, 0.04);
+        color: #666;
+    }
+    .blog-content blockquote p {
+        margin-bottom: 0;
+    }
+
+    /* Lists */
+    .blog-content ul,
+    .blog-content ol {
+        padding-left: 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+    .blog-content li {
+        margin-bottom: 0.4rem;
+    }
+    .blog-content ul li::marker {
+        color: #c8f135;
+    }
+    .blog-content ol li::marker {
+        color: #c8f135;
+        font-size: 11px;
+    }
+
+    /* Strong / em */
+    .blog-content strong {
+        color: #f0ede6;
+        font-weight: 700;
+    }
+    .blog-content em {
+        color: #aaa;
+        font-style: italic;
+    }
+
+    /* Horizontal rule */
+    .blog-content hr {
+        border: none;
+        border-top: 1px solid #1e1e1e;
+        margin: 2.5rem 0;
+    }
+
+    /* Tables */
+    .blog-content table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        margin: 1.5rem 0;
+    }
+    .blog-content th {
+        text-align: left;
+        padding: 8px 12px;
+        border-bottom: 1px solid #333;
+        color: #c8f135;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .blog-content td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #1e1e1e;
+        color: #666;
+    }
+    .blog-content tr:hover td {
+        background: #0d0d0d;
+    }
+</style>
