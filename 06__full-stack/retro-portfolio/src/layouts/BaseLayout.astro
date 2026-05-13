@@ -1,0 +1,70 @@
+---
+// src/scripts/gsap-setup.ts
+import Footer from "../componnets/common/Footer";
+import RouterWrapper from "../componnets/common/RouterWrapper";
+import "../styles/global.css";
+interface Props {
+    title?: string;
+    description?: string;
+}
+
+const {
+    title = "YK.DEV — DevOps · MLOps · Full-Stack · React Native",
+    description = "DevOps & MLOps Engineer. Full-Stack Developer. React Native. Building systems that scale.",
+} = Astro.props;
+---
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content={description} />
+
+        <!-- Open Graph -->
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="YK.DEV" />
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;700&display=swap"
+            rel="stylesheet"
+        />
+
+        <title>{title}</title>
+    </head>
+
+    <body
+        class="bg-[#0a0a0a] overflow-x-hidden font-mono text-[#f0ede6] antialiased min-h-screen flex flex-col"
+    >
+        <!-- Noise texture overlay -->
+        <div
+            class="z-50 fixed inset-0 opacity-[0.03] pointer-events-none"
+            style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E'); background-size: 200px 200px;"
+            aria-hidden="true"
+        >
+        </div>
+
+        <!-- Page progress bar -->
+        <div
+            id="progress-bar"
+            class="top-0 left-0 z-[60] fixed bg-[#c8f135] w-0 h-[2px] transition-none"
+            aria-hidden="true"
+        >
+        </div>
+
+        <RouterWrapper client:load>
+            <main id="main-content" class="flex-1 flex flex-col">
+                <slot />
+            </main>
+
+            <Footer />
+        </RouterWrapper>
+    </body>
+</html>
