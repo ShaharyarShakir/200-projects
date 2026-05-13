@@ -3,14 +3,12 @@
 // Fetches all blog posts via Content Collections, passes serialisable
 // props to the BlogList React island.
 
-import { getCollection } from "astro:content";
 import BlogList from "../blog/BlogList";
 import type { BlogPost } from "../blog/BlogList";
+import { getAllBlogPosts } from "../../content/blogCollections";
 
 // ── Fetch + sort posts (exclude drafts in production) ─────────────
-const allPosts = await getCollection("blog", ({ data }) => {
-    return import.meta.env.DEV ? true : !data.draft;
-});
+const allPosts = await getAllBlogPosts(import.meta.env.DEV);
 
 // Sort: featured first, then by date descending
 const sorted = allPosts.sort((a, b) => {
@@ -21,6 +19,7 @@ const sorted = allPosts.sort((a, b) => {
 
 // ── Serialise to plain objects (no Date / complex types) ──────────
 const serializedPosts: BlogPost[] = sorted.map((post) => ({
+    collection: post.collection,
     slug: post.id,
     title: post.data.title,
     excerpt: post.data.excerpt,
@@ -44,6 +43,5 @@ const posts = serializedPosts.slice(0, 4);
 <BlogList
     posts={posts}
     totalPostCount={serializedPosts.length}
-    layout="grid"
     client:visible
 />
