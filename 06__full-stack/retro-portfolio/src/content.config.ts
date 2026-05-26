@@ -11,6 +11,7 @@ const blogSchema = z.object({
   draft: z.boolean().default(false),
   readTime: z.number().optional(),
   github: z.string().url().optional(),
+  projectUrl: z.string().url().optional(),
 });
 
 const devops = defineCollection({
