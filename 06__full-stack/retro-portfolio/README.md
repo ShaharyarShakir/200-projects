@@ -1,43 +1,104 @@
-# Astro Starter Kit: Minimal
+# retro-portfolio
+
+Personal portfolio site for **YK.DEV** — a retro terminal–inspired site covering DevOps, MLOps, full-stack, and mobile work. Built with Astro for content and routing, React for interactive UI, and Three.js for the hero scene.
+
+## Features
+
+- **Hero** — 3D particle background (`@react-three/fiber`), animated terminal, GSAP transitions
+- **About** — Dedicated `/about` page with bio, experience, and stats
+- **Blog** — MDX posts grouped by collection (`devops`, `fullstack`, `mobile`, `mlops`, `series`, plus a root `blog` collection)
+- **MDX components** — Custom `Callout` and `Step` blocks for long-form posts
+- **Styling** — Tailwind CSS v4 via the Vite plugin
+- **SPA-style navigation** — Client-side routing wrapper for smoother page transitions
+
+## Tech stack
+
+| Layer        | Tools |
+| ------------ | ----- |
+| Framework    | [Astro](https://astro.build) 6 |
+| UI           | [React](https://react.dev) 19 |
+| 3D           | [Three.js](https://threejs.org), `@react-three/fiber`, `@react-three/drei` |
+| Animation    | [GSAP](https://gsap.com), `@gsap/react` |
+| Content      | `@astrojs/mdx`, Astro Content Collections |
+| Styling      | [Tailwind CSS](https://tailwindcss.com) 4 |
+| Runtime      | [Bun](https://bun.sh) (recommended) |
+
+**Node.js** `>=22.12.0` is required (`package.json` `engines`).
+
+## Getting started
 
 ```sh
-bun create astro@latest -- --template minimal
+git clone https://github.com/ShaharyarShakir/retro-portfolio.git
+cd retro-portfolio
+bun install
+bun dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Open [http://localhost:4321](http://localhost:4321).
 
-## 🚀 Project Structure
+### Scripts
 
-Inside of your Astro project, you'll see the following folders and files:
+| Command        | Description                          |
+| -------------- | ------------------------------------ |
+| `bun dev`      | Start the dev server                 |
+| `bun build`    | Production build to `./dist/`        |
+| `bun preview`  | Preview the production build locally |
+| `bun astro …`  | Run Astro CLI commands               |
+
+## Project structure
 
 ```text
 /
-├── public/
+├── public/                 # Static assets (favicon, etc.)
 ├── src/
-│   └── pages/
-│       └── index.astro
+│   ├── components/         # React & Astro UI
+│   │   ├── about/
+│   │   ├── blog/
+│   │   ├── common/         # Nav, Footer, RouterWrapper
+│   │   ├── hero/           # HeroScene, Terminal, HeroText
+│   │   └── sections/       # Hero, AboutPreview, Blog, About
+│   ├── content/
+│   │   └── blog/           # MDX posts by topic folder
+│   ├── layouts/            # BaseLayout, BlogPostLayout
+│   ├── pages/
+│   │   ├── index.astro     # Home: Hero, About preview, Blog teaser
+│   │   ├── about/
+│   │   └── blog/           # Index + dynamic post routes
+│   ├── styles/
+│   │   └── global.css
+│   ├── utils/
+│   │   └── pillar-data.ts  # About “pillars” copy
+│   ├── content.config.ts   # Blog collection schemas
+│   └── content/blogCollections.ts
+├── astro.config.mjs
 └── package.json
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Blog content
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Posts live under `src/content/blog/` in topic folders (`devops`, `fullstack`, `mobile`, etc.). Each post uses frontmatter validated in `src/content.config.ts`:
 
-Any static assets, like images, can be placed in the `public/` directory.
+- `title`, `excerpt`, `date`, `tag`
+- Optional: `featured`, `draft`, `readTime`, `github`
 
-## 🧞 Commands
+Drafts are excluded from production builds when `draft: true`. Collections are aggregated in `src/content/blogCollections.ts`.
 
-All commands are run from the root of the project, from a terminal:
+Routes:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `bun install`             | Installs dependencies                            |
-| `bun dev`             | Starts local dev server at `localhost:4321`      |
-| `bun build`           | Build your production site to `./dist/`          |
-| `bun preview`         | Preview your build locally, before deploying     |
-| `bun astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `bun astro -- --help` | Get help using the Astro CLI                     |
+- `/blog` — listing with category filters
+- `/blog/[collection]/[slug]` — collection-scoped posts
+- `/blog/[...slug]` — catch-all for other blog paths
 
-## 👀 Want to learn more?
+## Configuration
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+- **Astro** — `astro.config.mjs` (React + MDX integrations, Tailwind Vite plugin)
+- **TypeScript** — `tsconfig.json`
+- **Content** — `src/content.config.ts`
+
+## Roadmap (in code)
+
+The home page still has commented placeholders for future sections (Stack, Projects, Contact). Nav links already point at `#stack`, `#projects`, and `#contact` for when those ship.
+
+## License
+
+[MIT](LICENSE) © 2026 Shaharyar Shakir
