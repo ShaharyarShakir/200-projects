@@ -13,6 +13,8 @@ import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 import appCss from '../globals.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
+import { ThemeProvider } from '#/components/providers/theme-provider'
+import Navbar from '#/components/common/nav'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -51,24 +53,33 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
   shellComponent: RootDocument,
 
-  component: RootComponent,
+  component: RootLayout,
 
   notFoundComponent: NotFound,
 })
 
-function RootComponent() {
-  return <Outlet />
-}
 
+function RootLayout() {
+  return (
+    <div className="min-h-svh">
+      <Navbar />
+      <Outlet />
+    </div>
+  )
+}
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
 
-      <body>
-        {children}
+      <body className='bg-background selection:bg-primary/20 font-sans text-foreground antialiased'>
+        <ThemeProvider defaultTheme="system" storageKey="theme">
+          {children}
+        </ThemeProvider>
+
+
 
         <TanStackDevtools
           config={{
