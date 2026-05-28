@@ -1,0 +1,47 @@
+---
+// src/components/sections/Blog.astro
+// Fetches all blog posts via Content Collections, passes serialisable
+// props to the BlogList React island.
+
+import BlogList from "../blog/BlogList";
+import type { BlogPost } from "../blog/BlogList";
+import { getAllBlogPosts } from "../../content/blogCollections";
+
+// ── Fetch + sort posts (exclude drafts in production) ─────────────
+const allPosts = await getAllBlogPosts(import.meta.env.DEV);
+
+// Sort: featured first, then by date descending
+const sorted = allPosts.sort((a, b) => {
+    if (a.data.featured && !b.data.featured) return -1;
+    if (!a.data.featured && b.data.featured) return 1;
+    return b.data.date.getTime() - a.data.date.getTime();
+});
+
+// ── Serialise to plain objects (no Date / complex types) ──────────
+const serializedPosts: BlogPost[] = sorted.map((post) => ({
+    collection: post.collection,
+    slug: post.id,
+    title: post.data.title,
+    excerpt: post.data.excerpt,
+    tag: post.data.tag,
+    featured: post.data.featured ?? false,
+    readTime: post.data.readTime,
+    // Format date for display: "MAY 2025"
+    date: post.data.date
+        .toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
+        })
+        .toUpperCase(),
+}));
+
+// Get only the latest 4 posts for home page
+const posts = serializedPosts.slice(0, 4);
+---
+
+<!-- client:visible — only hydrate when scrolled into view -->
+<BlogList
+    posts={posts}
+    totalPostCount={serializedPosts.length}
+    client:visible
+/>
