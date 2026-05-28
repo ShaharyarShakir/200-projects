@@ -10,7 +10,7 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const { title, excerpt, date, tag, readTime, github, featured } = post.data;
+const { title, excerpt, date, tag, readTime, featured } = post.data;
 
 // Format date for display
 const displayDate = date.toLocaleDateString("en-US", {
@@ -46,7 +46,7 @@ const tagColor = TAG_COLORS[tag] ?? "#c8f135";
         <title>{title} — YK.DEV</title>
     </head>
 
-    <body class="bg-[#0a0a0a] font-mono text-[#f0ede6] antialiased">
+    <body class="bg-[#0a0a0a] overflow-x-hidden font-mono text-[#f0ede6] antialiased">
         <!-- Reading progress bar -->
         <div
             id="reading-bar"
@@ -57,7 +57,7 @@ const tagColor = TAG_COLORS[tag] ?? "#c8f135";
 
         <!-- Top nav bar -->
         <header
-            class="top-0 z-40 sticky flex justify-between items-center bg-[#0a0a0a]/90 backdrop-blur-sm px-8 border-[#1e1e1e] border-b h-14"
+            class="top-0 z-40 sticky flex justify-between items-center bg-[#0a0a0a]/90 backdrop-blur-sm px-4 sm:px-6 md:px-8 border-[#1e1e1e] border-b h-14"
         >
             <a
                 href="/#blog"
@@ -113,7 +113,7 @@ const tagColor = TAG_COLORS[tag] ?? "#c8f135";
 
                 <!-- Title -->
                 <h1
-                    class="mb-6 text-[#f0ede6] text-[52px] leading-[1.0] tracking-tight"
+                    class="mb-6 text-[#f0ede6] text-[36px] sm:text-[44px] md:text-[52px] leading-[1.0] tracking-tight"
                     style="font-family: 'Bebas Neue', sans-serif;"
                 >
                     {title}
@@ -127,34 +127,22 @@ const tagColor = TAG_COLORS[tag] ?? "#c8f135";
                 </p>
 
                 <!-- Meta row -->
-                <div class="flex flex-wrap justify-between items-center gap-4">
-                    <div class="flex items-center gap-6">
-                        <span
-                            class="font-mono text-[#333] text-[10px] uppercase tracking-[1px]"
-                        >
-                            {displayDate}
-                        </span>
-                        {
-                            readTime && (
-                                <span class="font-mono text-[#333] text-[10px] tracking-[1px]">
-                                    {readTime} min read
-                                </span>
-                            )
-                        }
-                    </div>
+                <div class="flex flex-wrap items-center gap-4 sm:gap-6 mb-8">
+                    <span
+                        class="font-mono text-[#555] text-[11px] sm:text-[12px] uppercase tracking-[1px]"
+                    >
+                        {displayDate}
+                    </span>
                     {
-                        github && (
-                            <a
-                                href={github}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="flex items-center gap-1.5 font-mono text-[#555] text-[10px] hover:text-[#c8f135] no-underline uppercase tracking-[1px] transition-colors duration-150"
-                            >
-                                View on GitHub ↗
-                            </a>
+                        readTime && (
+                            <span class="font-mono text-[#555] text-[11px] sm:text-[12px] tracking-[1px]">
+                                {readTime} min read
+                            </span>
                         )
                     }
                 </div>
+
+
             </div>
 
             <!-- ── MDX content ── -->
@@ -162,9 +150,11 @@ const tagColor = TAG_COLORS[tag] ?? "#c8f135";
                 <slot />
             </article>
 
+
+
             <!-- ── Post footer ── -->
             <div
-                class="flex justify-between items-center mt-16 pt-8 border-[#1e1e1e] border-t"
+                class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mt-16 pt-8 border-[#1e1e1e] border-t"
             >
                 <a
                     href="/#blog"
@@ -225,6 +215,20 @@ const tagColor = TAG_COLORS[tag] ?? "#c8f135";
         padding-right: 1.5rem;
     }
 
+    @media (min-width: 640px) {
+        .post-shell__pad {
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .post-shell__pad {
+            padding-left: 2.5rem;
+            padding-right: 2.5rem;
+        }
+    }
+
     .blog-content {
         font-family: "IBM Plex Mono", monospace;
         font-size: 13px;
@@ -235,12 +239,18 @@ const tagColor = TAG_COLORS[tag] ?? "#c8f135";
     /* Headings */
     .blog-content h2 {
         font-family: "Bebas Neue", sans-serif;
-        font-size: 36px;
+        font-size: 28px;
         color: #f0ede6;
         letter-spacing: 1px;
         margin: 2.5rem 0 1rem;
         padding-bottom: 0.5rem;
         border-bottom: 1px solid #1e1e1e;
+    }
+
+    @media (min-width: 768px) {
+        .blog-content h2 {
+            font-size: 36px;
+        }
     }
     .blog-content h3 {
         font-family: "IBM Plex Mono", monospace;
