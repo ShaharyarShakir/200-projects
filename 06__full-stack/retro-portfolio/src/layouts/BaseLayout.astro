@@ -1,7 +1,7 @@
 ---
 // src/scripts/gsap-setup.ts
-import Footer from "../componnets/common/Footer";
-import RouterWrapper from "../componnets/common/RouterWrapper";
+import Footer from "../components/common/Footer";
+import RouterWrapper from "../components/common/RouterWrapper";
 import "../styles/global.css";
 interface Props {
     title?: string;
@@ -60,7 +60,7 @@ const {
         </div>
 
         <RouterWrapper client:load>
-            <main id="main-content" class="flex-1 flex flex-col">
+            <main id="main-content" class="flex-1 flex flex-col w-full min-w-0 max-w-full overflow-x-hidden">
                 <slot />
             </main>
 
