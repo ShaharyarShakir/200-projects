@@ -1,0 +1,28 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProjectDetailPage from "../../components/projects/ProjectDetailPage";
+import {
+    PROJECTS,
+    getProjectById,
+} from "../../components/projects/projectsData";
+
+export function getStaticPaths() {
+    return PROJECTS.map((project) => ({
+        params: { id: project.id },
+        props: { project },
+    }));
+}
+
+const id = Astro.params.id;
+const project = Astro.props.project ?? (id ? getProjectById(id) : undefined);
+
+if (!project) {
+    return Astro.redirect("/projects");
+}
+
+const pageDescription = `${project.name} — ${project.desc}`;
+---
+
+<BaseLayout title={`${project.name} — Projects — YK.DEV`} description={pageDescription}>
+    <ProjectDetailPage client:load project={project} />
+</BaseLayout>
