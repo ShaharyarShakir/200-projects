@@ -1,0 +1,11 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import StackSection from "../../components/stack/StackSection";
+
+const pageDescription =
+    "Explore YK.DEV's interactive tech stack — tools and technologies used in DevOps, MLOps, Full-Stack, Mobile, and Cloud development.";
+---
+
+<BaseLayout title="Tech Stack — YK.DEV" description={pageDescription}>
+    <StackSection client:load />
+</BaseLayout>
