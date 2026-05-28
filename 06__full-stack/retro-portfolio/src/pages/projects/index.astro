@@ -1,0 +1,11 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProjectsPage from "../../components/projects/ProjectsPage";
+
+const pageDescription =
+    "DevOps, MLOps, mobile and infrastructure projects — Kubernetes operators, ML pipelines, GitOps tooling and more.";
+---
+
+<BaseLayout title="Projects — YK.DEV" description={pageDescription}>
+    <ProjectsPage client:load />
+</BaseLayout>
