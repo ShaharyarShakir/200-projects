@@ -5,9 +5,9 @@ import gsap from 'gsap'
 // ── Nav links data ────────────────────────────────────────────────
 const NAV_LINKS = [
     { href: '/', label: 'Home', num: '00' },
-    { href: '/#stack', label: 'Stack', num: '01' },
+    { href: '/stack', label: 'Stack', num: '01' },
     { href: '/about', label: 'About', num: '02' },
-    { href: '/#projects', label: 'Projects', num: '03' },
+    { href: '/projects', label: 'Projects', num: '03' },
     { href: '/blog', label: 'Blog', num: '04' },
     { href: '/contact', label: 'Contact', num: '05' },
 ]
@@ -213,7 +213,7 @@ export default function Nav() {
                                 <li key={href}>
                                     <button
                                         onClick={() => {
-                                            if (href.startsWith('/blog') || href === '/about' || href === '/contact') {
+                                            if (href.startsWith('/blog') || href === '/about' || href === '/contact' || href === '/projects' || href === '/stack') {
                                                 window.location.href = href
                                             } else if (href.includes('#')) {
                                                 const [path, hash] = href.split('#')
@@ -324,7 +324,7 @@ export default function Nav() {
                                 <li key={href}>
                                     <button
                                         onClick={() => {
-                                            if (href.startsWith('/blog') || href === '/about' || href === '/contact') {
+                                            if (href.startsWith('/blog') || href === '/about' || href === '/contact' || href === '/projects' || href === '/stack') {
                                                 window.location.href = href
                                             } else if (href.includes('#')) {
                                                 const [path, hash] = href.split('#')
