@@ -1,0 +1,19 @@
+---
+// src/components/sections/Contact.astro
+import ContactHeader from '../contact/ContactHeader'
+import ContactLinks  from '../contact/ContactLinks'
+import ContactForm   from '../contact/ContactForm'
+---
+
+<section id="contact" class="border-b border-[#1e1e1e]">
+
+  <!-- Animated heading -->
+  <ContactHeader client:visible />
+
+  <!-- Two-column: links / form -->
+  <div class="grid grid-cols-1 md:grid-cols-2">
+    <ContactLinks client:visible />
+    <ContactForm  client:visible />
+  </div>
+
+</section>
