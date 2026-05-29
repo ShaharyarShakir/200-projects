@@ -62,13 +62,13 @@ export default function StackContent({ section }: StackContentProps) {
 
             {/* ── Header ── */}
             <div
-                className="px-12 py-10 border-b border-[#1e1e1e]"
+                className="px-4 sm:px-8 md:px-12 py-6 sm:py-8 md:py-10 border-b border-l-[3px] border-[#1e1e1e]"
                 style={{ borderLeftColor: section.color }}
             >
                 {/* Headline split into lines for stagger */}
                 <h3
                     ref={headlineRef}
-                    className="text-[56px] leading-[0.95] tracking-tight text-[#f0ede6] mb-4 overflow-hidden"
+                    className="text-[36px] sm:text-[48px] md:text-[56px] leading-[0.95] tracking-tight text-[#f0ede6] mb-4 overflow-hidden"
                     style={{ fontFamily: "'Bebas Neue', sans-serif" }}
                 >
                     {section.headline.split('\n').map((line, i) => (
@@ -111,7 +111,7 @@ export default function StackContent({ section }: StackContentProps) {
             </div>
 
             {/* ── Tech list ── */}
-            <div ref={listRef} className="flex-1 overflow-y-auto px-12 py-6">
+            <div ref={listRef} className="flex-1 overflow-y-auto px-4 sm:px-8 md:px-12 py-4 sm:py-6">
                 {section.items.map((item) => (
                     <StackTechItem
                         key={item.name}
