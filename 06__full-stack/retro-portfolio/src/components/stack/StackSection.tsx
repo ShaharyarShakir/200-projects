@@ -61,14 +61,14 @@ export default function StackSection() {
             {/* ── Section header ── */}
             <div
                 ref={headerRef}
-                className="flex items-end justify-between px-12 pt-16 pb-10 border-b border-[#1e1e1e]"
+                className="flex flex-col md:flex-row md:items-end justify-between px-4 sm:px-8 md:px-12 pt-10 sm:pt-14 md:pt-16 pb-6 sm:pb-8 md:pb-10 border-b border-[#1e1e1e] gap-6"
             >
                 <div>
                     <p className="text-[10px] tracking-[3px] text-[#333] uppercase font-mono mb-3">
                         <span className="text-[#c8f135]">02</span> — Tooling
                     </p>
                     <h2
-                        className="text-[64px] leading-none text-[#f0ede6] tracking-tight"
+                        className="text-[44px] sm:text-[56px] md:text-[64px] leading-none text-[#f0ede6] tracking-tight"
                         style={{ fontFamily: "'Bebas Neue', sans-serif" }}
                     >
                         Tech Stack
@@ -76,7 +76,7 @@ export default function StackSection() {
                 </div>
 
                 {/* Legend */}
-                <div className="flex items-center gap-5 pb-2">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 md:gap-5 pb-2">
                     {[
                         { label: 'Expert', color: '#c8f135' },
                         { label: 'Advanced', color: '#3ddc84' },
@@ -99,7 +99,7 @@ export default function StackSection() {
             {/* ── Body: sidebar + content ── */}
             <div
                 ref={bodyRef}
-                className="flex"
+                className="flex flex-col lg:flex-row"
                 style={{ minHeight: '560px' }}
             >
                 <StackSidebar active={active} onChange={setActive} />
