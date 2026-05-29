@@ -44,7 +44,7 @@ export default function StackTechItem({ item, color, animate }: StackTechItemPro
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
-            <div className="flex items-start justify-between gap-4 mb-2">
+            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 sm:gap-4 mb-2">
                 {/* Left: name + role */}
                 <div className="flex items-baseline gap-3 min-w-0">
                     <span
@@ -59,7 +59,7 @@ export default function StackTechItem({ item, color, animate }: StackTechItemPro
                 </div>
 
                 {/* Right: proficiency badge + since */}
-                <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="flex items-center gap-3 self-start sm:self-auto flex-shrink-0">
                     <span
                         className="text-[9px] font-mono uppercase tracking-[1.5px] px-2 py-0.5 border"
                         style={{ borderColor: profColor, color: profColor }}
