@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	%sveltekit.head%
+	<script src="../node_modules/particles.js/particles.js"></script>
+</head>
+
+<body class="relative min-h-screen text-white">
+
+	<!-- 1. Background base color -->
+	<div class="fixed inset-0 -z-40 bg-slate-900"></div>
+
+	<!-- 2. Particles.js background -->
+	<div id="particles-js" class="fixed inset-0 -z-30"></div>
+
+	<!-- 3. Gradient overlay -->
+	<div class="background-gradient absolute inset-0 -z-40 max-h-screen"></div>
+
+	<!-- 4. Noise texture overlay -->
+	<div
+		class="pointer-events-none absolute inset-0 -z-40 bg-[url('/noisetexture.jpg')] opacity-20 mix-blend-soft-light ">
+	</div>
+
+	<!-- 5. SvelteKit Pages -->
+	<div style="display: contents">
+		%sveltekit.body%
+	</div>
+
+	<!-- 6. Initialize Particles.js -->
+	<script defer>
+		window.addEventListener("load", () => {
+			particlesJS.load("particles-js", "/assets/particles.json", function () {
+				console.log("Particles.js config loaded");
+			});
+		});
+	</script>
+
+</body>
+
+</html>
