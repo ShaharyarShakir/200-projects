@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+body {
+    font-family: 'Urbanist Variable', sans-serif;
+}
+
+.background-gradient {
+    background: radial-gradient(circle at top,
+            hsla(222, 59%, 49%, 0.5) 0%,
+            hsla(222, 0%, 0%, 0%) 50%,
+            hsla(222, 0%, 0%, 0%) 100%);
+}
