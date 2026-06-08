@@ -16,6 +16,7 @@ from app.schemas.chat import (
     MessagePart,
     TextPart,
     UIMessage,
+    StatusPart,
 )
 
 DEFAULT_THREAD_TITLE = "New chat"
@@ -60,6 +61,8 @@ def _parse_part(raw: dict[str, Any]) -> MessagePart:
         return TextPart.model_validate(raw)
     if part_type == "data-citation":
         return CitationPart.model_validate(raw)
+    if part_type == "data-status":
+        return StatusPart.model_validate(raw)
     raise ValueError(f"Unsupported message part type: {part_type!r}")
 
 
