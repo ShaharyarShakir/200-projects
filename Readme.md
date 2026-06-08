@@ -65,7 +65,7 @@ Full-stack applications combining frontend and backend technologies.
 | Project | URL |
 |---------|-----|
 | Gym AI Planner | [gym_ai](https://gym-ai-planner-ten.vercel.app) |
-| retro portfolio | [potfiolio](https://pot.com) |
+| retro portfolio | [portfolio](https://shakir-retro-portfolio.netlify.app/) |
 
 ## 🚀 Getting Started
 
