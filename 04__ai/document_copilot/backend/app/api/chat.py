@@ -22,7 +22,7 @@ from app.database.chats import (
 from app.database.documents import get_chunk_context
 from app.database.models import DocumentChunk
 from app.database.session import get_session
-from app.database.supabase import create_user_client
+from app.database.supabase import create_user_client, get_service_role_client
 from app.database.users import ensure_user
 from app.retrieval.retriever import DocumentRetriever
 from app.schemas.chat import (
@@ -125,7 +125,7 @@ async def post_thread(
     access_token: str = Depends(get_access_token),
 ) -> ThreadResponse:
     await ensure_user(user)
-    client = await create_user_client(access_token)
+    client = await get_service_role_client()
     return await create_thread(client, user, title=body.title)
 
 
@@ -176,7 +176,7 @@ async def post_stream(
     await ensure_user(user)
     thread = await require_thread_access(body.thread_id, user)
     user_message = extract_last_user_message(body.messages)
-    client = await create_user_client(access_token)
+    client = await get_service_role_client()
 
     retriever = DocumentRetriever()
     return StreamingResponse(
