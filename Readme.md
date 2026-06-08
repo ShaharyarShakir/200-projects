@@ -60,6 +60,13 @@ Full-stack applications combining frontend and backend technologies.
 - Student API
 - Todo App
 
+## 🔗 Live Links
+
+| Project | URL |
+|---------|-----|
+| Gym AI Planner | [gym_ai](https://gym-ai-planner-ten.vercel.app) |
+| retro portfolio | [potfiolio](https://pot.com) |
+
 ## 🚀 Getting Started
 
 Each project is self-contained with its own setup instructions. Navigate to the specific project directory to find detailed documentation.
