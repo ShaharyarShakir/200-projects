@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,27 +18,28 @@ class Settings(BaseSettings):
     supabase_service_role_key: str
     database_url: str
 
-    openai_api_key: str
-    openai_embedding_model: str = "text-embedding-3-small"
-    openai_embedding_dimensions: int = 1536
-    openai_chat_model: str = "gpt-5.5"
-    openai_grounding_model: str = "gpt-4.1-mini"
-    openai_agent_request_limit: int = 20
-    openai_agent_temperature: float = 0.0
+    openai_api_key: str | None = None
+
+    google_api_key: str
+    google_chat_model: str = "gemini-2.5-pro"
+    google_grounding_model: str = "gemini-2.5-flash"
+    google_embedding_model: str = "gemini-embedding-001"
+    google_embedding_dimensions: int = 1536
+    google_fts_keyword_model: str = "gemini-2.5-flash"
+    google_agent_request_limit: int = 20
+    google_agent_temperature: float = 0.0
 
     retrieval_candidate_k: int = 50
     retrieval_top_k: int = 10
     retrieval_rrf_k: int = 60
     retrieval_neighbor_radius: int = 1
     retrieval_fts_config: str = "english"
-    retrieval_fts_keyword_model: str = "gpt-4.1-mini"
     retrieval_fts_keyword_min: int = 3
     retrieval_fts_keyword_max: int = 5
     retrieval_fts_keyword_fast_path_tokens: int = 5
 
     # Comma-separated in .env; use `cors_origins` for the parsed list.
     allowed_origins: str = "http://localhost:5173"
-
 
     @computed_field
     @property
