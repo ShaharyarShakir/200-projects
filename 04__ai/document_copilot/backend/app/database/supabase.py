@@ -8,16 +8,8 @@ from app.config import settings
 _service_role_client: AsyncClient | None = None
 
 
-def _server_client_options(
-    *,
-    access_token: str | None = None,
-) -> AsyncClientOptions:
-    headers: dict[str, str] = {}
-    if access_token is not None:
-        headers["Authorization"] = f"Bearer {access_token}"
-
+def _server_client_options() -> AsyncClientOptions:
     return AsyncClientOptions(
-        headers=headers,
         auto_refresh_token=False,
         persist_session=False,
     )
@@ -46,10 +38,11 @@ async def get_service_role_client() -> AsyncClient:
 
 async def create_user_client(access_token: str) -> AsyncClient:
     """Return a request-scoped client that enforces RLS for the authenticated user."""
-    return await acreate_client(
+    token = _normalize_access_token(access_token)
+    client = await acreate_client(
         settings.supabase_url,
         settings.supabase_anon_key,
-        options=_server_client_options(
-            access_token=_normalize_access_token(access_token),
-        ),
+        options=_server_client_options(),
     )
+    client.postgrest.auth(token)
+    return client
