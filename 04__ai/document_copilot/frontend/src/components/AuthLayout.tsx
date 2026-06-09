@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react'
 
-import { Logo } from './Logo'
+import { Logo } from '@/components/Logo'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from './ui/card'
+} from '@/components/ui/card'
 
 type AuthLayoutProps = {
   title: string
