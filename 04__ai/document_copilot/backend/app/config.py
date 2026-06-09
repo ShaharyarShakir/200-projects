@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     retrieval_fts_keyword_fast_path_tokens: int = 5
 
     # Comma-separated in .env; use `cors_origins` for the parsed list.
-    allowed_origins: str = "http://localhost:5173"
+    allowed_origins: str = "https://frontend.shaharyarshakir.workers.dev"
 
     @computed_field
     @property
