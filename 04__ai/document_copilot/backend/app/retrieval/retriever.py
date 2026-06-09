@@ -9,7 +9,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.config import settings
+from pathlib import Path
 from app.database.documents import get_chunks_by_ids, get_surrounding_chunks
 from app.database.session import get_session
 from app.retrieval.embeddings import embed_query
@@ -18,6 +18,7 @@ from app.retrieval.keywords import extract_fts_keywords
 from app.retrieval.queries import full_text_search, semantic_search
 from app.retrieval.types import RankedChunkHit, RetrievedPassage, SearchFilters
 
+from app.config import settings
 from app.database.models import DocumentChunk, SourceDocument
 
 
@@ -72,61 +73,37 @@ class DocumentRetriever:
             query_vec = embed_future.result()
             fts_query = kw_future.result()
 
-        # #region agent log
-        try:
+        # #region agent log (removed - commented out for now to avoid variable issues
+        # try:
             semantic_hits, fts_hits = _dual_search(
                 query_vec,
                 fts_query,
                 candidate_k=candidate_k,
                 filters=filters,
             )
-        except Exception as exc:
-            with open(
-                "/home/shaharyar/01__git_repos/200-projects/04__ai/document_copilot/.cursor/debug-7afef9.log",
-                "a",
-                encoding="utf-8",
-            ) as _log:
-                _log.write(
-                    json.dumps(
-                        {
-                            "sessionId": "7afef9",
-                            "hypothesisId": "B",
-                            "location": "retriever.py:_search_with_session",
-                            "message": "dual_search failed",
-                            "data": {
-                                "query_vec_dims": len(query_vec),
-                                "fts_query": fts_query[:200],
-                                "error_type": type(exc).__name__,
-                                "error": str(exc)[:500],
-                            },
-                            "timestamp": int(time.time() * 1000),
-                        }
-                    )
-                    + "\n"
-                )
-            raise
-        with open(
-            "/home/shaharyar/01__git_repos/200-projects/04__ai/document_copilot/.cursor/debug-7afef9.log",
-            "a",
-            encoding="utf-8",
-        ) as _log:
-            _log.write(
-                json.dumps(
-                    {
-                        "sessionId": "7afef9",
-                        "hypothesisId": "B",
-                        "location": "retriever.py:_search_with_session",
-                        "message": "dual_search succeeded",
-                        "data": {
-                            "query_vec_dims": len(query_vec),
-                            "semantic_hits": len(semantic_hits),
-                            "fts_hits": len(fts_hits),
-                        },
-                        "timestamp": int(time.time() * 1000),
-                    }
-                )
-                + "\n"
-            )
+        # except Exception as exc:
+        #     log_path = Path("/home/shaharyar/01__git_repos/200-projects/04__ai/document_copilot/.cursor/debug-7afef9.log")
+        #     log_path.parent.mkdir(parents=True, exist_ok=True)
+        #     with open(log_path, "a", encoding="utf-8") as _log:
+        #         _log.write(
+        #             json.dumps(
+        #                 {
+        #                     "sessionId": "7afef9",
+        #                     "hypothesisId": "B",
+        #                     "location": "retriever.py:_search_with_session",
+        #                     "message": "dual_search failed",
+        #                     "data": {
+        #                         "query_vec_dims": len(query_vec),
+        #                         "fts_query": fts_query[:200],
+        #                         "error_type": type(exc).__name__,
+        #                         "error": str(exc)[:500],
+        #                     },
+        #                     "timestamp": int(time.time() * 1000),
+        #                 }
+        #             )
+        #             + "\n"
+        #         )
+        #     raise
         # #endregion
 
         semantic_ids = [hit.chunk_id for hit in semantic_hits]
