@@ -63,6 +63,7 @@ Full-stack applications combining frontend and backend technologies.
 - Student API
 - Shop Stack
 - Todo App
+- Document Copilot
 
 ## 🔗 Live Links
 
@@ -70,6 +71,7 @@ Full-stack applications combining frontend and backend technologies.
 |---------|-----|
 | Gym AI Planner | [gym_ai](https://gym-ai-planner-ten.vercel.app) |
 | retro portfolio | [portfolio](https://shakir-retro-portfolio.netlify.app/) |
+| Document Copilot | [document_copilot](https://frontend.shaharyarshakir.workers.dev/login) |
 
 ## 🚀 Getting Started
 
