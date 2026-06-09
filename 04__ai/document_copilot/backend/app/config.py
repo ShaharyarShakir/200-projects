@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     google_chat_model: str = "gemini-2.5-pro"
     google_grounding_model: str = "gemini-2.5-flash"
     google_embedding_model: str = "gemini-embedding-001"
-    google_embedding_dimensions: int = 1536
+    google_embedding_dimensions: int = 3072
     google_fts_keyword_model: str = "gemini-2.5-flash"
     google_agent_request_limit: int = 20
     google_agent_temperature: float = 0.0
