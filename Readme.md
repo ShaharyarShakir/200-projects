@@ -36,10 +36,12 @@ Microservices architecture projects.
 ### 04__ai
 Artificial Intelligence and machine learning projects.
 - FaceMesh (facial landmark detection)
+- Document Copilot (AI assistant)
 
 ### 05__backend
 Backend-focused projects.
 - FastAPI Blog
+- Student API
 
 ### 06__full-stack
 Full-stack applications combining frontend and backend technologies.
@@ -47,6 +49,7 @@ Full-stack applications combining frontend and backend technologies.
 - Cloudflare Waitlist
 - Docker Express React App
 - Event Planner
+- Build Your Own Adventure
 - Gossip
 - Gym AI Planner
 - Interview AI
@@ -58,6 +61,7 @@ Full-stack applications combining frontend and backend technologies.
 - Shakir Portfolio
 - Smorte Blog
 - Student API
+- Shop Stack
 - Todo App
 
 ## 🔗 Live Links
@@ -92,4 +96,4 @@ This repository contains personal projects for learning and demonstration purpos
 
 ---
 
-*Total Projects: 36+ across 6 categories*
+*Total Projects: 41 across 6 categories*
