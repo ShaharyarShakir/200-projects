@@ -5,7 +5,9 @@ A comprehensive collection of projects spanning multiple technologies and domain
 ## 📁 Project Structure
 
 ### 01_Vanilla-JS
+
 Pure JavaScript projects focusing on fundamental concepts and DOM manipulation.
+
 - Slot Machine
 - Accordion
 - Amazon Clone
@@ -22,55 +24,65 @@ Pure JavaScript projects focusing on fundamental concepts and DOM manipulation.
 - Keyboard Event Tracker
 - Pokemon Card
 
-### 02__tailwindcss
+### 02\_\_tailwindcss
+
 Projects demonstrating Tailwind CSS utility-first styling.
+
 - Beginner Tailwind CSS
 - Twitter Clone (Tailwind CSS)
 
-### 03__microservices
+### 03\_\_microservices
+
 Microservices architecture projects.
+
 - Social Media Platform
 - Pet Marketplace
 - School Management System
 
-### 04__ai
+### 04\_\_ai
+
 Artificial Intelligence and machine learning projects.
+
 - FaceMesh (facial landmark detection)
 - Document Copilot (AI assistant)
 
-### 05__backend
+### 05\_\_backend
+
 Backend-focused projects.
+
 - FastAPI Blog
 - Student API
 
-### 06__full-stack
+### 06\_\_full-stack
+
 Full-stack applications combining frontend and backend technologies.
-- Magic Movie Streaming Server
-- Cloudflare Waitlist
+
+- Magic Movie Streaming Server (In Progress )
+- Cloudflare Waitlist (In Progress)
 - Docker Express React App
 - Event Planner
-- Build Your Own Adventure
+- Build Your Own Adventure (In Progress)
 - Gossip
 - Gym AI Planner
-- Interview AI
-- Remote Blog
+- Interview AI (In Progress)
+- Remote Blog (In Progress)
 - Retro Portfolio
-- Sainzamore
-- Samma
-- Seddit
+- Sainzamore (In Progress)
+- Samma (In Progress)
+- Seddit (In Progress)
 - Shakir Portfolio
 - Smorte Blog
-- Student API
-- Shop Stack
+- Student API (In Progress)
+- Shop Stack (In Progress)
 - Todo App
 - Document Copilot
 
 ## 🔗 Live Links
 
-| Project | URL |
-|---------|-----|
-| Gym AI Planner | [gym_ai](https://gym-ai-planner-ten.vercel.app) |
-| retro portfolio | [portfolio](https://shakir-retro-portfolio.netlify.app/) |
+| Project          | URL                                                                    |
+| ---------------- | ---------------------------------------------------------------------- |
+| Gym AI Planner   | [gym_ai](https://gym-ai-planner-ten.vercel.app)                        |
+| retro portfolio  | [portfolio](https://shakir-retro-portfolio.netlify.app/)               |
 | Document Copilot | [document_copilot](https://frontend.shaharyarshakir.workers.dev/login) |
 
 ## 🚀 Getting Started
@@ -88,6 +100,7 @@ Each project is self-contained with its own setup instructions. Navigate to the 
 ## 📝 Development Environment
 
 This repository uses:
+
 - **Devbox** for development environment management
 - **Mise** for tool configuration
 - **Dev Containers** for consistent development environments
@@ -98,4 +111,4 @@ This repository contains personal projects for learning and demonstration purpos
 
 ---
 
-*Total Projects: 41 across 6 categories*
+_Total Projects: 41 across 6 categories_
