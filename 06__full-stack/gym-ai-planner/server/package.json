@@ -4,21 +4,23 @@
   "type": "module",
   "module": "index.ts",
   "scripts": {
-    "dev:client": "bun --watch --cwd . src/index.ts",
+    "dev:client": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt check"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "@prisma/adapter-neon": "^7.8.0",
-    "@prisma/adapter-pg": "^7.4.0",
-    "@prisma/client": "^7.4.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "openai": "^6.22.0",
-    "pg": "^8.18.0"
+    "pg": "^8.21.0",
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -27,7 +29,8 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.2.3",
     "@types/pg": "^8.16.0",
-    "prisma": "^7.4.0"
+    "@types/ws": "^8.18.1",
+    "prisma": "^7.8.0"
   },
   "peerDependencies": {
     "typescript": "^5"
