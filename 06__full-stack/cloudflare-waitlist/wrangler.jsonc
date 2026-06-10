@@ -1,0 +1,39 @@
+{
+	"name": "cloudflare-waitlist",
+	"main": "src/server/index.ts",
+	"compatibility_date": "2026-04-21",
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSSETS"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "dojo_local_db",
+			"database_id": "7de0",
+			"migrations_dir": "./src/server/db/migrations"
+		}
+	],
+	"env": {
+		"stagging": {
+			"vars": {
+				"ENVIRONMENT": "stagging",
+				"CF_ACCESS_DOMAIN": "https://shaharyarshakir.cloudflareaccess.com",
+				"POLICY_AUD": "aa35359bbcce70ce22d2dd7a46276b135fb110c065cbf96e1c881b9fcc604562"
+			},
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "dojo_stagging_db",
+					"database_id": "fcb0b922-b512-4af5-859b-6e6950be7de0",
+					"migrations_dir": "./src/server/db/migrations"
+				}
+			]
+		},
+		"production": {
+			"vars": {
+				"ENVIRONMENT": "production"
+			}
+		}
+	}
+}
