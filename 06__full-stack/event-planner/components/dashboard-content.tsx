@@ -34,7 +34,7 @@ export default async function DashboardContent({ userId }: { userId: string | un
   const events = rows.map((e) => ({
     id: e.id,
     title: e.title,
-    eventDate: e.eventDate ? e.eventDate.toLocaleDateString() : null,
+    eventDate: e.eventDate,
     location: e.location,
     ...countByStatus(e.rsvps),
   }));
@@ -63,7 +63,7 @@ export default async function DashboardContent({ userId }: { userId: string | un
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-4 mid:grid-cols-2 gap-4 ">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
           {events.map((event) => (
             <Card key={event.id}>
               <CardHeader className="space-y-3">
