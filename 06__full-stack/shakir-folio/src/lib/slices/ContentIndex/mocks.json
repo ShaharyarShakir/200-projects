@@ -1,0 +1,58 @@
+[
+	{
+		"__TYPE__": "SharedSliceContent",
+		"variation": "default",
+		"primary": {
+			"heading": {
+				"__TYPE__": "FieldContent",
+				"value": "poetry",
+				"type": "Text"
+			},
+			"description": {
+				"__TYPE__": "StructuredTextContent",
+				"value": [
+					{
+						"type": "paragraph",
+						"content": {
+							"text": "Aliquip mollit quis pariatur consectetur incididunt anim amet excepteur anim eiusmod."
+						}
+					}
+				]
+			},
+			"read_view_more": {
+				"__TYPE__": "FieldContent",
+				"value": "interior",
+				"type": "Text"
+			},
+			"fallback_item_image": {
+				"origin": {
+					"id": "main",
+					"url": "https://images.unsplash.com/photo-1587905069134-008460d7a636",
+					"width": 3935,
+					"height": 5894
+				},
+				"url": "https://images.unsplash.com/photo-1587905069134-008460d7a636",
+				"width": 3935,
+				"height": 5894,
+				"edit": {
+					"zoom": 1,
+					"crop": {
+						"x": 0,
+						"y": 0
+					},
+					"background": "transparent"
+				},
+				"alt": "swing",
+				"credits": null,
+				"__TYPE__": "ImageContent",
+				"thumbnails": {}
+			},
+			"content_type": {
+				"__TYPE__": "FieldContent",
+				"value": "Project",
+				"type": "Select"
+			}
+		},
+		"items": []
+	}
+]
