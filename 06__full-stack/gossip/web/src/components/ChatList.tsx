@@ -1,4 +1,3 @@
-import React from 'react'
 import { useSearchParams } from 'react-router'
 import { useChats } from '../hooks/useChats';
 import NoConversationsUI from './ui/NoConversationUI';
