@@ -38,7 +38,7 @@ export async function generateTrainingPlan(
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "nvidia/llama-nemotron-embed-vl-1b-v2:free",
+      model: "google/gemma-4-26b-a4b-it:free",
       messages: [
         {
           role: "system",
@@ -63,6 +63,8 @@ export async function generateTrainingPlan(
       );
       throw new Error("No content in AI response");
     }
+
+    console.log("[AI] Raw response content:", content);
 
     const planData = JSON.parse(content);
 
