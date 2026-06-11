@@ -52,6 +52,7 @@ Backend-focused projects.
 
 - FastAPI Blog
 - Student API
+- Video Streaming App
 
 ### 06\_\_full-stack
 
@@ -82,8 +83,9 @@ Full-stack applications combining frontend and backend technologies.
 | Project          | URL                                                                    |
 | ---------------- | ---------------------------------------------------------------------- |
 | Gym AI Planner   | [gym_ai](https://gym-ai-planner-ten.vercel.app)                        |
-| retro portfolio  | [portfolio](https://shakir-retro-portfolio.netlify.app/)               |
+| Retro Portfolio  | [portfolio](https://shakir-retro-portfolio.netlify.app/)               |
 | Document Copilot | [document_copilot](https://frontend.shaharyarshakir.workers.dev/login) |
+| Gossip           | [gossip](https://gossip.shaharyarshakir.workers.dev)                   |
 
 ## 🚀 Getting Started
 
