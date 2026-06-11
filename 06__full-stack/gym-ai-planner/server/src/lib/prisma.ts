@@ -1,11 +1,19 @@
-import { Pool, neonConfig } from "@neondatabase/serverless"
-import { PrismaNeon } from "@prisma/adapter-neon"
-import { PrismaClient } from "../generated/prisma/client"
-import ws from "ws"
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../generated/prisma/client";
 
-neonConfig.webSocketConstructor = ws
+function createPrismaClient() {
+  const databaseUrl = process.env.DATABASE_URL;
+  console.log("NODE_ENV:", process.env.NODE_ENV);
+  console.log("DATABASE_URL exists:", !!databaseUrl);
+  
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is missing. Please check your environment variables.");
+  }
+  
+  const pool = new Pool({ connectionString: databaseUrl });
+  const adapter = new PrismaPg(pool);
+  return new PrismaClient({ adapter });
+}
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-const adapter = new PrismaNeon(pool)
-
-export const prisma = new PrismaClient({ adapter })
+export const prisma = createPrismaClient();
