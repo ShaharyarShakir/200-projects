@@ -1,0 +1,46 @@
+[
+    {
+        "parts": [
+            {
+                "type": "text",
+                "text": "can you give the list of all the products"
+            }
+        ],
+        "id": "a5x1xiMeG2maOIAA",
+        "role": "user"
+    },
+    {
+        "id": "Y4h2CsVLfDj65Z3e",
+        "role": "assistant",
+        "parts": [
+            {
+                "type": "step-start"
+            },
+            {
+                "type": "tool-schema",
+                "toolCallId": "6xb4XePEz",
+                "state": "output-available",
+                "input": {},
+                "output": "CREATE TABLE products (\n\tid integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\tname text NOT NULL,\n\tcategory text NOT NULL,\n\tprice real NOT NULL,\n\tstock integer DEFAULT 0 NOT NULL,\n\tcreated_at text DEFAULT CURRENT_TIMESTAMP\n)\n\nCREATE TABLE sales (\n\tid integer PRIMARY KEY AUTOINCREMENT NOT NULL,\n\tproduct_id integer NOT NULL,\n\tquantity integer NOT NULL,\n\ttotal_amount real NOT NULL,\n\tsale_date text DEFAULT CURRENT_TIMESTAMP,\n\tcustomer_name text NOT NULL,\n\tregion text NOT NULL,\n\tFOREIGN KEY (product_id) REFERENCES products(id) ON UPDATE no action ON DELETE no action\n)"
+            },
+            {
+                "type": "step-start"
+            },
+            {
+                "type": "text",
+                "text": "Here's the SQL query to get the list of all products:\n\n```sql\nSELECT id, name, category, price, stock, created_at\nFROM products;\n```\n\nWould you like me to execute this query and fetch the results for you?",
+                "state": "done"
+            }
+        ]
+    },
+    {
+        "parts": [
+            {
+                "type": "text",
+                "text": "yes"
+            }
+        ],
+        "id": "5lUWVTRbJkFeIyOo",
+        "role": "user"
+    }
+]
