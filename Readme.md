@@ -53,6 +53,7 @@ Backend-focused projects.
 - FastAPI Blog
 - Student API
 - Video Streaming App
+- Url Shortner
 
 ### 06\_\_full-stack
 
