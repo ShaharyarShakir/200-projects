@@ -77,6 +77,7 @@ Full-stack applications combining frontend and backend technologies.
 - Shop Stack (In Progress)
 - Todo App
 - Document Copilot
+- Sql Agent
 
 ## 🔗 Live Links
 
@@ -86,6 +87,7 @@ Full-stack applications combining frontend and backend technologies.
 | Retro Portfolio  | [portfolio](https://shakir-retro-portfolio.netlify.app/)               |
 | Document Copilot | [document_copilot](https://frontend.shaharyarshakir.workers.dev/login) |
 | Gossip           | [gossip](https://gossip.shaharyarshakir.workers.dev)                   |
+| Sql Agent        | [sql_agent](https://sql-agent-orpin.vercel.app/)                       |
 
 ## 🚀 Getting Started
 
