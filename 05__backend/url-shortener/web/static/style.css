@@ -1,0 +1,22 @@
+body {
+    max-width: 700px;
+    margin: auto;
+    padding: 2rem;
+    font-family: sans-serif;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+}
+
+button {
+    margin-top: 10px;
+    padding: 10px;
+}
+
+.card {
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    padding: 20px;
+}
