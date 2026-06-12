@@ -43,8 +43,12 @@ Microservices architecture projects.
 
 Artificial Intelligence and machine learning projects.
 
+- Sql Agent
+- Interview AI (In Progress)
+- Gym AI Planner
 - FaceMesh (facial landmark detection)
 - Document Copilot (AI assistant)
+- Build Your Own Adventure (In Progress)
 
 ### 05\_\_backend
 
@@ -63,10 +67,7 @@ Full-stack applications combining frontend and backend technologies.
 - Cloudflare Waitlist (In Progress)
 - Docker Express React App
 - Event Planner
-- Build Your Own Adventure (In Progress)
 - Gossip
-- Gym AI Planner
-- Interview AI (In Progress)
 - Remote Blog (In Progress)
 - Retro Portfolio
 - Sainzamore (In Progress)
@@ -78,7 +79,6 @@ Full-stack applications combining frontend and backend technologies.
 - Shop Stack (In Progress)
 - Todo App
 - Document Copilot
-- Sql Agent
 
 ## 🔗 Live Links
 
