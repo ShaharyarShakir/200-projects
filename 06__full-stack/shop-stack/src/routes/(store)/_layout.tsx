@@ -1,15 +1,15 @@
-import Header from '#/components/base/common/header'
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import Header from "#/components/base/common/header";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-export const Route = createFileRoute('/(store)/_layout')({
+export const Route = createFileRoute("/(store)/_layout")({
   component: RouteComponent,
-})
+});
 
 function RouteComponent() {
-  return(
+  return (
     <>
-    <Header/>
-    <Outlet/>
+      <Header />
+      <Outlet />
     </>
-  )
+  );
 }
