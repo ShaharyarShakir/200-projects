@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as storeLayoutRouteImport } from './routes/(store)/_layout'
 import { Route as storeLayoutIndexRouteImport } from './routes/(store)/_layout/index'
+import { Route as storeLayoutCartRouteImport } from './routes/(store)/_layout/cart'
 
 const AuthSignInRoute = AuthSignInRouteImport.update({
   id: '/auth/sign-in',
@@ -27,27 +28,40 @@ const storeLayoutIndexRoute = storeLayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => storeLayoutRoute,
 } as any)
+const storeLayoutCartRoute = storeLayoutCartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
+  getParentRoute: () => storeLayoutRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/auth/sign-in': typeof AuthSignInRoute
+  '/cart': typeof storeLayoutCartRoute
   '/': typeof storeLayoutIndexRoute
 }
 export interface FileRoutesByTo {
   '/auth/sign-in': typeof AuthSignInRoute
+  '/cart': typeof storeLayoutCartRoute
   '/': typeof storeLayoutIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(store)/_layout': typeof storeLayoutRouteWithChildren
   '/auth/sign-in': typeof AuthSignInRoute
+  '/(store)/_layout/cart': typeof storeLayoutCartRoute
   '/(store)/_layout/': typeof storeLayoutIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/auth/sign-in' | '/'
+  fullPaths: '/auth/sign-in' | '/cart' | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth/sign-in' | '/'
-  id: '__root__' | '/(store)/_layout' | '/auth/sign-in' | '/(store)/_layout/'
+  to: '/auth/sign-in' | '/cart' | '/'
+  id:
+    | '__root__'
+    | '/(store)/_layout'
+    | '/auth/sign-in'
+    | '/(store)/_layout/cart'
+    | '/(store)/_layout/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -78,14 +92,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof storeLayoutIndexRouteImport
       parentRoute: typeof storeLayoutRoute
     }
+    '/(store)/_layout/cart': {
+      id: '/(store)/_layout/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof storeLayoutCartRouteImport
+      parentRoute: typeof storeLayoutRoute
+    }
   }
 }
 
 interface storeLayoutRouteChildren {
+  storeLayoutCartRoute: typeof storeLayoutCartRoute
   storeLayoutIndexRoute: typeof storeLayoutIndexRoute
 }
 
 const storeLayoutRouteChildren: storeLayoutRouteChildren = {
+  storeLayoutCartRoute: storeLayoutCartRoute,
   storeLayoutIndexRoute: storeLayoutIndexRoute,
 }
 
