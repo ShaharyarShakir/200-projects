@@ -27,12 +27,12 @@ export default function Navbar({
           to={item.to}
           className={cn(
             "flex justify-center items-center bg-transparent hover:bg-primary px-7.5 border hover:border-transparent border-dashed rounded-xl @7xl:h-16 hover:text-background dark:hover:text-background dark:text-body-70 text-lg transition-all",
-            linkClassName
+            linkClassName,
           )}
           activeProps={{
             className: cn(
               "bg-foreground! dark:bg-body-10! px-7.5 border-transparent rounded-xl h-12 @7xl:h-16 text-background hover:dark:text-foreground text-lg",
-              activeLinkClassName
+              activeLinkClassName,
             ),
           }}
         >
