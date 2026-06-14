@@ -79,6 +79,7 @@ Full-stack applications combining frontend and backend technologies.
 - Shop Stack (In Progress)
 - Todo App
 - Document Copilot
+- **Sockploy** (A dockploy POC app)
 
 ## 🔗 Live Links
 
