@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sockploy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="styles.css">
+<script src="main.js" defer></script>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      sockploy
+    </div>
+    <nav class="tabs">
+      <button class="tab active" onclick="switchTab('deploy', this)">
+        <i class="ti ti-rocket" aria-hidden="true"></i> Deploy
+      </button>
+      <button class="tab" onclick="switchTab('containers', this)">
+        <i class="ti ti-box" aria-hidden="true"></i> Containers
+      </button>
+    </nav>
+    <div class="topbar-right">mgmt :8080</div>
+  </header>
+
+  <main class="main">
+
+    <!-- Deploy panel -->
+    <section class="panel active" id="panel-deploy">
+      <div class="card">
+        <div class="section-label">// pull image and start container</div>
+        <br>
+        <div class="field-row">
+          <div class="field">
+            <label for="img-input">Image</label>
+            <input id="img-input" type="text" placeholder="nginx" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="tag-input">Tag</label>
+            <input id="tag-input" type="text" placeholder="latest" autocomplete="off" />
+          </div>
+        </div>
+        <button class="btn-deploy" id="deploy-btn" onclick="deployContainer()">
+          <i class="ti ti-player-play" style="font-size:14px;" aria-hidden="true"></i>
+          Deploy
+        </button>
+      </div>
+
+      <div class="log-panel" id="log-panel">
+        <div class="log-header">
+          <div class="spinner" id="log-spinner" style="display:none;"></div>
+          <span id="log-title">output</span>
+        </div>
+        <div class="log-body" id="log-body"></div>
+      </div>
+
+      <div class="result-bar" id="result-bar">
+        <div class="result-kv">
+          <div class="result-k">container</div>
+          <div class="result-v" id="r-name">—</div>
+        </div>
+        <div class="result-kv">
+          <div class="result-k">domain</div>
+          <div class="result-v" id="r-domain">—</div>
+        </div>
+        <div class="result-kv">
+          <div class="result-k">status</div>
+          <div class="result-v">running</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Containers panel -->
+    <section class="panel" id="panel-containers">
+      <div class="containers-toolbar">
+        <div class="section-label">// active containers</div>
+        <button class="btn-sm" onclick="loadContainers()">
+          <i class="ti ti-refresh" style="font-size:13px;" aria-hidden="true"></i> Refresh
+        </button>
+      </div>
+      <div class="container-list" id="container-list">
+        <div class="empty-state">
+          <i class="ti ti-box" aria-hidden="true"></i>
+          <span>Switch to this tab to load containers</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+</body>
+</html>
