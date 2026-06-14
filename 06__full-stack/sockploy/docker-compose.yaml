@@ -1,0 +1,34 @@
+services:
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./public:/app/public
+    environment:
+      - MANAGEMENT_PORT=8080
+      - RESOLVE_REVERSE_PROXY=localhost
+      - NETWORK_NAME=sockploy-network
+    ports:
+      - "8080:8080"
+      - "80:80"
+    networks:
+      - sockploy-network
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - node_modules/
+
+        - action: rebuild
+          path: package.json
+
+        - action: rebuild
+          path: package-lock.json
+
+networks:
+  sockploy-network:
+    name: sockploy-network
