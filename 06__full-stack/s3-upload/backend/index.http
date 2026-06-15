@@ -1,0 +1,14 @@
+###
+POST http://localhost:4000/api/products
+Content-Type: application/json
+
+{
+    "name": "Shaharyar",
+    "description": "This is an image",
+    "price": 3000,
+    "filename": "019b0cf4-c460-7000-b080-6a6b5a61cfdd.png"
+}
+
+###
+
+GET http://localhost:4000/api/products
