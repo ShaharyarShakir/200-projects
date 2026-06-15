@@ -28,9 +28,7 @@ async function main() {
       submittedBy: product.submittedBy,
     });
 
-    console.log(
-      `✅ Added product: ${product.name} (${product.voteCount || 0} votes)`
-    );
+    console.log(`✅ Added product: ${product.name} (${product.voteCount || 0} votes)`);
   }
 
   // Verify inserted products
@@ -39,9 +37,7 @@ async function main() {
 
   console.log("\n📦 Products in database:");
   insertedProducts.forEach((product) => {
-    console.log(
-      `  - ${product.name} (${product.slug}) - ${product.voteCount} votes`
-    );
+    console.log(`  - ${product.name} (${product.slug}) - ${product.voteCount} votes`);
   });
 }
 
