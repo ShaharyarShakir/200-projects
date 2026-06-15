@@ -17,7 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "IBuildThis - Share your creations, Discover  New Launches",
-  description: "A community platform for creators to showcase their apps, AI tools, SaaS products and creative projects. Authentic launches, real builders, genuine feedback.",
+  description:
+    "A community platform for creators to showcase their apps, AI tools, SaaS products and creative projects. Authentic launches, real builders, genuine feedback.",
 };
 
 export default function RootLayout({
@@ -27,9 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClerkProvider>
           <Header />
           {children}
