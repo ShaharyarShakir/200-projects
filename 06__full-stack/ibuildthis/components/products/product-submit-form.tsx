@@ -1,12 +1,11 @@
 "use client";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
+
 import { FormField } from "../field/form-field";
 import { Button } from "../ui/button";
 import { LoaderIcon, SparkleIcon } from "lucide-react";
 
 import { useActionState } from "react";
-import { addProductAction } from "./product-action";
+import { addProductAction } from "../../lib/products/product-actions";
 import { cn } from "@/lib/utils";
 
 const initialState = {
