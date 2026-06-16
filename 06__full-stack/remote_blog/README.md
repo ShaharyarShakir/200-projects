@@ -15,7 +15,7 @@ To recreate this project with the same configuration:
 
 ```sh
 # recreate this project
-bun x sv@0.15.3 create --template minimal --types ts --add prettier eslint tailwindcss="plugins:none" drizzle="database:postgresql+postgresql:postgres.js+docker:yes" --install bun remote_blog
+bun x sv@0.16.1 create --template minimal --types ts --add prettier eslint drizzle="database:postgresql+postgresql:postgres.js+docker:yes" experimental="versions:kit+features:async,remoteFunctions" --install bun .
 ```
 
 ## Developing
