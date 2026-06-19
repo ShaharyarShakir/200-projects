@@ -70,7 +70,6 @@ Full-stack applications combining frontend and backend technologies.
 - Gossip
 - Remote Blog (In Progress)
 - Retro Portfolio
-- Sainzamore (In Progress)
 - Samma (In Progress)
 - Seddit (In Progress)
 - Shakir Portfolio
