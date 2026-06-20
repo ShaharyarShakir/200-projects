@@ -78,6 +78,7 @@ Full-stack applications combining frontend and backend technologies.
 - Shop Stack (In Progress)
 - Todo App
 - IBuildThis
+- Skilld
 - Document Copilot
 - **Sockploy** (A dockploy POC app)
 
