@@ -53,7 +53,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				<ClerkProvider>
-					<div id="root-layout">
+					<div id="root-layout" className="dark">
 						<header>
 							<div className="frame">
 								<Navbar />
