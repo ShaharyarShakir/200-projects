@@ -1,0 +1,7 @@
+# pnpm-workspace.yaml
+packages:
+  - 'packages/*'
+  - 'apps/*'
+allowBuilds:
+  electron-winstaller: true
+  esbuild: true

@@ -1,0 +1,18 @@
+{
+  "name": "business-management-suite",
+  "private": true,
+  "scripts": {
+    "dev:backend": "pnpm --filter @bms/backend dev",
+    "dev:web": "pnpm --filter @bms/web dev",
+    "dev:mobile": "pnpm --filter @bms/mobile dev",
+    "dev:desktop": "pnpm --filter @bms/desktop dev",
+    "dev": "concurrently \"pnpm dev:backend\" \"pnpm dev:web\"",
+    "build": "pnpm -r build",
+    "type-check": "pnpm -r type-check",
+    "lint": "pnpm -r lint"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "typescript": "^5.4.0"
+  }
+}
