@@ -10,24 +10,40 @@ export async function getFeaturedProducts() {
     .from(products)
     .where(eq(products.status, "approved"))
     .orderBy(desc(products.voteCount));
+
   return productsData;
 }
-export async function getAllProducts() {
+
+export async function getAllApprovedProducts() {
   const productsData = await db
     .select()
     .from(products)
     .where(eq(products.status, "approved"))
     .orderBy(desc(products.voteCount));
+
   return productsData;
 }
+
+export async function getAllProducts() {
+  "use cache";
+  const productsData = await db
+    .select()
+    .from(products)
+    .orderBy(desc(products.voteCount));
+
+  return productsData;
+}
+
 export async function getRecentlyLaunchedProducts() {
   await connection();
-  const productsData = await getAllProducts();
+  const productsData = await getAllApprovedProducts();
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
   return productsData.filter(
-    (product) => product.createdAt && new Date(product.createdAt.toISOString()) >= oneWeekAgo,
+    (product) =>
+      product.createdAt &&
+      new Date(product.createdAt.toISOString()) >= oneWeekAgo
   );
 }
 
