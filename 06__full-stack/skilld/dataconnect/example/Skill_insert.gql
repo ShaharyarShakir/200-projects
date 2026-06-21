@@ -1,0 +1,25 @@
+mutation InsertSkill(
+  $id: UUID!,
+  $authorClerkId: String!,
+  $createdAt: Timestamp!,
+  $description: String,
+  $installCommand: String!,
+  $promptConfig: String!,
+  $tags: [String!]!,
+  $title: String,
+  $usageExample: String!
+) @auth(level: PUBLIC, insecureReason: "Initial prototype operation") {
+  skill_insert(
+    data: {
+      id: $id,
+      authorClerkId: $authorClerkId,
+      createdAt: $createdAt,
+      description: $description,
+      installCommand: $installCommand,
+      promptConfig: $promptConfig,
+      tags: $tags,
+      title: $title,
+      usageExample: $usageExample
+    }
+  )
+}
