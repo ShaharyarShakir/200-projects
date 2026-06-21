@@ -1,8 +1,8 @@
 {
   "name": "videoforge",
-  "productName": "videoforge",
+  "productName": "VideoForge",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "VideoForge is a cross-platform video downloading application built with Electron and React.",
   "main": ".vite/build/main.js",
   "private": true,
   "scripts": {
