@@ -159,6 +159,10 @@
   }
 
   html {
+    color-scheme: light;
+  }
+
+  .dark {
     color-scheme: dark;
   }
 
@@ -309,7 +313,7 @@
     }
 
     .back {
-      @apply flex items-center gap-2 w-fit text-text-muted hover:text-white transition-colors;
+      @apply flex items-center gap-2 w-fit text-text-muted hover:text-black dark:hover:text-white transition-colors;
 
       span {
         @apply font-medium text-sm;
@@ -320,7 +324,7 @@
       @apply flex flex-col gap-2 mb-4;
 
       h1 {
-        @apply font-bold text-white text-3xl md:text-4xl tracking-tight;
+        @apply font-bold text-black dark:text-white text-3xl md:text-4xl tracking-tight;
       }
 
       p {
@@ -553,7 +557,7 @@
     }
 
     .copy {
-      @apply opacity-0 p-1 text-text-muted hover:text-white transition-opacity;
+      @apply opacity-0 p-1 text-text-muted hover:text-black dark:hover:text-white transition-opacity;
     }
 
     &:hover .copy {
@@ -589,7 +593,7 @@
     }
 
     .open {
-      @apply flex items-center gap-1 font-semibold text-text-muted hover:text-white text-xs transition-colors;
+      @apply flex items-center gap-1 font-semibold text-text-muted hover:text-black dark:hover:text-white text-xs transition-colors;
     }
 
     .save {
@@ -602,7 +606,7 @@
   }
 
   .form-label {
-    @apply w-fit! font-bold! text-sm! text-white! leading-normal! tracking-wider! block! uppercase!;
+    @apply w-fit! font-bold! text-sm! text-black! dark:text-white! leading-normal! tracking-wider! block! uppercase!;
   }
 
   .form-description {
@@ -614,7 +618,7 @@
   }
 
   .input-field {
-    @apply bg-surface! dark:bg-surface! shadow-none! px-4! py-4! border-border-subtle! focus-visible:border-border-subtle! rounded-none! outline-none! ring-0! aria-invalid:ring-0! focus-visible:ring-0! focus-visible:ring-transparent! w-full! h-auto! min-h-0! text-white! placeholder:text-text-muted! transition-none! border!;
+    @apply bg-surface! dark:bg-surface! shadow-none! px-4! py-4! border-border-subtle! focus-visible:border-border-subtle! rounded-none! outline-none! ring-0! aria-invalid:ring-0! focus-visible:ring-0! focus-visible:ring-transparent! w-full! h-auto! min-h-0! text-black! dark:text-white! placeholder:text-text-muted! transition-none! border!;
   }
 
   .input-field-textarea {
@@ -651,6 +655,10 @@
 
   .btn-secondary {
     @apply justify-center! items-center! gap-2! bg-transparent! hover:bg-accent! px-6! py-2.5! border-border! hover:border-muted-foreground! rounded-sm! font-semibold! text-foreground! text-sm! transition-all! cursor-pointer! border! flex!;
+  }
+
+  .theme-toggle-btn {
+    @apply justify-center! items-center! bg-transparent! p-2.5! border-border-subtle! rounded-sm! text-text-muted! hover:text-foreground! hover:bg-accent! cursor-pointer! flex! transition-all!;
   }
 }
 
