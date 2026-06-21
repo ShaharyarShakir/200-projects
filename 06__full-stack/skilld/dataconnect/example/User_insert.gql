@@ -1,0 +1,3 @@
+mutation InsertUser($clerkId: String!, $email: String!, $imageUrl: String, $username: String) @auth(level: PUBLIC, insecureReason: "Initial prototype operation") {
+  user_insert(data: {clerkId: $clerkId, email: $email, imageUrl: $imageUrl, username: $username})
+}
