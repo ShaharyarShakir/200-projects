@@ -1,0 +1,17 @@
+query GetAllSkills @auth(level: PUBLIC, insecureReason: "Initial prototype operation") {
+  skills {
+    author {
+      clerkId
+      email
+      username
+      imageUrl
+    }
+    title
+    description
+    tags
+    installCommand
+    promptConfig
+    usageExample
+    createdAt
+  }
+}
