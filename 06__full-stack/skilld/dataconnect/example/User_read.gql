@@ -1,0 +1,8 @@
+query GetUsers @auth(level: PUBLIC, insecureReason: "Initial prototype operation") {
+  users {
+    clerkId
+    email
+    username
+    imageUrl
+  }
+}
