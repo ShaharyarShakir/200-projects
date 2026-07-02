@@ -12,12 +12,12 @@ class Settings(BaseSettings):
 
     ALLOWED_ORIGINS: str = ""
 
-    GOOGLE_API_KEY: str 
+    GOOGLE_API_KEY: str
 
     @field_validator("ALLOWED_ORIGINS")
     def parse_allowed_origins(cls, v) -> List[str]:
-        return v.split(',') if v else []
-    
+        return v.split(",") if v else []
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
