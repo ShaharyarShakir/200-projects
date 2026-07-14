@@ -1,0 +1,26 @@
+{
+  "name": "collaboration-server",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@eraser/database": "workspace:*",
+    "@hocuspocus/extension-database": "^2.13.5",
+    "@hocuspocus/extension-redis": "^2.13.5",
+    "@hocuspocus/server": "^2.13.5",
+    "dotenv": "^16.4.7",
+    "mongodb": "^6.13.0",
+    "yjs": "^13.6.20"
+  },
+  "devDependencies": {
+    "@eraser/tsconfig": "workspace:*",
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^7.0.2"
+  }
+}
