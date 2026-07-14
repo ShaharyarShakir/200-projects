@@ -1,7 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getConnectionToken } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+
+jest.mock('@eraser/database', () => ({
+  getMongoClient: jest.fn().mockResolvedValue({
+    db: () => ({
+      admin: () => ({
+        ping: jest.fn().mockResolvedValue(true),
+      }),
+    }),
+  }),
+}));
 
 describe('AppController', () => {
   let appController: AppController;
@@ -9,15 +18,7 @@ describe('AppController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [
-        AppService,
-        {
-          provide: getConnectionToken(),
-          useValue: {
-            readyState: 1,
-          },
-        },
-      ],
+      providers: [AppService],
     }).compile();
 
     appController = app.get<AppController>(AppController);
@@ -30,12 +31,11 @@ describe('AppController', () => {
   });
 
   describe('health', () => {
-    it('should return health status and database connected', () => {
-      const health = appController.health();
+    it('should return health status and database connected', async () => {
+      const health = await appController.health();
       expect(health.status).toBe('ok');
-      expect(health.service).toBe('eraser-api');
-      expect(health.database).toBe('connected');
-      expect(health.timestamp).toBeDefined();
+      expect(health.database).toBe(true);
+      expect(health.version).toBe('0.1.0');
     });
   });
 });
