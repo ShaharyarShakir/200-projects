@@ -68,6 +68,47 @@ services:
     networks:
       - er-flow-network
 
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: er-flow-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      MONGODB_URI: mongodb://admin:password@mongodb:27017/er-flow?authSource=admin
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      BETTER_AUTH_SECRET: replace-with-a-long-random-secret
+      BETTER_AUTH_URL: http://localhost:3001
+      APP_URL: http://localhost:3000
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - er-flow-network
+
+  collaboration-server:
+    build:
+      context: .
+      dockerfile: apps/collaboration-server/Dockerfile
+    container_name: er-flow-collaboration-server
+    restart: unless-stopped
+    ports:
+      - "1234:1234"
+    environment:
+      PORT: 1234
+      MONGODB_URI: mongodb://admin:password@mongodb:27017/er-flow?authSource=admin
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - er-flow-network
+
 volumes:
   mongodb_data:
   redis_data:

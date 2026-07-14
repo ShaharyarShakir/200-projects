@@ -1,7 +1,7 @@
 {
   "name": "ER Flow",
   "private": true,
-  "packageManager": "pnpm@11.12.0",
+  "packageManager": "pnpm@10.14.0",
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
