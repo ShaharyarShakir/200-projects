@@ -6,6 +6,8 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { DocumentsModule } from './features/documents/documents.module.js';
 import { FoldersModule } from './features/folders/folders.module.js';
+import { SchemaModule } from './features/schema/schema.module.js';
+import { AiModule } from './features/ai/ai.module.js';
 import { json, urlencoded } from 'express';
 
 @Module({
@@ -17,6 +19,8 @@ import { json, urlencoded } from 'express';
     AuthModule,
     DocumentsModule,
     FoldersModule,
+    SchemaModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
