@@ -16,15 +16,32 @@ import {
   getSelectionBounds,
   fitToRect,
   zoomToPoint,
-  screenToWorld,
+  screenToWorld
+} from '@eraser/diagram-engine'
+import {
   isPointInRect,
   isPointInCircle,
   isPointInDiamond,
   isPointNearLine
-} from '@eraser/canvas'
+} from '@eraser/graph-engine'
 import { CollaborativeEditor } from '@eraser/editor'
 import { useSession } from '../features/auth/hooks/use-session'
-import { validateSchema, generateSql, ER_TEMPLATES } from '@eraser/er'
+import { validateSchema, generateSql, ER_TEMPLATES } from '@eraser/plugin-er'
+import * as SchemaEngine from '@eraser/schema-engine'
+import { AiSidebar } from '../features/ai/components/AiSidebar.js'
+
+// Import dynamic diagram plugins
+import { erPlugin } from '@eraser/plugin-er'
+import { flowchartPlugin } from '@eraser/plugin-flowchart'
+import { umlPlugin } from '@eraser/plugin-uml'
+import { sequencePlugin } from '@eraser/plugin-sequence'
+import { architecturePlugin } from '@eraser/plugin-architecture'
+import { networkPlugin } from '@eraser/plugin-network'
+import { kubernetesPlugin } from '@eraser/plugin-kubernetes'
+import { awsPlugin } from '@eraser/plugin-aws'
+import { gcpPlugin } from '@eraser/plugin-gcp'
+import { azurePlugin } from '@eraser/plugin-azure'
+import { mindmapPlugin } from '@eraser/plugin-mindmap'
 import {
   History,
   MousePointer,
@@ -112,12 +129,15 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
   const [title, setTitle] = useState(doc.title)
   const [showSnapshots, setShowSnapshots] = useState(false)
   const [showComments, setShowComments] = useState(false)
-  const [activeSidebarTab, setActiveSidebarTab] = useState<'explorer' | 'shapes' | 'components' | 'favorites' | 'sql' | 'validation'>('explorer')
+  const [activeSidebarTab, setActiveSidebarTab] = useState<'explorer' | 'shapes' | 'components' | 'favorites' | 'sql' | 'validation' | 'ai'>('explorer')
   const [editingShapeId, setEditingShapeId] = useState<string | null>(null)
   const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(true)
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false)
   const [isInsertMenuOpen, setIsInsertMenuOpen] = useState(false)
   const [isZoomMenuOpen, setIsZoomMenuOpen] = useState(false)
+  const [isLayoutMenuOpen, setIsLayoutMenuOpen] = useState(false)
+  const [isAlignMenuOpen, setIsAlignMenuOpen] = useState(false)
+  const [isRoutingMenuOpen, setIsRoutingMenuOpen] = useState(false)
 
   // Layout Modes: 'document' (text only) | 'canvas' (whiteboard only) | 'split' (side-by-side)
   const [layoutMode, setLayoutMode] = useState<'document' | 'canvas' | 'split'>('split')
@@ -128,9 +148,43 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
   // SQL & Validation States
   const [activeSqlDialect, setActiveSqlDialect] = useState<'postgres' | 'mysql' | 'sqlite' | 'sqlserver'>('postgres')
   const [copiedSql, setCopiedSql] = useState(false)
+  const [previewTarget, setPreviewTarget] = useState<'sql' | 'prisma' | 'drizzle' | 'typeorm' | 'mongoose' | 'mermaid'>('sql')
+  const [importCodeModalOpen, setImportCodeModalOpen] = useState(false)
+  const [importCodeType, setImportCodeType] = useState<'sql' | 'prisma' | 'drizzle' | 'typeorm' | 'mongoose'>('sql')
+  const [importCodeText, setImportCodeText] = useState('')
+  const [importError, setImportError] = useState<string | null>(null)
 
   // Initialize Canvas Engine
   const engine = useCanvas(ydoc)
+
+  // Register plugins dynamically
+  React.useEffect(() => {
+    if (engine) {
+      engine.registerPlugin(erPlugin)
+      engine.registerPlugin(flowchartPlugin)
+      engine.registerPlugin(umlPlugin)
+      engine.registerPlugin(sequencePlugin)
+      engine.registerPlugin(architecturePlugin)
+      engine.registerPlugin(networkPlugin)
+      engine.registerPlugin(kubernetesPlugin)
+      engine.registerPlugin(awsPlugin)
+      engine.registerPlugin(gcpPlugin)
+      engine.registerPlugin(azurePlugin)
+      engine.registerPlugin(mindmapPlugin)
+    }
+  }, [engine])
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault()
+        setIsLeftPanelCollapsed(false)
+        setActiveSidebarTab('ai')
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   // Extract entities & relationships for SQL DDL compilation and validation checks
   const shapes = engine?.getShapes() || []
@@ -155,8 +209,72 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
       label: (s as any).label || "",
     }))
 
-  const generatedSql = generateSql(erEntities, erRelationships, activeSqlDialect)
-  const schemaErrors = validateSchema(erEntities, erRelationships)
+  // Canonical Schema AST
+  const schemaAST: SchemaEngine.SchemaAST = {
+    tables: erEntities.map((ent) => ({
+      id: ent.id,
+      name: ent.name,
+      columns: ent.attributes.map((attr: any) => ({
+        name: attr.name,
+        type: attr.type,
+        nullable: !!attr.isNullable,
+        primaryKey: !!attr.isPk,
+        unique: !!attr.isUnique,
+        defaultValue: attr.defaultValue,
+        autoIncrement: false,
+        fkReference: attr.fkReference ? {
+          table: erEntities.find(e => e.id === attr.fkReference.entityId)?.name || "",
+          column: erEntities.find(e => e.id === attr.fkReference.entityId)?.attributes.find((a: any) => a.id === attr.fkReference.attributeId)?.name || "id"
+        } : null
+      }))
+    })),
+    relationships: erRelationships.map((rel) => {
+      const source = erEntities.find(e => e.id === rel.sourceEntityId);
+      const target = erEntities.find(e => e.id === rel.targetEntityId);
+      
+      const sourceFkAttr = source?.attributes.find((a: any) => a.isFk && a.fkReference && a.fkReference.entityId === rel.targetEntityId);
+      const targetCol = target?.attributes.find((a: any) => a.id === sourceFkAttr?.fkReference?.attributeId)?.name || "id";
+
+      return {
+        sourceTable: source?.name || "",
+        targetTable: target?.name || "",
+        sourceColumn: sourceFkAttr?.name || `${target?.name || 'target'}_id`,
+        targetColumn: targetCol,
+        cardinality: rel.sourceCardinality === "1" && rel.targetCardinality === "1" ? "1:1" : "1:N"
+      };
+    })
+  };
+
+  let codePreviewText = "";
+  try {
+    if (previewTarget === "sql") {
+      codePreviewText = SchemaEngine.generateSql(schemaAST, activeSqlDialect);
+    } else if (previewTarget === "prisma") {
+      codePreviewText = SchemaEngine.generatePrisma(schemaAST);
+    } else if (previewTarget === "drizzle") {
+      codePreviewText = SchemaEngine.generateDrizzle(schemaAST);
+    } else if (previewTarget === "typeorm") {
+      codePreviewText = SchemaEngine.generateTypeorm(schemaAST);
+    } else if (previewTarget === "mongoose") {
+      codePreviewText = SchemaEngine.generateMongoose(schemaAST);
+    } else if (previewTarget === "mermaid") {
+      codePreviewText = SchemaEngine.generateMermaid(schemaAST);
+    }
+  } catch (e: any) {
+    codePreviewText = `// Error generating code: ${e.message || e}`;
+  }
+  
+  // Pluggable multi-plugin validation engine
+  const validationRules = engine?.registry.getValidationRules() || []
+  const schemaErrors = [
+    ...validationRules.flatMap((rule) => rule.validate(shapes)),
+    ...SchemaEngine.validateSchemaAST(schemaAST).map((err) => ({
+      targetId: shapes.find((s) => s.text === err.table)?.id || "",
+      type: (err.column ? "attribute" : "entity") as any,
+      severity: err.severity,
+      message: err.message,
+    }))
+  ];
 
   const handleLoadTemplate = (templateKey: string) => {
     if (!engine) return
@@ -539,9 +657,10 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
               {(
                 [
                   { id: 'explorer', label: 'Files', icon: Layers },
-                  { id: 'shapes', label: 'Shapes', icon: Sparkles },
+                  { id: 'shapes', label: 'Shapes', icon: Square },
                   { id: 'sql', label: 'SQL', icon: Database },
                   { id: 'validation', label: 'Check', icon: AlertCircle },
+                  { id: 'ai', label: 'AI', icon: Sparkles },
                 ]
               ).map((tab) => {
                 const Icon = tab.icon
@@ -674,23 +793,69 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <span className="font-bold text-slate-300 uppercase tracking-wider text-[10px] block">
-                      Target Dialect
+                      Target Code Format
                     </span>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {(['postgres', 'mysql', 'sqlite', 'sqlserver'] as const).map((dial) => (
+                    <div className="grid grid-cols-3 gap-1">
+                      {(['sql', 'prisma', 'drizzle', 'typeorm', 'mongoose', 'mermaid'] as const).map((tgt) => (
                         <button
-                          key={dial}
+                          key={tgt}
                           type="button"
-                          onClick={() => setActiveSqlDialect(dial)}
-                          className={`py-1.5 px-2 rounded-lg border text-[10px] font-bold uppercase transition-all cursor-pointer ${activeSqlDialect === dial
+                          onClick={() => setPreviewTarget(tgt)}
+                          className={`py-1.5 px-1 rounded-lg border text-[8.5px] font-bold uppercase transition-all cursor-pointer text-center ${previewTarget === tgt
                             ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300 shadow-md'
                             : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-400'
                             }`}
                         >
-                          {dial === 'sqlserver' ? 'SQL Server' : dial}
+                          {tgt}
                         </button>
                       ))}
                     </div>
+                  </div>
+
+                  {previewTarget === 'sql' && (
+                    <>
+                      <hr className="border-slate-800" />
+                      <div className="space-y-1.5">
+                        <span className="font-bold text-slate-350 text-[9px] block">
+                          SQL Dialect
+                        </span>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {(['postgres', 'mysql', 'sqlite', 'sqlserver'] as const).map((dial) => (
+                            <button
+                              key={dial}
+                              type="button"
+                              onClick={() => setActiveSqlDialect(dial)}
+                              className={`py-1 px-2 rounded-lg border text-[9px] font-bold uppercase transition-all cursor-pointer ${activeSqlDialect === dial
+                                ? 'bg-indigo-600/10 border-indigo-500 text-indigo-300 shadow-sm'
+                                : 'bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-400'
+                                }`}
+                            >
+                              {dial === 'sqlserver' ? 'SQL Server' : dial}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <hr className="border-slate-800" />
+
+                  <div className="space-y-2">
+                    <span className="font-bold text-slate-300 uppercase tracking-wider text-[10px] block">
+                      Import Schema
+                    </span>
+                    <button
+                      type="button; button"
+                      onClick={() => {
+                        setImportCodeText("");
+                        setImportError(null);
+                        setImportCodeModalOpen(true);
+                      }}
+                      className="w-full py-2 bg-indigo-650 hover:bg-indigo-650/80 border border-indigo-500/30 text-white rounded-xl text-[10.5px] font-bold cursor-pointer transition-colors shadow-lg flex items-center justify-center gap-1.5"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-indigo-200" />
+                      <span>Import from Code...</span>
+                    </button>
                   </div>
 
                   <hr className="border-slate-800" />
@@ -698,24 +863,24 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-300 uppercase tracking-wider text-[10px]">
-                        Generated DDL
+                        Generated Code ({previewTarget.toUpperCase()})
                       </span>
                       <button
                         type="button"
                         onClick={() => {
-                          navigator.clipboard.writeText(generatedSql)
+                          navigator.clipboard.writeText(codePreviewText)
                           setCopiedSql(true)
                           setTimeout(() => setCopiedSql(false), 2000)
                         }}
                         className="bg-slate-900 border border-slate-800 hover:border-slate-700 hover:text-white px-2.5 py-1 rounded text-[10px] font-bold text-slate-300 cursor-pointer transition-all"
                       >
-                        {copiedSql ? '✓ Copied!' : 'Copy Schema'}
+                        {copiedSql ? '✓ Copied!' : 'Copy Code'}
                       </button>
                     </div>
 
                     <textarea
                       readOnly
-                      value={generatedSql}
+                      value={codePreviewText}
                       className="w-full h-48 bg-slate-950 border border-slate-800 rounded-xl p-2.5 outline-none font-mono text-[9px] text-indigo-250 custom-scrollbar resize-none leading-relaxed select-all"
                     />
                   </div>
@@ -815,6 +980,15 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
                   </div>
                 </div>
               )}
+              {activeSidebarTab === 'ai' && engine && (
+                <div className="h-full flex flex-col overflow-hidden">
+                  <AiSidebar
+                    workspaceId={workspaceId}
+                    documentId={documentId}
+                    engine={engine}
+                  />
+                </div>
+              )}
             </div>
           </aside>
         )}
@@ -837,7 +1011,7 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
           {/* B: Infinite Canvas Whiteboard area (Render on 'canvas' or 'split') */}
           {(layoutMode === 'canvas' || layoutMode === 'split') && (
             <div
-              className="flex-1 h-full relative overflow-hidden canvas-viewport bg-[#0f0f11] flex flex-col"
+              className={`flex-1 h-full relative overflow-hidden canvas-viewport bg-[#0f0f11] flex flex-col ${engine?.isLayoutAnimating ? 'layout-animating' : ''}`}
               onWheel={handleWheel}
               onMouseMove={handleMouseMove}
               onDoubleClick={handleDoubleClick}
@@ -871,15 +1045,14 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
                       <Plus className="h-3.5 w-3.5" />
                     </button>
                     {isInsertMenuOpen && (
-                      <div className="absolute left-12 top-0 bg-[#131416]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl p-1.5 flex flex-col gap-1 w-36 select-none z-50">
+                      <div className="absolute left-12 top-0 bg-[#131416]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl p-1.5 flex flex-col gap-1 w-44 max-h-96 overflow-y-auto custom-scrollbar select-none z-50">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider px-2 py-0.5">Basic Shapes</span>
                         {[
                           { id: 'rectangle', label: 'Rectangle' },
                           { id: 'circle', label: 'Circle' },
                           { id: 'diamond', label: 'Diamond' },
                           { id: 'text', label: 'Text' },
                           { id: 'sticky', label: 'Sticky Frame' },
-                          { id: 'er-entity', label: 'Entity' },
-                          { id: 'er-relationship', label: 'Relationship' },
                         ].map((item) => (
                           <button
                             key={item.id}
@@ -893,6 +1066,27 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
                             {item.label}
                           </button>
                         ))}
+                        
+                        <div className="w-full h-[1px] bg-white/5 my-1" />
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider px-2 py-0.5">Plugin Components</span>
+
+                        {engine.registry.getToolbarEntries().map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => {
+                              engine.setActiveTool(item.targetType)
+                              setIsInsertMenuOpen(false)
+                            }}
+                            className="px-2.5 py-1.5 hover:bg-white/5 text-[11px] font-semibold text-slate-400 hover:text-slate-200 cursor-pointer text-left rounded-md transition-colors flex items-center gap-1.5"
+                          >
+                            {item.icon && (() => {
+                              const IconComp = item.icon
+                              return <IconComp className="h-3 w-3 text-slate-400" />
+                            })()}
+                            <span>{item.label}</span>
+                          </button>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -901,6 +1095,10 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
                   <div className="flex flex-col items-center group cursor-pointer pt-0.5">
                     <button
                       type="button"
+                      onClick={() => {
+                        setIsLeftPanelCollapsed(false)
+                        setActiveSidebarTab('ai')
+                      }}
                       className="p-1 rounded-lg text-indigo-400 hover:text-indigo-300 hover:bg-slate-800 cursor-pointer"
                       title="Generate AI Diagram (Ctrl+J)"
                     >
@@ -920,8 +1118,6 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
                       { id: 'arrow', label: 'Arrow (A)', icon: ArrowRight },
                       { id: 'line', label: 'Line (L)', icon: Minus },
                       { id: 'text', label: 'Text (T)', icon: Type },
-                      { id: 'er-entity', label: 'Entity (E)', icon: Database },
-                      { id: 'er-relationship', label: 'Relationship (C)', icon: LinkIcon },
                       { id: 'sticky', label: 'Sticky Frame (F)', icon: FileText },
                     ] as const
                   ).map((item) => {
@@ -942,6 +1138,148 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
                       </button>
                     )
                   })}
+                </div>
+              )}
+
+              {/* Floating Layout & Alignment Controls at the top center of the canvas */}
+              {engine && (
+                <div className="absolute left-1/2 transform -translate-x-1/2 top-4 z-40 bg-[#131416]/90 backdrop-blur-md border border-white/5 rounded-lg shadow-xl px-2.5 py-1.5 flex items-center gap-2 text-xs font-bold text-slate-350 select-none">
+                  {/* Auto Layout Menu */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsLayoutMenuOpen(!isLayoutMenuOpen)}
+                      className="px-2 py-1 bg-[#1c1d21]/80 hover:bg-[#25272d] border border-white/5 text-slate-300 hover:text-white rounded text-[10px] font-bold cursor-pointer transition-colors flex items-center gap-1"
+                    >
+                      <Sparkles className="h-3 w-3 text-indigo-400" />
+                      <span>Auto Layout</span>
+                      <ChevronDown className="h-3 w-3 text-slate-500" />
+                    </button>
+                    {isLayoutMenuOpen && (
+                      <div className="absolute left-0 top-7 bg-[#131416]/95 backdrop-blur-md border border-white/10 rounded-lg shadow-2xl p-1 flex flex-col gap-0.5 w-28 z-50">
+                        {[
+                          { id: 'layered', label: 'Hierarchical' },
+                          { id: 'tree', label: 'Tree Map' },
+                          { id: 'grid', label: 'Grid Table' },
+                          { id: 'force', label: 'Force Directed' },
+                          { id: 'circular', label: 'Circular Ring' },
+                        ].map((layout) => (
+                          <button
+                            key={layout.id}
+                            type="button"
+                            onClick={() => {
+                              engine.triggerAutoLayout(layout.id as any)
+                              setIsLayoutMenuOpen(false)
+                            }}
+                            className="px-2.5 py-1 hover:bg-white/5 text-[10px] font-semibold text-slate-400 hover:text-slate-200 cursor-pointer text-left rounded transition-colors"
+                          >
+                            {layout.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="w-[1px] h-3 bg-white/5" />
+
+                  {/* Route Edges Selector */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsRoutingMenuOpen(!isRoutingMenuOpen)}
+                      className="px-2 py-1 bg-[#1c1d21]/80 hover:bg-[#25272d] border border-white/5 text-slate-300 hover:text-white rounded text-[10px] font-bold cursor-pointer transition-colors flex items-center gap-1"
+                    >
+                      <span>Route Style</span>
+                      <ChevronDown className="h-3 w-3 text-slate-500" />
+                    </button>
+                    {isRoutingMenuOpen && (
+                      <div className="absolute left-0 top-7 bg-[#131416]/95 backdrop-blur-md border border-white/10 rounded-lg shadow-2xl p-1 flex flex-col gap-0.5 w-28 z-50">
+                        {[
+                          { id: 'straight', label: 'Straight' },
+                          { id: 'orthogonal', label: 'Orthogonal' },
+                          { id: 'bezier', label: 'Bezier Curved' },
+                        ].map((style) => (
+                          <button
+                            key={style.id}
+                            type="button"
+                            onClick={() => {
+                              engine.transact(() => {
+                                for (const shape of engine.getShapes()) {
+                                  if (engine.registry.getEdgeDefinition(shape.type) || shape.type === "er-relationship") {
+                                    engine.updateShape(shape.id, { routingType: style.id } as any);
+                                  }
+                                }
+                              });
+                              setIsRoutingMenuOpen(false);
+                            }}
+                            className="px-2.5 py-1 hover:bg-white/5 text-[10px] font-semibold text-slate-400 hover:text-slate-200 cursor-pointer text-left rounded transition-colors"
+                          >
+                            {style.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Alignment & Distribution Menu (only visible when multiple shapes selected) */}
+                  {engine.selectedIds.size > 1 && (
+                    <>
+                      <div className="w-[1px] h-3 bg-white/5" />
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setIsAlignMenuOpen(!isAlignMenuOpen)}
+                          className="px-2 py-1 bg-[#1c1d21]/80 hover:bg-[#25272d] border border-white/5 text-slate-300 hover:text-white rounded text-[10px] font-bold cursor-pointer transition-colors flex items-center gap-1"
+                        >
+                          <span>Align / Dist</span>
+                          <ChevronDown className="h-3 w-3 text-slate-500" />
+                        </button>
+                        {isAlignMenuOpen && (
+                          <div className="absolute right-0 top-7 bg-[#131416]/95 backdrop-blur-md border border-white/10 rounded-lg shadow-2xl p-1 flex flex-col gap-0.5 w-32 z-50">
+                            <span className="text-[8px] font-extrabold text-slate-500 uppercase tracking-widest px-2 py-0.5">Align Nodes</span>
+                            {[
+                              { id: 'left', label: 'Align Left' },
+                              { id: 'center', label: 'Align Center X' },
+                              { id: 'right', label: 'Align Right' },
+                              { id: 'top', label: 'Align Top' },
+                              { id: 'middle', label: 'Align Middle Y' },
+                              { id: 'bottom', label: 'Align Bottom' },
+                            ].map((item) => (
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => {
+                                  engine.alignSelected(item.id as any);
+                                  setIsAlignMenuOpen(false);
+                                }}
+                                className="px-2.5 py-1 hover:bg-white/5 text-[10px] font-semibold text-slate-400 hover:text-slate-200 cursor-pointer text-left rounded transition-colors"
+                              >
+                                {item.label}
+                              </button>
+                            ))}
+                            <div className="w-full h-[1px] bg-white/5 my-0.5" />
+                            <span className="text-[8px] font-extrabold text-slate-500 uppercase tracking-widest px-2 py-0.5">Distribute</span>
+                            {[
+                              { id: 'horizontal', label: 'Horizontal Gap' },
+                              { id: 'vertical', label: 'Vertical Gap' },
+                            ].map((item) => (
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => {
+                                  engine.distributeSelected(item.id as any);
+                                  setIsAlignMenuOpen(false);
+                                }}
+                                className="px-2.5 py-1 hover:bg-white/5 text-[10px] font-semibold text-slate-400 hover:text-slate-200 cursor-pointer text-left rounded transition-colors"
+                              >
+                                {item.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -1003,6 +1341,8 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
                   onPointerDown={(e) => engine.handlePointerDown(e, e.currentTarget)}
                   onPointerMove={(e) => engine.handlePointerMove(e, e.currentTarget)}
                   onPointerUp={(e) => engine.handlePointerUp(e, e.currentTarget)}
+                  registry={engine.registry}
+                  activeGuides={engine.activeGuides}
                 />
               ) : (
                 <div className="h-full flex items-center justify-center bg-slate-950">
@@ -1052,258 +1392,31 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
               </div>
             ) : (
               <div className="space-y-5 text-xs text-slate-300">
-                {/* 1. ER Entity properties inspector */}
-                {selectedShapes.length === 1 && selectedShapes[0].type === "er-entity" && (
-                  <div className="space-y-4 animate-fade-in">
-                    <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px] block">Entity Properties</span>
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-slate-500 font-semibold block">Table Name</label>
-                      <input
-                        type="text"
-                        value={selectedShapes[0].text || ""}
-                        onChange={(e) => updateSelectedProperty("text", e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 outline-none focus:border-indigo-500 text-xs font-semibold text-slate-200"
-                      />
-                    </div>
-
-                    <hr className="border-slate-800" />
-
-                    {/* Attributes Edit Grid */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Columns / Fields</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const currentAttrs = (selectedShapes[0] as any).attributes || []
-                            const newAttr = {
-                              id: crypto.randomUUID(),
-                              name: "new_column",
-                              type: "String" as any,
-                              isPk: false,
-                              isFk: false,
-                              isNullable: true,
-                              isUnique: false,
+                {/* 1. Pluggable custom properties */}
+                {selectedShapes.length === 1 && (() => {
+                  const pe = engine?.registry.getPropertyEditor(selectedShapes[0].type)
+                  if (pe) {
+                    const EditorComponent = pe.component
+                    return (
+                      <div className="space-y-4 animate-fade-in">
+                        <EditorComponent
+                          element={selectedShapes[0]}
+                          updateElement={(props) => {
+                            for (const [k, v] of Object.entries(props)) {
+                              updateSelectedProperty(k, v)
                             }
-                            updateSelectedProperty("attributes", [...currentAttrs, newAttr])
                           }}
-                          className="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] px-2 py-1 rounded font-bold cursor-pointer transition-colors"
-                        >
-                          + Add Column
-                        </button>
+                          allShapes={shapes}
+                        />
+                        <hr className="border-slate-800" />
                       </div>
+                    )
+                  }
+                  return null
+                })()}
 
-                      <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1 custom-scrollbar">
-                        {((selectedShapes[0] as any).attributes || []).map((attr: any, idx: number) => {
-                          const updateAttr = (fields: Partial<typeof attr>) => {
-                            const currentAttrs = [...((selectedShapes[0] as any).attributes || [])]
-                            currentAttrs[idx] = { ...currentAttrs[idx], ...fields }
-                            updateSelectedProperty("attributes", currentAttrs)
-                          }
-
-                          const removeAttr = () => {
-                            const currentAttrs = ((selectedShapes[0] as any).attributes || []).filter((a: any) => a.id !== attr.id)
-                            updateSelectedProperty("attributes", currentAttrs)
-                          }
-
-                          return (
-                            <div key={attr.id} className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2 relative group/col">
-                              {/* Row 1: Name and Trash */}
-                              <div className="flex items-center justify-between gap-2">
-                                <input
-                                  type="text"
-                                  value={attr.name}
-                                  onChange={(e) => updateAttr({ name: e.target.value })}
-                                  className="bg-slate-900 border border-slate-800 rounded px-1.5 py-0.5 outline-none focus:border-indigo-500 text-xs w-full text-slate-200"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={removeAttr}
-                                  className="text-slate-500 hover:text-rose-450 p-0.5 rounded transition-colors cursor-pointer"
-                                  title="Delete Column"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </button>
-                              </div>
-
-                              {/* Row 2: Type Selector */}
-                              <div className="flex items-center justify-between gap-2">
-                                <label className="text-[9px] text-slate-500 font-semibold block">Type</label>
-                                <select
-                                  value={attr.type}
-                                  onChange={(e) => updateAttr({ type: e.target.value as any })}
-                                  className="bg-slate-900 border border-slate-800 rounded px-1 py-0.5 outline-none text-[10px] text-slate-350 w-28 focus:border-indigo-500"
-                                >
-                                  {["String", "Integer", "Boolean", "Float", "Decimal", "Date", "Timestamp", "UUID", "JSON"].map(t => (
-                                    <option key={t} value={t}>{t}</option>
-                                  ))}
-                                </select>
-                              </div>
-
-                              {/* Row 3: Key check-badges */}
-                              <div className="flex items-center gap-3.5 text-[9px] text-slate-400">
-                                <label className="flex items-center gap-1 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={attr.isPk}
-                                    onChange={(e) => updateAttr({ isPk: e.target.checked })}
-                                    className="rounded border-slate-800 bg-slate-900 text-indigo-600 focus:ring-indigo-500/20"
-                                  />
-                                  <span>PK</span>
-                                </label>
-                                <label className="flex items-center gap-1 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={attr.isFk}
-                                    onChange={(e) => {
-                                      const isChecked = e.target.checked
-                                      if (!isChecked) {
-                                        updateAttr({ isFk: false, fkReference: null })
-                                      } else {
-                                        updateAttr({ isFk: true })
-                                      }
-                                    }}
-                                    className="rounded border-slate-800 bg-slate-900 text-indigo-600 focus:ring-indigo-500/20"
-                                  />
-                                  <span>FK</span>
-                                </label>
-                                <label className="flex items-center gap-1 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={attr.isNullable}
-                                    onChange={(e) => updateAttr({ isNullable: e.target.checked })}
-                                    className="rounded border-slate-800 bg-slate-900 text-indigo-600 focus:ring-indigo-500/20"
-                                  />
-                                  <span>Null</span>
-                                </label>
-                                <label className="flex items-center gap-1 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={attr.isUnique}
-                                    onChange={(e) => updateAttr({ isUnique: e.target.checked })}
-                                    className="rounded border-slate-800 bg-slate-900 text-indigo-600 focus:ring-indigo-500/20"
-                                  />
-                                  <span>UQ</span>
-                                </label>
-                              </div>
-
-                              {/* FK target entities layout picker */}
-                              {attr.isFk && (
-                                <div className="space-y-1 pt-1.5 border-t border-slate-900 text-[10px]">
-                                  <span className="text-[9px] text-slate-500 block">FK Target:</span>
-                                  <div className="grid grid-cols-2 gap-1.5">
-                                    <select
-                                      value={attr.fkReference?.entityId || ""}
-                                      onChange={(e) => {
-                                        const refId = e.target.value
-                                        const refEnt = erEntities.find(ent => ent.id === refId)
-                                        const firstAttr = refEnt?.attributes[0]
-                                        updateAttr({
-                                          fkReference: {
-                                            entityId: refId,
-                                            attributeId: firstAttr?.id || "",
-                                          }
-                                        })
-                                      }}
-                                      className="bg-slate-900 border border-slate-800 rounded px-1 py-0.5 outline-none text-[9px] text-slate-350 focus:border-indigo-500 w-full"
-                                    >
-                                      <option value="">Select Table...</option>
-                                      {erEntities.filter(ent => ent.id !== selectedShapes[0].id).map(ent => (
-                                        <option key={ent.id} value={ent.id}>{ent.name}</option>
-                                      ))}
-                                    </select>
-
-                                    <select
-                                      value={attr.fkReference?.attributeId || ""}
-                                      onChange={(e) => {
-                                        if (attr.fkReference) {
-                                          updateAttr({
-                                            fkReference: {
-                                              ...attr.fkReference,
-                                              attributeId: e.target.value,
-                                            }
-                                          })
-                                        }
-                                      }}
-                                      className="bg-slate-900 border border-slate-800 rounded px-1 py-0.5 outline-none text-[9px] text-slate-350 focus:border-indigo-500 w-full"
-                                      disabled={!attr.fkReference?.entityId}
-                                    >
-                                      <option value="">Select Key...</option>
-                                      {(erEntities.find(ent => ent.id === attr.fkReference?.entityId)?.attributes || []).map(a => (
-                                        <option key={a.id} value={a.id}>{a.name}</option>
-                                      ))}
-                                    </select>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 2. ER Relationship properties inspector */}
-                {selectedShapes.length === 1 && selectedShapes[0].type === "er-relationship" && (
-                  <div className="space-y-4 animate-fade-in">
-                    <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px] block">Relationship Settings</span>
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-slate-500 font-semibold block">Label / Verb</label>
-                      <input
-                        type="text"
-                        value={(selectedShapes[0] as any).label || ""}
-                        placeholder="e.g. references, belongs to"
-                        onChange={(e) => updateSelectedProperty("label", e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 outline-none focus:border-indigo-500 text-xs text-slate-200"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3.5">
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-500 font-semibold block">Source Card.</label>
-                        <select
-                          value={(selectedShapes[0] as any).sourceCardinality || "1"}
-                          onChange={(e) => updateSelectedProperty("sourceCardinality", e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 outline-none focus:border-indigo-500 text-xs text-slate-350"
-                        >
-                          {["1", "0..1", "*", "1..*", "0..*"].map(c => (
-                            <option key={c} value={c}>{c}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] text-slate-500 font-semibold block">Target Card.</label>
-                        <select
-                          value={(selectedShapes[0] as any).targetCardinality || "*"}
-                          onChange={(e) => updateSelectedProperty("targetCardinality", e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 outline-none focus:border-indigo-500 text-xs text-slate-350"
-                        >
-                          {["1", "0..1", "*", "1..*", "0..*"].map(c => (
-                            <option key={c} value={c}>{c}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-1.5">
-                      <input
-                        type="checkbox"
-                        id="identifying-check"
-                        checked={(selectedShapes[0] as any).identifying ?? true}
-                        onChange={(e) => updateSelectedProperty("identifying", e.target.checked)}
-                        className="rounded border-slate-805 bg-slate-950 text-indigo-600 focus:ring-indigo-500/20"
-                      />
-                      <label htmlFor="identifying-check" className="text-[10px] text-slate-400 font-semibold cursor-pointer select-none">
-                        Identifying Relationship
-                      </label>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. Generic shape aesthetics & geometry */}
-                {selectedShapes.length === 1 && selectedShapes[0].type !== "er-entity" && selectedShapes[0].type !== "er-relationship" && (
+                {/* 2. Generic shape aesthetics & geometry */}
+                {selectedShapes.length === 1 && !engine?.registry.getEdgeDefinition(selectedShapes[0].type) && selectedShapes[0].type !== "er-relationship" && (
                   <div className="space-y-5 animate-fade-in">
                     {/* Dimensions Section */}
                     <div className="space-y-3">
@@ -1593,6 +1706,205 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
           <span className="text-slate-600">Eraser.io Clone Editor</span>
         </div>
       </footer>
+
+      {/* Schema Import Modal */}
+      {importCodeModalOpen && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#131416] border border-white/5 w-full max-w-2xl rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-indigo-400" />
+                <h3 className="text-sm font-bold text-slate-100">Import Database Schema from Code</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setImportCodeModalOpen(false)}
+                className="text-slate-500 hover:text-slate-300 text-xs cursor-pointer"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {/* Type Selectors */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-extrabold uppercase text-slate-400 block">Source Format</label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {(["sql", "prisma", "drizzle", "typeorm", "mongoose"] as const).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setImportCodeType(type)}
+                      className={`py-1.5 rounded-lg border text-[10px] font-bold uppercase transition-all cursor-pointer text-center ${importCodeType === type
+                        ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300 shadow-md'
+                        : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-500'
+                        }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Paste Textarea */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-extrabold uppercase text-slate-400 block">Paste Code Snippet</label>
+                <textarea
+                  value={importCodeText}
+                  onChange={(e) => setImportCodeText(e.target.value)}
+                  placeholder={`Paste your ${importCodeType.toUpperCase()} code structure here...`}
+                  className="w-full h-64 bg-slate-950 border border-slate-850 rounded-xl p-3 outline-none font-mono text-[10px] text-slate-300 custom-scrollbar resize-none leading-relaxed"
+                />
+              </div>
+
+              {importError && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-[10px]">
+                  {importError}
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setImportCodeModalOpen(false)}
+                  className="px-4 py-2 border border-slate-800 hover:bg-white/5 rounded-xl text-xs font-bold text-slate-400 cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!importCodeText.trim()) return;
+                    setImportError(null);
+                    try {
+                      let ast: SchemaEngine.SchemaAST = { tables: [], relationships: [] };
+                      if (importCodeType === "sql") {
+                        ast = SchemaEngine.parseSql(importCodeText);
+                      } else if (importCodeType === "prisma") {
+                        ast = SchemaEngine.parsePrisma(importCodeText);
+                      } else if (importCodeType === "drizzle") {
+                        ast = SchemaEngine.parseDrizzle(importCodeText);
+                      } else if (importCodeType === "typeorm") {
+                        ast = SchemaEngine.parseTypeorm(importCodeText);
+                      } else if (importCodeType === "mongoose") {
+                        ast = SchemaEngine.parseMongoose(importCodeText);
+                      }
+
+                      if (ast.tables.length === 0) {
+                        setImportError("No table or model definitions could be parsed from the provided input code.");
+                        return;
+                      }
+
+                      if (engine) {
+                        engine.transact(() => {
+                          // Clear existing whiteboard shapes
+                          for (const s of engine.getShapes()) {
+                            engine.deleteShape(s.id);
+                          }
+
+                          // Add Entities
+                          const entitiesMap = new Map<string, string>();
+                          ast.tables.forEach((t, index) => {
+                            const entityId = `entity-${Date.now()}-${index}`;
+                            entitiesMap.set(t.name.toLowerCase(), entityId);
+
+                            const attributes = t.columns.map((col, cIdx) => ({
+                              id: `attr-${Date.now()}-${cIdx}`,
+                              name: col.name,
+                              type: col.type,
+                              isPk: col.primaryKey,
+                              isFk: !!col.fkReference,
+                              isNullable: col.nullable,
+                              isUnique: col.unique,
+                              defaultValue: col.defaultValue || "",
+                              fkReference: col.fkReference ? {
+                                entityId: col.fkReference.table.toLowerCase(),
+                                attributeId: col.fkReference.column
+                              } : null
+                            }));
+
+                            engine.addShape({
+                              id: entityId,
+                              type: "er-entity",
+                              x: (index % 3) * 260 + 100,
+                              y: Math.floor(index / 3) * 240 + 100,
+                              width: 180,
+                              height: 60 + attributes.length * 20,
+                              text: t.name,
+                              attributes,
+                              fill: "#131416",
+                              stroke: "#6366f1",
+                              strokeWidth: 2,
+                            } as any);
+                          });
+
+                          // Resolve the placeholder relational connections inside attributes
+                          const shapesList = engine.getShapes();
+                          for (const shape of shapesList) {
+                            if (shape.type === "er-entity" && (shape as any).attributes) {
+                              const updatedAttrs = (shape as any).attributes.map((attr: any) => {
+                                if (attr.isFk && attr.fkReference) {
+                                  const targetTableId = entitiesMap.get(attr.fkReference.entityId.toLowerCase());
+                                  if (targetTableId) {
+                                    const targetTableShape = shapesList.find(s => s.id === targetTableId);
+                                    const targetAttr = (targetTableShape as any)?.attributes?.find((a: any) => a.name === attr.fkReference.attributeId);
+                                    return {
+                                      ...attr,
+                                      fkReference: {
+                                        entityId: targetTableId,
+                                        attributeId: targetAttr?.id || "id"
+                                      }
+                                    };
+                                  }
+                                }
+                                return attr;
+                              });
+                              engine.updateShape(shape.id, { attributes: updatedAttrs } as any);
+                            }
+                          }
+
+                          // Add relationships
+                          ast.relationships.forEach((rel, rIdx) => {
+                            const sourceEntityId = entitiesMap.get(rel.sourceTable.toLowerCase());
+                            const targetEntityId = entitiesMap.get(rel.targetTable.toLowerCase());
+
+                            if (sourceEntityId && targetEntityId) {
+                              engine.addShape({
+                                id: `relationship-${Date.now()}-${rIdx}`,
+                                type: "er-relationship",
+                                sourceEntityId,
+                                targetEntityId,
+                                sourceCardinality: rel.cardinality === "1:1" ? "1" : "1",
+                                targetCardinality: rel.cardinality === "1:N" ? "*" : "1",
+                                identifying: true,
+                                label: "",
+                                stroke: "#818cf8",
+                                strokeWidth: 1.5,
+                              } as any);
+                            }
+                          });
+                        });
+
+                        // Recalculate auto-layout dynamically!
+                        setTimeout(() => {
+                          engine.triggerAutoLayout("layered");
+                        }, 100);
+                      }
+
+                      setImportCodeModalOpen(false);
+                    } catch (e: any) {
+                      setImportError(e.message || "Failed to parse schema. Check for format syntax errors.");
+                    }
+                  }}
+                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors shadow-md"
+                >
+                  Parse & Synchronize
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

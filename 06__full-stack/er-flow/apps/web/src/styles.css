@@ -208,3 +208,20 @@ textarea {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
 }
+
+/* Layout Animations for SVG elements during Auto Layout */
+.layout-animating rect,
+.layout-animating circle,
+.layout-animating path,
+.layout-animating polygon,
+.layout-animating foreignObject,
+.layout-animating g {
+  transition: x 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              y 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              width 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              cx 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              cy 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              d 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
