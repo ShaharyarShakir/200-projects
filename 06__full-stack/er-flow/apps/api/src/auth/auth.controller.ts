@@ -5,7 +5,7 @@ import { auth } from "./auth";
 
 @Controller("api/auth")
 export class AuthController {
-  @All("*")
+  @All("{*path}")
   async handleAuth(@Req() req: express.Request, @Res() res: express.Response) {
     return toNodeHandler(auth)(req, res);
   }
