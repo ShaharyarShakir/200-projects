@@ -1,0 +1,27 @@
+{
+  "name": "@eraser/diagram-engine",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "yjs": "^13.6.20",
+    "lucide-react": "^0.545.0",
+    "@eraser/graph-engine": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@eraser/tsconfig": "workspace:*",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "vitest": "^4.1.5"
+  }
+}
