@@ -1,0 +1,16 @@
+{
+  "name": "@eraser/database-connectors",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@eraser/tsconfig": "workspace:*",
+    "@types/node": "^22.10.2"
+  }
+}
