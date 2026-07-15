@@ -1,0 +1,24 @@
+{
+  "name": "@eraser/collaboration",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@hocuspocus/provider": "^2.13.5",
+    "yjs": "^13.6.20"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eraser/tsconfig": "workspace:*",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0"
+  }
+}
