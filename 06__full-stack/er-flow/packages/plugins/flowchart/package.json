@@ -1,0 +1,24 @@
+{
+  "name": "@eraser/plugin-flowchart",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.tsx"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@eraser/diagram-engine": "workspace:*",
+    "@eraser/graph-engine": "workspace:*",
+    "lucide-react": "^0.545.0"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@eraser/tsconfig": "workspace:*",
+    "vitest": "^4.1.5"
+  }
+}
