@@ -1,0 +1,8 @@
+{
+  "name": "@eraser/eslint-config",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./eslint.config.mjs"
+  }
+}
