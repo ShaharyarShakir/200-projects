@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { toJsonSchema } from "@langchain/core/utils/json_schema";
 
 export const GraphOperationSchema = z.object({
   operations: z.array(
@@ -76,8 +77,55 @@ Guidelines:
       input: prompt,
     });
 
-    const modelWithStructuredOutput = this.model.withStructuredOutput(GraphOperationSchema);
-    const result = await modelWithStructuredOutput.invoke(formattedPrompt);
-    return result as GraphOperations;
+    try {
+      const modelWithStructuredOutput = this.model.withStructuredOutput(GraphOperationSchema);
+      const result = await modelWithStructuredOutput.invoke(formattedPrompt);
+      return result as GraphOperations;
+    } catch (err: any) {
+      console.warn("Structured output failed, falling back to manual prompt & parse:", err?.message || err);
+
+      const schemaJson = toJsonSchema(GraphOperationSchema);
+      const schemaPrompt = `You must return a JSON object that adheres exactly to this schema:
+${JSON.stringify(schemaJson, null, 2)}
+
+Ensure your output is valid JSON and matches the schema above. Do NOT include any explanations, markdown code blocks, or conversational text.`;
+
+      const fallbackPrompt = ChatPromptTemplate.fromMessages([
+        ["system", systemPrompt + "\n\n" + schemaPrompt],
+        ["user", "{input}"],
+      ]);
+
+      const formattedFallback = await fallbackPrompt.formatMessages({
+        context: currentContext || "Empty diagram. No entities or relationships currently exist.",
+        input: prompt,
+      });
+
+      // Try to bind format JSON to force JSON output in Ollama and other compatible providers
+      let boundModel: any = this.model;
+      try {
+        boundModel = this.model.bind({ format: "json" } as any);
+      } catch (bindErr) {
+        // Ignore if binding format: "json" is not supported by the model type
+      }
+
+      const response = await boundModel.invoke(formattedFallback);
+      const content = response.content.toString().trim();
+
+      // Parse JSON from content. Strip markdown code block wrappers if any are present
+      let jsonStr = content;
+      if (jsonStr.startsWith("```")) {
+        const lines = jsonStr.split("\n");
+        if (lines[0].startsWith("```")) {
+          lines.shift();
+        }
+        if (lines[lines.length - 1].startsWith("```")) {
+          lines.pop();
+        }
+        jsonStr = lines.join("\n").trim();
+      }
+
+      const parsed = JSON.parse(jsonStr);
+      return GraphOperationSchema.parse(parsed) as GraphOperations;
+    }
   }
 }
