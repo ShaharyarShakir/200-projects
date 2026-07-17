@@ -112,6 +112,7 @@ Ensure your output is valid JSON and matches the schema above. Do NOT include an
 
       const response = await boundModel.invoke(formattedFallback);
       const content = response.content.toString().trim();
+      console.log("Fallback response content:", content);
 
       // Parse JSON from content. Strip markdown code block wrappers if any are present
       let jsonStr = content;
