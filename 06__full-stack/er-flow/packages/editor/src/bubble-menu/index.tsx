@@ -4,9 +4,10 @@ import { Bold, Italic, Underline, Highlighter, Sparkles, Link2, Link2Off, Chevro
 
 interface BubbleMenuProps {
   editor: Editor | null;
+  onNotify?: (message: string, type?: "success" | "error" | "info" | "warning") => void;
 }
 
-export const EditorBubbleMenu: React.FC<BubbleMenuProps> = ({ editor }) => {
+export const EditorBubbleMenu: React.FC<BubbleMenuProps> = ({ editor, onNotify }) => {
   const [showAiOptions, setShowAiOptions] = useState(false);
   if (!editor) return null;
 
@@ -22,7 +23,12 @@ export const EditorBubbleMenu: React.FC<BubbleMenuProps> = ({ editor }) => {
   };
 
   const triggerAiAction = (action: string) => {
-    alert(`AI Action [${action}] is under development and will be completed in a future phase!`);
+    const msg = `AI Action [${action}] is under development and will be completed in a future phase!`;
+    if (onNotify) {
+      onNotify(msg, "info");
+    } else {
+      console.warn(msg);
+    }
     setShowAiOptions(false);
   };
 
