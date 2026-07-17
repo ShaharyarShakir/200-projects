@@ -11,6 +11,72 @@ export * from "./sql";
 export * from "./validation";
 export * from "./templates";
 
+function getEntityColorTheme(name: string) {
+  const themes = [
+    {
+      text: "text-indigo-400",
+      bg: "bg-indigo-500/10",
+      border: "border-indigo-500/20",
+      stroke: "#6366f1",
+    },
+    {
+      text: "text-emerald-400",
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-500/20",
+      stroke: "#10b981",
+    },
+    {
+      text: "text-rose-400",
+      bg: "bg-rose-500/10",
+      border: "border-rose-500/20",
+      stroke: "#f43f5e",
+    },
+    {
+      text: "text-amber-400",
+      bg: "bg-amber-500/10",
+      border: "border-amber-500/20",
+      stroke: "#f59e0b",
+    },
+    {
+      text: "text-violet-400",
+      bg: "bg-violet-500/10",
+      border: "border-violet-500/20",
+      stroke: "#8b5cf6",
+    },
+    {
+      text: "text-cyan-400",
+      bg: "bg-cyan-500/10",
+      border: "border-cyan-500/20",
+      stroke: "#06b6d4",
+    },
+    {
+      text: "text-orange-400",
+      bg: "bg-orange-500/10",
+      border: "border-orange-500/20",
+      stroke: "#f97316",
+    },
+    {
+      text: "text-fuchsia-400",
+      bg: "bg-fuchsia-500/10",
+      border: "border-fuchsia-500/20",
+      stroke: "#d946ef",
+    },
+  ];
+
+  let hash = 0;
+  const cleanName = (name || "").trim().toLowerCase();
+  for (let i = 0; i < cleanName.length; i++) {
+    hash = cleanName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % themes.length;
+  return themes[index];
+}
+
+const isLabelIgnored = (label: string) => {
+  const normalized = (label || "").trim().toLowerCase();
+  return ["written by", "authored by", "written_by", "authored_by", "author_by"].includes(normalized);
+};
+
 export const erPlugin: DiagramPlugin = {
   id: "er",
   name: "Entity Relationship",
@@ -49,6 +115,7 @@ export const erPlugin: DiagramPlugin = {
       }),
       render: ({ node, isSelected }) => {
         const attributes = node.attributes || [];
+        const theme = getEntityColorTheme(node.text || "");
         return (
           <>
             <rect
@@ -59,8 +126,8 @@ export const erPlugin: DiagramPlugin = {
               rx="12"
               ry="12"
               fill={node.fill || "#0f172a"}
-              stroke={isSelected ? "#6366f1" : node.stroke || "#1e293b"}
-              strokeWidth={isSelected ? (node.strokeWidth || 2) + 0.5 : node.strokeWidth || 2}
+              stroke={isSelected ? "#6366f1" : theme.stroke}
+              strokeWidth={isSelected ? (node.strokeWidth || 2) + 1 : node.strokeWidth || 2}
               opacity={node.opacity ?? 1}
             />
             <foreignObject
@@ -71,8 +138,8 @@ export const erPlugin: DiagramPlugin = {
               style={{ pointerEvents: "none", opacity: node.opacity ?? 1 }}
             >
               <div className="w-full h-full flex flex-col bg-slate-950/60 rounded-xl overflow-hidden border border-white/5 text-left font-sans select-none">
-                <div className="bg-indigo-500/10 border-b border-white/5 px-3 py-2 flex items-center justify-between">
-                  <span className="text-sm font-extrabold text-indigo-300 uppercase tracking-wider truncate">
+                <div className={`${theme.bg} border-b ${theme.border} px-3 py-2 flex items-center justify-between`}>
+                  <span className={`text-sm font-extrabold uppercase tracking-wider truncate ${theme.text}`}>
                     {node.text || "Untitled Entity"}
                   </span>
                 </div>
@@ -172,7 +239,7 @@ export const erPlugin: DiagramPlugin = {
               </text>
             </g>
 
-            {edge.label && (
+            {edge.label && !isLabelIgnored(edge.label) && (
               <g transform={`translate(${midPos.x}, ${midPos.y})`}>
                 <rect x="-35" y="-8" width="70" height="16" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
                 <text textAnchor="middle" alignmentBaseline="middle" y="1" fill="#e2e8f0" fontSize="8" fontWeight="600" fontFamily="sans-serif">
