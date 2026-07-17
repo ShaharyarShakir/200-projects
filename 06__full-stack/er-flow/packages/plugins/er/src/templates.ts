@@ -54,7 +54,7 @@ export const ER_TEMPLATES = [
         sourceCardinality: "*",
         targetCardinality: "1",
         identifying: true,
-        label: "written by",
+        label: "",
       },
       {
         id: "br-2",
@@ -72,7 +72,7 @@ export const ER_TEMPLATES = [
         sourceCardinality: "*",
         targetCardinality: "1",
         identifying: false,
-        label: "authored by",
+        label: "",
       },
     ],
   },
