@@ -90,8 +90,10 @@ ${JSON.stringify(schemaJson, null, 2)}
 
 Ensure your output is valid JSON and matches the schema above. Do NOT include any explanations, markdown code blocks, or conversational text.`;
 
+      const escapedSchemaPrompt = schemaPrompt.replace(/{/g, "{{").replace(/}/g, "}}");
+
       const fallbackPrompt = ChatPromptTemplate.fromMessages([
-        ["system", systemPrompt + "\n\n" + schemaPrompt],
+        ["system", systemPrompt + "\n\n" + escapedSchemaPrompt],
         ["user", "{input}"],
       ]);
 
