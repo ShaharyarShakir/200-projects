@@ -38,6 +38,7 @@ interface CollaborativeEditorProps {
   placeholder?: string;
   onMarkdownChange?: (markdown: string) => void;
   editorRef?: React.MutableRefObject<any>;
+  onNotify?: (message: string, type?: "success" | "error" | "info" | "warning") => void;
 }
 
 export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
@@ -47,6 +48,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
   placeholder = "Write document notes here...",
   onMarkdownChange,
   editorRef,
+  onNotify,
 }) => {
   if (!ydoc || !provider) {
     return (
@@ -158,7 +160,7 @@ export const CollaborativeEditor: React.FC<CollaborativeEditorProps> = ({
       {/* Editor Content scroll container */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8 flex justify-center bg-[#0c0c0e]/10 pb-24">
         <div className="w-full max-w-4xl bg-[#0f0f11]/30 border border-white/5 rounded-2xl shadow-2xl flex flex-col p-4 md:p-8 min-h-[500px]">
-          {editor && <EditorBubbleMenu editor={editor} />}
+          {editor && <EditorBubbleMenu editor={editor} onNotify={onNotify} />}
           {editor && <EditorFloatingMenu editor={editor} />}
           
           <EditorContent editor={editor} className="flex-1 w-full" />
