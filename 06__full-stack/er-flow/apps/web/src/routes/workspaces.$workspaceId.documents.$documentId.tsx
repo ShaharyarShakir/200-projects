@@ -29,6 +29,7 @@ import { useSession } from '../features/auth/hooks/use-session'
 import { validateSchema, generateSql, ER_TEMPLATES } from '@eraser/plugin-er'
 import * as SchemaEngine from '@eraser/schema-engine'
 import { AiSidebar } from '../features/ai/components/AiSidebar.js'
+import { useToast } from '../contexts/ToastContext.js'
 
 // Import dynamic diagram plugins
 import { erPlugin } from '@eraser/plugin-er'
@@ -118,6 +119,7 @@ interface DocumentDashboardProps {
 
 function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardProps) {
   const { status, doc: ydoc, provider } = useCollaboration()
+  const toast = useToast()
   const { data: session } = useSession()
   const { isSidebarCollapsed, setIsSidebarCollapsed } = useWorkspaceLayoutContext()
   const updateDocMutation = useUpdateDocument()
@@ -361,11 +363,11 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
   const handleCreateSnapshot = () => {
     createSnapshotMutation.mutate(documentId, {
       onSuccess: () => {
-        alert('Snapshot created successfully!')
+        toast.success('Snapshot created successfully!')
         refetchSnapshots()
       },
       onError: () => {
-        alert('Failed to create snapshot. Ensure collaborative edits exist first.')
+        toast.error('Failed to create snapshot. Ensure collaborative edits exist first.')
       }
     })
   }
@@ -583,7 +585,7 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
             type="button"
             onClick={() => {
               navigator.clipboard.writeText(window.location.href)
-              alert("Workspace document link copied to clipboard!")
+              toast.success("Workspace document link copied to clipboard!")
             }}
             className="bg-[#131416] border border-white/5 hover:border-slate-800 text-slate-350 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
           >
@@ -1004,6 +1006,11 @@ function DocumentDashboard({ doc, workspaceId, documentId }: DocumentDashboardPr
                 provider={provider}
                 currentUser={currentUserData}
                 placeholder="Start typing collaborative notes here... Type / for block triggers (Tables, Math equations, Mermaid flowcharts)."
+                onNotify={(msg, type) => {
+                  if (type === "success") toast.success(msg);
+                  else if (type === "error") toast.error(msg);
+                  else toast.info(msg);
+                }}
               />
             </div>
           )}
