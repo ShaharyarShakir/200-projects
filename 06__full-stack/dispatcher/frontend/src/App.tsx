@@ -13,40 +13,65 @@ import { TripListPage } from './features/trip/pages/TripListPage';
 import { TripForm } from './features/routing/components/TripForm';
 import { TripSummary } from './features/routing/components/TripSummary';
 import { RouteMap } from './features/routing/components/RouteMap';
-import { useRoute } from './features/routing/hooks/useRoute';
+import { useCalculateRoute } from './features/routing/hooks/useRoute';
 import type { CoordinatePair, RouteResponse } from './features/routing/types/routing';
 import { Compass } from 'lucide-react';
-
-
 
 const RoutePlannerContent: React.FC = () => {
   const [originCoords, setOriginCoords] = useState<CoordinatePair | null>([74.3587, 31.5204]); // Lahore
   const [pickupCoords, setPickupCoords] = useState<CoordinatePair | null>([73.0169, 33.5651]); // Rawalpindi
   const [dropoffCoords, setDropoffCoords] = useState<CoordinatePair | null>([73.0479, 33.6844]); // Islamabad
 
+  const [originName, setOriginName] = useState<string>('Lahore');
+  const [pickupName, setPickupName] = useState<string>('Rawalpindi');
+  const [dropoffName, setDropoffName] = useState<string>('Islamabad');
+
   const [routeResult, setRouteResult] = useState<RouteResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const routeMutation = useRoute();
+  const calculateRouteMutation = useCalculateRoute();
+
+  const triggerCalculation = (
+    orig: CoordinatePair,
+    pick: CoordinatePair,
+    drop: CoordinatePair
+  ) => {
+    setErrorMessage(null);
+    calculateRouteMutation.mutate(
+      { origin: orig, pickup: pick, dropoff: drop },
+      {
+        onSuccess: (data) => {
+          setRouteResult(data);
+        },
+        onError: (error) => {
+          setErrorMessage(error.message || 'Failed to calculate route. Please check coordinates.');
+        },
+      }
+    );
+  };
 
   const handleCalculateRoute = (values: {
     origin: CoordinatePair;
     pickup: CoordinatePair;
     dropoff: CoordinatePair;
+    originName: string;
+    pickupName: string;
+    dropoffName: string;
   }) => {
     setOriginCoords(values.origin);
     setPickupCoords(values.pickup);
     setDropoffCoords(values.dropoff);
-    setErrorMessage(null);
+    setOriginName(values.originName);
+    setPickupName(values.pickupName);
+    setDropoffName(values.dropoffName);
 
-    routeMutation.mutate(values, {
-      onSuccess: (data) => {
-        setRouteResult(data);
-      },
-      onError: (error) => {
-        setErrorMessage(error.message || 'Failed to calculate route. Please check coordinates.');
-      },
-    });
+    triggerCalculation(values.origin, values.pickup, values.dropoff);
+  };
+
+  const handleRecalculate = () => {
+    if (originCoords && pickupCoords && dropoffCoords) {
+      triggerCalculation(originCoords, pickupCoords, dropoffCoords);
+    }
   };
 
   return (
@@ -54,7 +79,7 @@ const RoutePlannerContent: React.FC = () => {
       <section id="trip-form-section">
         <TripForm
           onCalculateRoute={handleCalculateRoute}
-          isLoading={routeMutation.isPending}
+          isLoading={calculateRouteMutation.isPending}
           errorMsg={errorMessage}
         />
       </section>
@@ -62,7 +87,7 @@ const RoutePlannerContent: React.FC = () => {
       <section id="trip-summary-section">
         <TripSummary
           routeData={routeResult}
-          isLoading={routeMutation.isPending}
+          isLoading={calculateRouteMutation.isPending}
         />
       </section>
 
@@ -73,7 +98,7 @@ const RoutePlannerContent: React.FC = () => {
           </h2>
           <div className="flex items-center gap-3 text-xs">
             <span className="flex items-center gap-1.5 text-slate-300">
-              <span className="bg-blue-500 rounded-full w-2.5 h-2.5"></span> Origin
+              <span className="bg-blue-500 rounded-full w-2.5 h-2.5"></span> Current
             </span>
             <span className="flex items-center gap-1.5 text-slate-300">
               <span className="bg-emerald-500 rounded-full w-2.5 h-2.5"></span> Pickup
@@ -88,8 +113,14 @@ const RoutePlannerContent: React.FC = () => {
           originCoords={originCoords}
           pickupCoords={pickupCoords}
           dropoffCoords={dropoffCoords}
+          originName={originName}
+          pickupName={pickupName}
+          dropoffName={dropoffName}
           geometry={routeResult?.geometry || null}
-          isLoading={routeMutation.isPending}
+          bbox={routeResult?.bbox || null}
+          steps={routeResult?.steps || null}
+          isLoading={calculateRouteMutation.isPending}
+          onRecalculate={handleRecalculate}
         />
       </section>
     </div>
@@ -144,8 +175,5 @@ const MainLayout: React.FC = () => {
 };
 
 export default function App() {
-  return (
-        <MainLayout />
-      
-  );
+  return <MainLayout />;
 }
