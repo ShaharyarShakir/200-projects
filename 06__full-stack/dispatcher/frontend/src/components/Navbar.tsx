@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../features/auth/context/AuthContext';
-import { Truck, LayoutDashboard, Route, History, User as UserIcon, LogOut, LogIn, UserPlus } from 'lucide-react';
+import { Truck, LayoutDashboard, Route, History, User as UserIcon, LogOut, LogIn, UserPlus, FileSpreadsheet, Clock } from 'lucide-react';
 
 interface NavbarProps {
   currentView: string;
@@ -63,8 +63,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                 : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
             }`}
           >
-            <Clock className="w-4 h-4 text-brand-600" />
-            HOS Engine
+            <FileSpreadsheet className="w-4 h-4 text-brand-600" />
+            HOS & ELD Logs
           </button>
 
           <button
