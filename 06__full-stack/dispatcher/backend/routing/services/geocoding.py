@@ -36,12 +36,13 @@ class GeocodingService:
             return cached_res
 
         url = "https://nominatim.openstreetmap.org/search"
-        headers = {"User-Agent": USER_AGENT}
+        headers = {"User-Agent": USER_AGENT, "Accept-Language": "en"}
         params = {
             "q": clean_query,
             "format": "json",
             "addressdetails": 1,
             "limit": 5,
+            "accept-language": "en",
         }
 
         try:
@@ -97,11 +98,12 @@ class GeocodingService:
             return cached_res
 
         url = "https://nominatim.openstreetmap.org/reverse"
-        headers = {"User-Agent": USER_AGENT}
+        headers = {"User-Agent": USER_AGENT, "Accept-Language": "en"}
         params = {
             "lat": rounded_lat,
             "lon": rounded_lng,
             "format": "json",
+            "accept-language": "en",
         }
 
         try:
