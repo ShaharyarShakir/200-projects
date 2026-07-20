@@ -49,6 +49,46 @@ export const GraphOperationSchema = z.object({
 
 export type GraphOperations = z.infer<typeof GraphOperationSchema>;
 
+export function normalizeGraphOperations(parsed: any): any {
+  if (!parsed) return parsed;
+
+  const mapItem = (item: any) => {
+    if (item && typeof item === "object" && "name" in item && "arguments" in item) {
+      return {
+        type: item.name,
+        ...item.arguments,
+      };
+    }
+    return item;
+  };
+
+  if (Array.isArray(parsed)) {
+    return {
+      operations: parsed.map(mapItem),
+    };
+  }
+
+  if (typeof parsed === "object") {
+    if (Array.isArray(parsed.operations)) {
+      return {
+        operations: parsed.operations.map(mapItem),
+      };
+    }
+    if ("name" in parsed && "arguments" in parsed) {
+      return {
+        operations: [mapItem(parsed)],
+      };
+    }
+    if ("type" in parsed) {
+      return {
+        operations: [parsed],
+      };
+    }
+  }
+
+  return parsed;
+}
+
 export class GraphAgent {
   constructor(private model: BaseChatModel) {}
 
@@ -82,7 +122,47 @@ Guidelines:
       const result = await modelWithStructuredOutput.invoke(formattedPrompt);
       return result as GraphOperations;
     } catch (err: any) {
-      console.warn("Structured output failed, falling back to manual prompt & parse:", err?.message || err);
+      console.warn("Structured output failed, attempting to recover or fallback:", err?.message || err);
+
+      // Attempt recovery: extract output from LangChain exception string
+      let rawText = "";
+      if (err?.message && err.message.includes('Failed to parse. Text: "')) {
+        const startIdx = err.message.indexOf('Failed to parse. Text: "') + 'Failed to parse. Text: "'.length;
+        const endIdx = err.message.lastIndexOf('". Error:');
+        if (endIdx > startIdx) {
+          rawText = err.message.substring(startIdx, endIdx);
+        }
+      }
+
+      if (rawText) {
+        let parsedJson: any = null;
+        try {
+          parsedJson = JSON.parse(rawText);
+        } catch (e) {
+          try {
+            const unescaped = rawText.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+            parsedJson = JSON.parse(unescaped);
+          } catch (e2) {
+            try {
+              const unescaped = JSON.parse(`"${rawText}"`);
+              parsedJson = JSON.parse(unescaped);
+            } catch (e3) {
+              // Ignore
+            }
+          }
+        }
+
+        if (parsedJson) {
+          try {
+            const normalized = normalizeGraphOperations(parsedJson);
+            const validated = GraphOperationSchema.parse(normalized);
+            console.log("Successfully recovered and normalized operations from original LLM response.");
+            return validated as GraphOperations;
+          } catch (recoverErr) {
+            console.warn("Could not recover from original LLM response error, falling back to manual prompt:", recoverErr);
+          }
+        }
+      }
 
       const schemaJson = toJsonSchema(GraphOperationSchema);
       const schemaPrompt = `You must return a JSON object that adheres exactly to this schema:
@@ -128,7 +208,8 @@ Ensure your output is valid JSON and matches the schema above. Do NOT include an
       }
 
       const parsed = JSON.parse(jsonStr);
-      return GraphOperationSchema.parse(parsed) as GraphOperations;
+      const normalized = normalizeGraphOperations(parsed);
+      return GraphOperationSchema.parse(normalized) as GraphOperations;
     }
   }
 }
