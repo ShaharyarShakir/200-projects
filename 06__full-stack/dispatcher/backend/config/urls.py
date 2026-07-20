@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/trips/', include('trips.urls')),
     path('api/routing/', include('routing.urls')),
     path('api/hos/', include('hos.urls')),
+    path('api/eld/', include('eld.urls')),
 ]
 
 
