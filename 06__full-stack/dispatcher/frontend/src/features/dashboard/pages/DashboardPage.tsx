@@ -19,9 +19,10 @@ import {
 interface DashboardPageProps {
   onNavigateNewTrip: () => void;
   onNavigateTrips?: () => void;
+  onNavigateHos?: () => void;
 }
 
-export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigateNewTrip, onNavigateTrips }) => {
+export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigateNewTrip, onNavigateTrips, onNavigateHos }) => {
   const { user, isAuthenticated } = useAuth();
   const { data, isLoading } = useTrips({ page: 1 });
 
@@ -54,6 +55,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigateNewTrip,
               <Plus className="w-4 h-4" />
               Calculate Route & Plan Trip
             </button>
+            {onNavigateHos && (
+              <button
+                onClick={onNavigateHos}
+                className="bg-neutral-100 hover:bg-neutral-200 text-neutral-800 border border-neutral-200 font-semibold px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 text-sm cursor-pointer"
+              >
+                <Clock className="w-4 h-4 text-brand-600" />
+                HOS Driving Engine
+              </button>
+            )}
             {onNavigateTrips && (
               <button
                 onClick={onNavigateTrips}
