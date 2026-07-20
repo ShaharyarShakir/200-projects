@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'trips',
     'routing',
     'eld',
+    'hos',
 ]
 
 MIDDLEWARE = [
