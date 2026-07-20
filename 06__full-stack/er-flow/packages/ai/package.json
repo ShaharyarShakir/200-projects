@@ -12,6 +12,7 @@
   "dependencies": {
     "@langchain/core": "^0.3.40",
     "@langchain/community": "^0.3.32",
+    "@langchain/groq": "^0.1.2",
     "@langchain/ollama": "^0.2.0",
     "@qdrant/js-client-rest": "^1.13.0",
     "langchain": "^0.3.19",
