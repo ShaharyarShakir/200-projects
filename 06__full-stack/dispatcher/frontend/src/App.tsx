@@ -8,6 +8,7 @@ import { DashboardPage } from './features/dashboard/pages/DashboardPage';
 import { LoginPage } from './features/auth/pages/LoginPage';
 import { RegisterPage } from './features/auth/pages/RegisterPage';
 import { TripListPage } from './features/trip/pages/TripListPage';
+import { HosPage } from './features/hos/pages/HosPage';
 
 // Route Planner Components
 import { TripForm } from './features/routing/components/TripForm';
@@ -140,10 +141,13 @@ const MainLayout: React.FC = () => {
             <DashboardPage
               onNavigateNewTrip={() => setCurrentView('route-planner')}
               onNavigateTrips={() => setCurrentView('trip-history')}
+              onNavigateHos={() => setCurrentView('hos-engine')}
             />
           )}
 
           {currentView === 'route-planner' && <RoutePlannerContent />}
+
+          {currentView === 'hos-engine' && <HosPage />}
 
           {currentView === 'login' && (
             <LoginPage

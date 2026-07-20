@@ -56,6 +56,18 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
           </button>
 
           <button
+            onClick={() => onNavigate('hos-engine')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+              currentView === 'hos-engine'
+                ? 'bg-brand-50 text-brand-600 border border-brand-300'
+                : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
+            }`}
+          >
+            <Clock className="w-4 h-4 text-brand-600" />
+            HOS Engine
+          </button>
+
+          <button
             onClick={() => onNavigate('trip-history')}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
               currentView === 'trip-history'
