@@ -22,7 +22,7 @@ export class AiService {
   ) {
     this.providerType = this.configService.get<string>("AI_PROVIDER") || "ollama";
     this.ollamaHost = this.configService.get<string>("OLLAMA_HOST") || "http://localhost:11434";
-    this.chatModelName = this.configService.get<string>("DEFAULT_CHAT_MODEL") || "deepseek-coder:1.3b";
+    this.chatModelName = this.configService.get<string>("DEFAULT_CHAT_MODEL") || "qwen2.5-coder:1.5b";
   }
 
   async generateDiagram(prompt: string, currentContext?: string) {
