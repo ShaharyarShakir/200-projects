@@ -12,6 +12,13 @@ def validate_coordinate_pair(value):
         raise serializers.ValidationError(f"Invalid latitude: {lat}. Must be between -90 and 90.")
     return value
 
+class LocationSearchQuerySerializer(serializers.Serializer):
+    q = serializers.CharField(required=True, allow_blank=False, min_length=1)
+
+class LocationReverseQuerySerializer(serializers.Serializer):
+    lat = serializers.FloatField(required=True, min_value=-90.0, max_value=90.0)
+    lng = serializers.FloatField(required=True, min_value=-180.0, max_value=180.0)
+
 class GeocodeRequestSerializer(serializers.Serializer):
     address = serializers.CharField(required=True, allow_blank=False, min_length=1)
 
@@ -37,3 +44,5 @@ class RouteRequestSerializer(serializers.Serializer):
         required=True,
         validators=[validate_coordinate_pair]
     )
+
+
