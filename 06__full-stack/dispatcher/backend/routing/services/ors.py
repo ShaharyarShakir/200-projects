@@ -1,7 +1,9 @@
 import math
 import logging
+import hashlib
 import httpx
 from django.conf import settings
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -95,8 +97,14 @@ class ORSService:
         return {"lat": lat, "lng": lng}
 
     @staticmethod
-    def calculate_route(origin: list[float], pickup: list[float], dropoff: list[float]) -> dict:
+    def calculate_route(origin: list[float], pickup: list[float], dropoff: list[float], use_cache: bool = True) -> dict:
         # Expected inputs: origin = [lng, lat], pickup = [lng, lat], dropoff = [lng, lat]
+        cache_key = f"route_{hashlib.md5(f'{origin}:{pickup}:{dropoff}'.encode()).hexdigest()}"
+        if use_cache:
+            cached_result = cache.get(cache_key)
+            if cached_result:
+                return cached_result
+
         api_key = getattr(settings, 'ORS_API_KEY', None) or ""
 
         if api_key:
@@ -107,7 +115,9 @@ class ORSService:
                     "Content-Type": "application/json"
                 }
                 body = {
-                    "coordinates": [origin, pickup, dropoff]
+                    "coordinates": [origin, pickup, dropoff],
+                    "instructions": True,
+                    "language": "en"
                 }
                 with httpx.Client(timeout=12.0) as client:
                     resp = client.post(url, headers=headers, json=body)
@@ -116,20 +126,50 @@ class ORSService:
                         features = data.get("features", [])
                         if features:
                             feature = features[0]
-                            summary = feature["properties"]["summary"]
-                            dist = round(summary["distance"], 2) # meters
-                            dur = round(summary["duration"], 2)   # seconds
+                            properties = feature.get("properties", {})
+                            summary_raw = properties.get("summary", {})
+                            dist = round(summary_raw.get("distance", 0.0), 2) # meters
+                            dur = round(summary_raw.get("duration", 0.0), 2)   # seconds
                             
                             # ORS GeoJSON coordinates are [[lng, lat], ...]
                             ors_coords = feature["geometry"]["coordinates"]
                             # Convert to [[lat, lng], ...] for Leaflet
                             leaflet_geometry = [[c[1], c[0]] for c in ors_coords]
-                            
-                            return {
+
+                            # Parse turn-by-turn steps
+                            steps = []
+                            segments = properties.get("segments", [])
+                            for seg_idx, seg in enumerate(segments):
+                                for step in seg.get("steps", []):
+                                    steps.append({
+                                        "instruction": step.get("instruction", "Continue along route"),
+                                        "distance": round(step.get("distance", 0.0), 1),
+                                        "duration": round(step.get("duration", 0.0), 1),
+                                        "type": step.get("type", 0),
+                                        "name": step.get("name", ""),
+                                        "segment": seg_idx
+                                    })
+
+                            bbox = feature.get("bbox", [
+                                min(c[0] for c in ors_coords),
+                                min(c[1] for c in ors_coords),
+                                max(c[0] for c in ors_coords),
+                                max(c[1] for c in ors_coords),
+                            ])
+
+                            result = {
                                 "distance": dist,
                                 "duration": dur,
-                                "geometry": leaflet_geometry
+                                "geometry": leaflet_geometry,
+                                "bbox": bbox,
+                                "summary": {
+                                    "distance_km": round(dist / 1000.0, 1),
+                                    "duration_hours": round(dur / 3600.0, 1)
+                                },
+                                "steps": steps
                             }
+                            cache.set(cache_key, result, timeout=900) # 15 min cache
+                            return result
             except Exception as e:
                 logger.warning(f"ORS Directions API failed, using fallback route calculator: {e}")
 
@@ -149,9 +189,67 @@ class ORSService:
         total_duration = round(total_distance / avg_speed_m_s, 2)
         
         geometry = generate_fallback_polyline(origin_lat_lng, pickup_lat_lng, dropoff_lat_lng)
+        
+        d1_km = round(d1 * 1.25 / 1000.0, 1)
+        d2_km = round(d2 * 1.25 / 1000.0, 1)
 
-        return {
+        steps = [
+            {
+                "instruction": "Depart from Current Location",
+                "distance": 0,
+                "duration": 0,
+                "type": 11,
+                "name": "Current Location",
+                "segment": 0
+            },
+            {
+                "instruction": f"Head toward Pickup location via primary route ({d1_km} km)",
+                "distance": round(d1 * 1.25, 1),
+                "duration": round((d1 * 1.25) / avg_speed_m_s, 1),
+                "type": 0,
+                "name": "Main Transit Highway",
+                "segment": 0
+            },
+            {
+                "instruction": "Arrive at Pickup Location",
+                "distance": 0,
+                "duration": 0,
+                "type": 10,
+                "name": "Pickup Location",
+                "segment": 0
+            },
+            {
+                "instruction": f"Depart Pickup and merge onto Interstate freight corridor ({d2_km} km)",
+                "distance": round(d2 * 1.25, 1),
+                "duration": round((d2 * 1.25) / avg_speed_m_s, 1),
+                "type": 0,
+                "name": "Freight Corridor M-2",
+                "segment": 1
+            },
+            {
+                "instruction": "Arrive at Dropoff Destination",
+                "distance": 0,
+                "duration": 0,
+                "type": 10,
+                "name": "Dropoff Location",
+                "segment": 1
+            }
+        ]
+
+        lats = [c[0] for c in geometry]
+        lngs = [c[1] for c in geometry]
+        bbox = [min(lngs), min(lats), max(lngs), max(lats)]
+
+        result = {
             "distance": total_distance,
             "duration": total_duration,
-            "geometry": geometry
+            "geometry": geometry,
+            "bbox": bbox,
+            "summary": {
+                "distance_km": round(total_distance / 1000.0, 1),
+                "duration_hours": round(total_duration / 3600.0, 1)
+            },
+            "steps": steps
         }
+        cache.set(cache_key, result, timeout=900)
+        return result

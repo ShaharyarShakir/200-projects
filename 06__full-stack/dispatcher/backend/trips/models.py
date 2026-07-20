@@ -42,6 +42,11 @@ class Trip(models.Model):
             MaxValueValidator(Decimal('70.00'))
         ]
     )
+
+    distance_meters = models.FloatField(null=True, blank=True)
+    duration_seconds = models.FloatField(null=True, blank=True)
+    route_geometry = models.JSONField(default=list, blank=True)
+    route_summary = models.JSONField(default=dict, blank=True)
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
