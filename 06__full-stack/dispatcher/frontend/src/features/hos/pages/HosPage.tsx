@@ -5,10 +5,9 @@ import { Timeline } from '../components/timeline/Timeline';
 import { RemainingHoursCard } from '../components/cards/RemainingHoursCard';
 import { TripClock } from '../components/cards/TripClock';
 import { ELDViewer } from '../../eld/components/ELDViewer';
-import { HOSScheduleResponse } from '../types/hos';
+import type { HOSScheduleResponse } from '../types/hos';
 import type { DailyLog } from '../../eld/types/eld';
 import {
-  Clock,
   Gauge,
   Play,
   AlertCircle,
@@ -98,13 +97,13 @@ export const HosPage: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Page Header */}
-      <div className="bg-neutral-50/90 border border-neutral-200 rounded-2xl p-6 shadow-xl space-y-2">
+      <div className="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl backdrop-blur-md space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 border border-brand-200 text-brand-600">
-              <ShieldCheck className="w-3.5 h-3.5" /> FMCSA Hours of Service & ELD Log Engine
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/10 border border-brand-500/30 text-brand-300">
+              <ShieldCheck className="w-3.5 h-3.5 text-brand-400" /> FMCSA Hours of Service & ELD Log Engine
             </span>
-            <h1 className="text-2xl font-extrabold text-neutral-900 tracking-tight mt-2">
+            <h1 className="text-2xl font-extrabold text-neutral-100 tracking-tight mt-2">
               ELD Log Generator & Daily Log Sheets
             </h1>
             <p className="text-xs text-neutral-400">
@@ -114,9 +113,9 @@ export const HosPage: React.FC = () => {
 
           <button
             onClick={handlePresetScenario}
-            className="bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-800 text-xs font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+            className="bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 text-neutral-200 text-xs font-semibold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-brand-600" /> Assessment Sample (1,842 mi / 27.4h / 25h cycle)
+            <RotateCcw className="w-3.5 h-3.5 text-brand-400" /> Assessment Sample (1,842 mi / 27.4h / 25h cycle)
           </button>
         </div>
       </div>
@@ -124,14 +123,14 @@ export const HosPage: React.FC = () => {
       {/* Input Form & Driver Dashboard */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form Inputs Panel */}
-        <div className="bg-neutral-50/90 border border-neutral-200 rounded-2xl p-6 shadow-xl space-y-5">
-          <h3 className="text-base font-bold text-neutral-900 flex items-center gap-2">
-            <Gauge className="w-5 h-5 text-brand-600" /> Engine Inputs
+        <div className="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl backdrop-blur-md space-y-5">
+          <h3 className="text-base font-bold text-neutral-100 flex items-center gap-2">
+            <Gauge className="w-5 h-5 text-brand-400" /> Engine Inputs
           </h3>
 
           <form onSubmit={handleGenerate} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1">
+              <label className="block text-xs font-semibold text-neutral-300 mb-1">
                 Trip Distance (miles / km)
               </label>
               <input
@@ -139,13 +138,13 @@ export const HosPage: React.FC = () => {
                 step="any"
                 value={distance}
                 onChange={(e) => setDistance(parseFloat(e.target.value) || 0)}
-                className="w-full bg-neutral-0 border border-neutral-200 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-brand-600"
+                className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-sm font-mono text-neutral-100 focus:outline-none focus:border-brand-500"
                 placeholder="e.g. 1842"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1">
+              <label className="block text-xs font-semibold text-neutral-300 mb-1">
                 Estimated Driving Duration (hours)
               </label>
               <input
@@ -153,13 +152,13 @@ export const HosPage: React.FC = () => {
                 step="any"
                 value={duration}
                 onChange={(e) => setDuration(parseFloat(e.target.value) || 0)}
-                className="w-full bg-neutral-0 border border-neutral-200 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-brand-600"
+                className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-sm font-mono text-neutral-100 focus:outline-none focus:border-brand-500"
                 placeholder="e.g. 27.4"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1">
+              <label className="block text-xs font-semibold text-neutral-300 mb-1">
                 Current Cycle Hours Used (0 - 70)
               </label>
               <input
@@ -167,14 +166,14 @@ export const HosPage: React.FC = () => {
                 step="any"
                 value={cycleUsed}
                 onChange={(e) => setCycleUsed(parseFloat(e.target.value) || 0)}
-                className="w-full bg-neutral-0 border border-neutral-200 rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-brand-600"
+                className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-sm font-mono text-neutral-100 focus:outline-none focus:border-brand-500"
                 placeholder="e.g. 25"
               />
             </div>
 
             {(validationError || generateHosMutation.isError || generateEldMutation.isError) && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-xs text-red-400 flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+              <div className="bg-rose-950/40 border border-rose-500/40 rounded-xl p-3 text-xs text-rose-300 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
                 <span>{validationError || (generateHosMutation.error as any)?.message || 'Generation failed.'}</span>
               </div>
             )}
@@ -182,11 +181,11 @@ export const HosPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-brand-600 hover:bg-brand-700 text-neutral-0 font-semibold py-3 px-4 rounded-xl shadow-lg shadow-brand-600/30 transition-all flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-50"
+              className="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-brand-600/30 transition-all flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-neutral-0 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   <span>Generating ELD Logs & HOS Schedule...</span>
                 </>
               ) : (
@@ -220,19 +219,19 @@ export const HosPage: React.FC = () => {
 
       {/* Main Content Tabs: ELD Logs vs Driving Timeline */}
       <div className="space-y-6">
-        <div className="flex items-center gap-2 border-b border-neutral-200 pb-2">
+        <div className="flex items-center gap-2 border-b border-neutral-800 pb-2">
           <button
             onClick={() => setActiveTab('eld-logs')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer border ${
               activeTab === 'eld-logs'
-                ? 'bg-brand-600 text-neutral-0 border-brand-500 shadow-md shadow-brand-600/30'
-                : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-neutral-100'
+                ? 'bg-brand-600 text-white border-brand-500 shadow-md shadow-brand-600/30'
+                : 'bg-neutral-900 text-neutral-300 border-neutral-800 hover:bg-neutral-800 hover:text-white'
             }`}
           >
             <FileSpreadsheet className="w-4 h-4" />
             <span>FMCSA Daily Log Sheets</span>
             {dailyLogs.length > 0 && (
-              <span className={`text-xs px-2 py-0.5 rounded-full font-extrabold ${activeTab === 'eld-logs' ? 'bg-brand-700 text-neutral-0' : 'bg-neutral-200 text-neutral-700'}`}>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-extrabold ${activeTab === 'eld-logs' ? 'bg-brand-700 text-white' : 'bg-neutral-800 text-neutral-300'}`}>
                 {dailyLogs.length} Days
               </span>
             )}
@@ -242,8 +241,8 @@ export const HosPage: React.FC = () => {
             onClick={() => setActiveTab('hos-timeline')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer border ${
               activeTab === 'hos-timeline'
-                ? 'bg-brand-600 text-neutral-0 border-brand-500 shadow-md shadow-brand-600/30'
-                : 'bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-neutral-100'
+                ? 'bg-brand-600 text-white border-brand-500 shadow-md shadow-brand-600/30'
+                : 'bg-neutral-900 text-neutral-300 border-neutral-800 hover:bg-neutral-800 hover:text-white'
             }`}
           >
             <Route className="w-4 h-4" />
