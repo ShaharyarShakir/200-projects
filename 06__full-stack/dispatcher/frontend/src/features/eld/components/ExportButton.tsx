@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, Printer, FileText } from 'lucide-react';
+import { Download, Printer } from 'lucide-react';
 import { eldApi } from '../api/eldApi';
 
 interface ExportButtonProps {
@@ -55,9 +55,9 @@ export const ExportButton: React.FC<ExportButtonProps> = ({ tripId }) => {
 
       <button
         onClick={handlePrint}
-        className="bg-neutral-100 hover:bg-neutral-200 text-neutral-800 border border-neutral-300 font-semibold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+        className="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 font-semibold text-xs px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
       >
-        <Printer className="w-4 h-4 text-neutral-600" />
+        <Printer className="w-4 h-4 text-neutral-400" />
         <span>Print Logs</span>
       </button>
     </div>
