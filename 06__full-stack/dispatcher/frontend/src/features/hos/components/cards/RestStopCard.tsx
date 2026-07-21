@@ -1,6 +1,6 @@
 import React from 'react';
 import { BedDouble, Coffee, MapPin, Clock } from 'lucide-react';
-import { HOSEvent } from '../../types/hos';
+import type { HOSEvent } from '../../types/hos';
 
 interface RestStopCardProps {
   event: HOSEvent;
