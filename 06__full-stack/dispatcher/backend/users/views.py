@@ -9,6 +9,7 @@ from .serializers import UserSerializer, RegisterSerializer
 
 User = get_user_model()
 
+
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -17,13 +18,16 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
-            return Response({
-                'user': UserSerializer(user).data,
-                'tokens': {
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
-                }
-            }, status=status.HTTP_201_CREATED)
+            return Response(
+                {
+                    "user": UserSerializer(user).data,
+                    "tokens": {
+                        "refresh": str(refresh),
+                        "access": str(refresh.access_token),
+                    },
+                },
+                status=status.HTTP_201_CREATED,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -31,30 +35,32 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        email = request.data.get('email')
-        password = request.data.get('password')
+        email = request.data.get("email")
+        password = request.data.get("password")
 
         if not email or not password:
             return Response(
-                {'error': 'Both email and password are required.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Both email and password are required."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         user = authenticate(request, email=email, password=password)
         if user is None:
             return Response(
-                {'error': 'Invalid credentials.'},
-                status=status.HTTP_401_UNAUTHORIZED
+                {"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED
             )
 
         refresh = RefreshToken.for_user(user)
-        return Response({
-            'user': UserSerializer(user).data,
-            'tokens': {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "user": UserSerializer(user).data,
+                "tokens": {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class UserMeView(APIView):
@@ -75,8 +81,7 @@ class HealthCheckView(APIView):
         except Exception:
             db_status = "disconnected"
 
-        return Response({
-            "status": "ok",
-            "database": db_status,
-            "version": "1.0.0"
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {"status": "ok", "database": db_status, "version": "1.0.0"},
+            status=status.HTTP_200_OK,
+        )
