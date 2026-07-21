@@ -1,98 +1,96 @@
 import React from 'react';
+import { Link } from '@tanstack/react-router';
 import { useAuth } from '../features/auth/context/AuthContext';
-import { Truck, LayoutDashboard, Route, History, User as UserIcon, LogOut, LogIn, UserPlus, FileSpreadsheet, Clock } from 'lucide-react';
+import { Truck, LayoutDashboard, Route, History, User as UserIcon, LogOut, LogIn, UserPlus, FileSpreadsheet, Sliders } from 'lucide-react';
 
-interface NavbarProps {
-  currentView: string;
-  onNavigate: (view: string) => void;
-}
-
-export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
+export const Navbar: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
 
+  const activeLinkClass = 'bg-brand-500/20 text-brand-300 border-brand-500/40 shadow-sm';
+  const inactiveLinkClass = 'text-neutral-300 hover:text-white hover:bg-neutral-800/80 border-transparent';
+  const baseLinkClass = 'flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all border';
+
   return (
-    <header className="border-b border-neutral-200 bg-neutral-50/90 backdrop-blur-md sticky top-0 z-50">
+    <header className="border-b border-neutral-800/80 bg-neutral-900/90 backdrop-blur-md sticky top-0 z-50 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo */}
-        <button
-          onClick={() => onNavigate('dashboard')}
-          className="flex items-center gap-3 bg-transparent border-0 cursor-pointer text-left"
+        <Link
+          to="/"
+          className="flex items-center gap-3 bg-transparent border-0 cursor-pointer text-left group"
         >
-          <div className="p-2 bg-brand-600 rounded-xl shadow-lg shadow-brand-600/30 text-neutral-0">
+          <div className="p-2 bg-brand-600 rounded-xl shadow-lg shadow-brand-600/30 text-white group-hover:scale-105 transition-transform">
             <Truck className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-neutral-900 tracking-tight leading-tight">
+            <h1 className="text-lg font-bold text-neutral-100 tracking-tight leading-tight">
               Trip Planner
             </h1>
-            <p className="text-[11px] text-brand-600 font-medium">HOS & ELD Dispatcher</p>
+            <p className="text-[11px] text-brand-400 font-medium">HOS & ELD Dispatcher</p>
           </div>
-        </button>
+        </Link>
 
         {/* Navigation Links */}
-        <nav className="hidden md:flex items-center gap-1">
-          <button
-            onClick={() => onNavigate('dashboard')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-              currentView === 'dashboard'
-                ? 'bg-brand-50 text-brand-600 border border-brand-300'
-                : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
-            }`}
+        <nav className="hidden md:flex items-center gap-1.5">
+          <Link
+            to="/"
+            activeOptions={{ exact: true }}
+            activeProps={{ className: `${baseLinkClass} ${activeLinkClass}` }}
+            inactiveProps={{ className: `${baseLinkClass} ${inactiveLinkClass}` }}
           >
-            <LayoutDashboard className="w-4 h-4" />
+            <LayoutDashboard className="w-4 h-4 text-brand-400" />
             Dashboard
-          </button>
+          </Link>
 
-          <button
-            onClick={() => onNavigate('route-planner')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-              currentView === 'route-planner'
-                ? 'bg-brand-50 text-brand-600 border border-brand-300'
-                : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
-            }`}
+          <Link
+            to="/route-planner"
+            activeProps={{ className: `${baseLinkClass} ${activeLinkClass}` }}
+            inactiveProps={{ className: `${baseLinkClass} ${inactiveLinkClass}` }}
           >
-            <Route className="w-4 h-4" />
+            <Route className="w-4 h-4 text-emerald-400" />
             New Trip
-          </button>
+          </Link>
 
-          <button
-            onClick={() => onNavigate('hos-engine')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-              currentView === 'hos-engine'
-                ? 'bg-brand-50 text-brand-600 border border-brand-300'
-                : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
-            }`}
+          <Link
+            to="/route-optimization"
+            activeProps={{ className: `${baseLinkClass} ${activeLinkClass}` }}
+            inactiveProps={{ className: `${baseLinkClass} ${inactiveLinkClass}` }}
           >
-            <FileSpreadsheet className="w-4 h-4 text-brand-600" />
+            <Sliders className="w-4 h-4 text-amber-400" />
+            Route Optimization
+          </Link>
+
+          <Link
+            to="/hos-logs"
+            activeProps={{ className: `${baseLinkClass} ${activeLinkClass}` }}
+            inactiveProps={{ className: `${baseLinkClass} ${inactiveLinkClass}` }}
+          >
+            <FileSpreadsheet className="w-4 h-4 text-purple-400" />
             HOS & ELD Logs
-          </button>
+          </Link>
 
-          <button
-            onClick={() => onNavigate('trip-history')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-              currentView === 'trip-history'
-                ? 'bg-brand-50 text-brand-600 border border-brand-300'
-                : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
-            }`}
+          <Link
+            to="/trips"
+            activeProps={{ className: `${baseLinkClass} ${activeLinkClass}` }}
+            inactiveProps={{ className: `${baseLinkClass} ${inactiveLinkClass}` }}
           >
-            <History className="w-4 h-4" />
+            <History className="w-4 h-4 text-sky-400" />
             Trip History
-          </button>
+          </Link>
         </nav>
 
         {/* User / Auth Controls */}
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-100 border border-neutral-200">
-                <UserIcon className="w-4 h-4 text-brand-600" />
-                <span className="text-xs font-semibold text-neutral-800">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-800/80 border border-neutral-700">
+                <UserIcon className="w-4 h-4 text-brand-400" />
+                <span className="text-xs font-semibold text-neutral-200">
                   {user?.first_name || user?.email.split('@')[0]}
                 </span>
               </div>
               <button
                 onClick={logout}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-error-50 text-neutral-600 hover:text-error-600 border border-neutral-200 hover:border-error-300 text-xs font-medium transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-rose-500/20 text-neutral-300 hover:text-rose-400 border border-neutral-700 hover:border-rose-500/40 text-xs font-semibold transition-all cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 Logout
@@ -100,28 +98,22 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => onNavigate('login')}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
-                  currentView === 'login'
-                    ? 'bg-brand-600 text-neutral-0 border-brand-500'
-                    : 'bg-neutral-100 text-neutral-800 border-neutral-200 hover:bg-neutral-200'
-                }`}
+              <Link
+                to="/login"
+                activeProps={{ className: "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border bg-brand-600 text-white border-brand-500 shadow-md" }}
+                inactiveProps={{ className: "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-750 hover:text-white" }}
               >
                 <LogIn className="w-3.5 h-3.5" />
                 Sign In
-              </button>
-              <button
-                onClick={() => onNavigate('register')}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
-                  currentView === 'register'
-                    ? 'bg-brand-600 text-neutral-0 border-brand-500'
-                    : 'bg-brand-50 text-brand-600 border-brand-300 hover:bg-brand-100'
-                }`}
+              </Link>
+              <Link
+                to="/register"
+                activeProps={{ className: "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border bg-brand-600 text-white border-brand-500 shadow-md" }}
+                inactiveProps={{ className: "flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border bg-brand-500/10 text-brand-400 border-brand-500/30 hover:bg-brand-500/20" }}
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 Register
-              </button>
+              </Link>
             </div>
           )}
         </div>
