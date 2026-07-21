@@ -4,55 +4,54 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('trips', '0001_initial'),
+        ("trips", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='trip',
-            name='current_lat',
+            model_name="trip",
+            name="current_lat",
             field=models.FloatField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='trip',
-            name='current_lng',
+            model_name="trip",
+            name="current_lng",
             field=models.FloatField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='trip',
-            name='current_location_name',
-            field=models.CharField(blank=True, default='', max_length=255),
+            model_name="trip",
+            name="current_location_name",
+            field=models.CharField(blank=True, default="", max_length=255),
         ),
         migrations.AddField(
-            model_name='trip',
-            name='dropoff_lat',
+            model_name="trip",
+            name="dropoff_lat",
             field=models.FloatField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='trip',
-            name='dropoff_lng',
+            model_name="trip",
+            name="dropoff_lng",
             field=models.FloatField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='trip',
-            name='dropoff_name',
-            field=models.CharField(blank=True, default='', max_length=255),
+            model_name="trip",
+            name="dropoff_name",
+            field=models.CharField(blank=True, default="", max_length=255),
         ),
         migrations.AddField(
-            model_name='trip',
-            name='pickup_lat',
+            model_name="trip",
+            name="pickup_lat",
             field=models.FloatField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='trip',
-            name='pickup_lng',
+            model_name="trip",
+            name="pickup_lng",
             field=models.FloatField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='trip',
-            name='pickup_name',
-            field=models.CharField(blank=True, default='', max_length=255),
+            model_name="trip",
+            name="pickup_name",
+            field=models.CharField(blank=True, default="", max_length=255),
         ),
     ]
