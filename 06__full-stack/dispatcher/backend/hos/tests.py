@@ -5,7 +5,7 @@ from rest_framework import status
 from trips.models import Trip
 from .models import TripSchedule
 from .services.schedule_engine import ScheduleEngine
-from .services.hos_engine import HOSEngine, HOSConfig
+from .services.hos_engine import HOSConfig
 from .services.cycle_engine import CycleEngine
 from .services.fuel_engine import FuelEngine
 
@@ -13,7 +13,6 @@ User = get_user_model()
 
 
 class HOSEngineUnitTests(APITestCase):
-
     def test_fmcsa_constants(self):
         self.assertEqual(HOSConfig.MAX_DRIVING_HOURS, 11.0)
         self.assertEqual(HOSConfig.MAX_DUTY_HOURS, 14.0)
@@ -28,7 +27,7 @@ class HOSEngineUnitTests(APITestCase):
         # 10 hours total driving distance: 500 miles, duration: 10 hours
         result = engine.generate_schedule(distance=500, duration=10, cycle_used=0)
         event_types = [e["type"] for e in result["events"]]
-        
+
         # Must contain pickup, drive, break (after 8h drive), drive, dropoff
         self.assertIn("break", event_types)
         drive_events = [e for e in result["events"] if e["type"] == "drive"]
@@ -40,7 +39,7 @@ class HOSEngineUnitTests(APITestCase):
         # 15 hours total driving (requires sleep stop after 11h driving / 14h duty)
         result = engine.generate_schedule(distance=900, duration=15, cycle_used=0)
         event_types = [e["type"] for e in result["events"]]
-        
+
         self.assertIn("sleep", event_types)
         sleep_events = [e for e in result["events"] if e["type"] == "sleep"]
         self.assertEqual(sleep_events[0]["hours"], 10.0)
@@ -73,50 +72,45 @@ class HOSEngineUnitTests(APITestCase):
         # Sample prompt: 1,842 km / miles, 27.4 hours, 25 hours cycle used
         engine = ScheduleEngine()
         result = engine.generate_schedule(distance=1842, duration=27.4, cycle_used=25)
-        
+
         events = result["events"]
         event_types = [e["type"] for e in events]
-        
+
         # Verify event sequence begins with pickup and ends with dropoff
         self.assertEqual(events[0]["type"], "pickup")
         self.assertEqual(events[-1]["type"], "dropoff")
-        
+
         self.assertIn("break", event_types)
         self.assertIn("sleep", event_types)
         self.assertIn("fuel", event_types)
 
 
 class HOSAPITests(APITestCase):
-
     def setUp(self):
-        self.user = User.objects.create_user(email='driver@example.com', password='Password123!')
+        self.user = User.objects.create_user(
+            email="driver@example.com", password="Password123!"
+        )
         self.trip = Trip.objects.create(
             user=self.user,
-            current_location='New York, NY',
-            pickup_location='Chicago, IL',
-            dropoff_location='Los Angeles, CA',
+            current_location="New York, NY",
+            pickup_location="Chicago, IL",
+            dropoff_location="Los Angeles, CA",
             distance_meters=2800000.0,  # ~1739.8 miles
-            duration_seconds=97200.0,    # 27 hours
-            current_cycle_used=Decimal('20.00'),
-            status=Trip.Status.DRAFT
+            duration_seconds=97200.0,  # 27 hours
+            current_cycle_used=Decimal("20.00"),
+            status=Trip.Status.DRAFT,
         )
 
     def test_generate_schedule_direct_payload(self):
-        payload = {
-            "distance": 1842,
-            "duration": 27.4,
-            "cycle_used": 25
-        }
-        response = self.client.post('/api/hos/generate/', payload, format='json')
+        payload = {"distance": 1842, "duration": 27.4, "cycle_used": 25}
+        response = self.client.post("/api/hos/generate/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("events", response.data)
         self.assertGreater(len(response.data["events"]), 4)
 
     def test_generate_schedule_with_trip_id_and_persistence(self):
-        payload = {
-            "trip_id": str(self.trip.id)
-        }
-        response = self.client.post('/api/hos/generate/', payload, format='json')
+        payload = {"trip_id": str(self.trip.id)}
+        response = self.client.post("/api/hos/generate/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["trip_id"], str(self.trip.id))
 
@@ -129,33 +123,21 @@ class HOSAPITests(APITestCase):
         self.assertEqual(self.trip.status, Trip.Status.PLANNING)
 
         # Test GET schedule endpoint
-        get_res = self.client.get(f'/api/hos/schedule/{self.trip.id}/')
+        get_res = self.client.get(f"/api/hos/schedule/{self.trip.id}/")
         self.assertEqual(get_res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(get_res.data["events"]), schedules.count())
 
     def test_validation_negative_cycle(self):
-        payload = {
-            "distance": 1000,
-            "duration": 15,
-            "cycle_used": -5
-        }
-        response = self.client.post('/api/hos/generate/', payload, format='json')
+        payload = {"distance": 1000, "duration": 15, "cycle_used": -5}
+        response = self.client.post("/api/hos/generate/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_validation_cycle_over_70(self):
-        payload = {
-            "distance": 1000,
-            "duration": 15,
-            "cycle_used": 75
-        }
-        response = self.client.post('/api/hos/generate/', payload, format='json')
+        payload = {"distance": 1000, "duration": 15, "cycle_used": 75}
+        response = self.client.post("/api/hos/generate/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_validation_zero_distance(self):
-        payload = {
-            "distance": 0,
-            "duration": 15,
-            "cycle_used": 10
-        }
-        response = self.client.post('/api/hos/generate/', payload, format='json')
+        payload = {"distance": 0, "duration": 15, "cycle_used": 10}
+        response = self.client.post("/api/hos/generate/", payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
