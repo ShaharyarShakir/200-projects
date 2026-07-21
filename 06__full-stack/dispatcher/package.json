@@ -1,0 +1,10 @@
+{
+  "name": "dispatcher-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "pre-commit": "bash scripts/pre-commit.sh",
+    "prepare": "git config core.hooksPath .husky || true"
+  },
+  "packageManager": "pnpm@10.5.2"
+}
