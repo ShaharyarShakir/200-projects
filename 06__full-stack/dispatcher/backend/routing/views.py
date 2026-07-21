@@ -12,6 +12,7 @@ from .serializers import (
 from .services.ors import ORSService
 from .services.geocoding import GeocodingService
 
+
 class LocationSearchView(APIView):
     def get(self, request):
         serializer = LocationSearchQuerySerializer(data=request.query_params)
@@ -21,6 +22,7 @@ class LocationSearchView(APIView):
         q = serializer.validated_data["q"]
         results = GeocodingService.search(q)
         return Response(results, status=status.HTTP_200_OK)
+
 
 class LocationReverseView(APIView):
     def get(self, request):
@@ -39,7 +41,7 @@ class GeocodeView(APIView):
         serializer = GeocodeRequestSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
         address = serializer.validated_data["address"]
         try:
             coords = ORSService.geocode(address)
@@ -47,15 +49,16 @@ class GeocodeView(APIView):
         except Exception as e:
             return Response(
                 {"error": f"Failed to geocode address: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
 
 class RouteView(APIView):
     def post(self, request):
         serializer = RouteRequestSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
         data = serializer.validated_data
         origin = data["origin"]
         pickup = data["pickup"]
@@ -67,7 +70,7 @@ class RouteView(APIView):
         except Exception as e:
             return Response(
                 {"error": f"Route calculation failed: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
@@ -78,28 +81,39 @@ class RouteDetailView(APIView):
         trip = get_object_or_404(Trip, id=trip_id, user=request.user)
 
         # Check if route is already calculated and cached on trip
-        if trip.route_geometry and trip.route_summary and trip.distance_meters is not None:
-            return Response({
-                "trip_id": str(trip.id),
-                "distance": trip.distance_meters,
-                "duration": trip.duration_seconds,
-                "geometry": trip.route_geometry,
-                "summary": trip.route_summary,
-                "cached": True
-            }, status=status.HTTP_200_OK)
+        if (
+            trip.route_geometry
+            and trip.route_summary
+            and trip.distance_meters is not None
+        ):
+            return Response(
+                {
+                    "trip_id": str(trip.id),
+                    "distance": trip.distance_meters,
+                    "duration": trip.duration_seconds,
+                    "geometry": trip.route_geometry,
+                    "summary": trip.route_summary,
+                    "cached": True,
+                },
+                status=status.HTTP_200_OK,
+            )
 
         # If coordinates exist, calculate and persist
-        if (trip.current_lat is not None and trip.current_lng is not None and
-            trip.pickup_lat is not None and trip.pickup_lng is not None and
-            trip.dropoff_lat is not None and trip.dropoff_lng is not None):
-
+        if (
+            trip.current_lat is not None
+            and trip.current_lng is not None
+            and trip.pickup_lat is not None
+            and trip.pickup_lng is not None
+            and trip.dropoff_lat is not None
+            and trip.dropoff_lng is not None
+        ):
             origin = [trip.current_lng, trip.current_lat]
             pickup = [trip.pickup_lng, trip.pickup_lat]
             dropoff = [trip.dropoff_lng, trip.dropoff_lat]
 
             try:
                 route_result = ORSService.calculate_route(origin, pickup, dropoff)
-                
+
                 # Persist on Trip model
                 trip.distance_meters = route_result.get("distance")
                 trip.duration_seconds = route_result.get("duration")
@@ -113,10 +127,12 @@ class RouteDetailView(APIView):
             except Exception as e:
                 return Response(
                     {"error": f"Failed to compute route for trip: {str(e)}"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
 
         return Response(
-            {"error": "Trip coordinates are missing. Geocode locations before calculating route."},
-            status=status.HTTP_400_BAD_REQUEST
+            {
+                "error": "Trip coordinates are missing. Geocode locations before calculating route."
+            },
+            status=status.HTTP_400_BAD_REQUEST,
         )
