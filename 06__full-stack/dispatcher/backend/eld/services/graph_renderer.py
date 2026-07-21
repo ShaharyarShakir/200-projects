@@ -6,7 +6,7 @@ ROW_Y_MAP = {
     DutyStatus.OFF_DUTY: 0,
     DutyStatus.SLEEPER_BERTH: 1,
     DutyStatus.DRIVING: 2,
-    DutyStatus.ON_DUTY: 3
+    DutyStatus.ON_DUTY: 3,
 }
 
 
@@ -16,7 +16,9 @@ class ELDGraphRenderer:
     """
 
     @staticmethod
-    def generate_svg_elements(graph_data: List[Dict[str, Any]], width: float = 800, height: float = 200) -> Dict[str, Any]:
+    def generate_svg_elements(
+        graph_data: List[Dict[str, Any]], width: float = 800, height: float = 200
+    ) -> Dict[str, Any]:
         """
         Calculates normalized SVG path coordinates for the 4 duty status rows:
         Row 0: OFF_DUTY
@@ -75,5 +77,5 @@ class ELDGraphRenderer:
             "margin_bottom": margin_bottom,
             "chart_width": chart_w,
             "chart_height": chart_h,
-            "row_height": row_height
+            "row_height": row_height,
         }
