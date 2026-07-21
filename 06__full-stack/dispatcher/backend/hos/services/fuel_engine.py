@@ -5,6 +5,7 @@ class FuelEngine:
     """
     Handles fuel stop calculations based on trip mileage.
     """
+
     def __init__(self, config=HOSConfig):
         self.config = config
 
@@ -19,10 +20,16 @@ class FuelEngine:
 
         num_stops = int(total_distance // interval)
         # Avoid fuel stop exactly at destination end point
-        stops = [i * interval for i in range(1, num_stops + 1) if i * interval < total_distance]
+        stops = [
+            i * interval
+            for i in range(1, num_stops + 1)
+            if i * interval < total_distance
+        ]
         return stops
 
-    def distance_to_next_fuel(self, current_distance: float, next_milestone: float) -> float:
+    def distance_to_next_fuel(
+        self, current_distance: float, next_milestone: float
+    ) -> float:
         """
         Returns distance remaining until the next fuel milestone.
         """
