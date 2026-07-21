@@ -75,24 +75,24 @@ export const LogGraph: React.FC<LogGraphProps> = ({ graphData, dayNumber, dateSt
   const hoursArray = Array.from({ length: 25 }, (_, i) => i);
 
   return (
-    <div className="bg-neutral-50/90 border border-neutral-200 rounded-2xl p-5 shadow-lg space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 pb-3">
+    <div className="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-5 shadow-xl backdrop-blur-md space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800 pb-3">
         <div className="flex items-center gap-3">
-          <span className="px-2.5 py-1 bg-brand-50 border border-brand-300 text-brand-600 text-xs font-bold rounded-lg">
+          <span className="px-2.5 py-1 bg-brand-500/10 border border-brand-500/30 text-brand-300 text-xs font-bold rounded-lg">
             Day #{dayNumber}
           </span>
-          <h3 className="text-sm font-bold text-neutral-800 tracking-tight">
+          <h3 className="text-sm font-bold text-neutral-100 tracking-tight">
             24-Hour Duty Status Graph Grid ({dateStr})
           </h3>
         </div>
 
         {activeSegment && (
-          <div className="text-xs font-mono bg-blue-50 border border-blue-200 text-blue-800 px-3 py-1 rounded-lg flex items-center gap-2 animate-pulse">
+          <div className="text-xs font-mono bg-brand-500/20 border border-brand-500/40 text-brand-300 px-3 py-1 rounded-lg flex items-center gap-2 animate-pulse">
             <span className="font-semibold">{activeSegment.status.replace('_', ' ')}:</span>
             <span>
               {activeSegment.start_hour.toFixed(2)}h - {activeSegment.end_hour.toFixed(2)}h ({activeSegment.duration.toFixed(2)}h)
             </span>
-            {activeSegment.location && <span className="text-blue-600">📍 {activeSegment.location}</span>}
+            {activeSegment.location && <span className="text-brand-400">📍 {activeSegment.location}</span>}
           </div>
         )}
       </div>
@@ -105,8 +105,8 @@ export const LogGraph: React.FC<LogGraphProps> = ({ graphData, dayNumber, dateSt
             y={margin.top}
             width={chartW}
             height={chartH}
-            fill="#f8fafc"
-            stroke="#94a3b8"
+            fill="#090d16"
+            stroke="#1f2937"
             strokeWidth="1.5"
             rx="4"
           />
@@ -124,7 +124,7 @@ export const LogGraph: React.FC<LogGraphProps> = ({ graphData, dayNumber, dateSt
                     y1={yDiv}
                     x2={margin.left + chartW}
                     y2={yDiv}
-                    stroke="#cbd5e1"
+                    stroke="#1f2937"
                     strokeWidth="1"
                   />
                 )}
@@ -135,7 +135,7 @@ export const LogGraph: React.FC<LogGraphProps> = ({ graphData, dayNumber, dateSt
                   textAnchor="end"
                   fontSize="11"
                   fontWeight="700"
-                  fill="#334155"
+                  fill="#9ca3af"
                 >
                   {ROW_LABELS[st]}
                 </text>
@@ -146,7 +146,7 @@ export const LogGraph: React.FC<LogGraphProps> = ({ graphData, dayNumber, dateSt
                   textAnchor="start"
                   fontSize="11"
                   fontWeight="800"
-                  fill="#0f172a"
+                  fill="#f3f4f6"
                 >
                   {totals[st].toFixed(1)}h
                 </text>
@@ -167,7 +167,7 @@ export const LogGraph: React.FC<LogGraphProps> = ({ graphData, dayNumber, dateSt
                   y1={margin.top}
                   x2={x}
                   y2={margin.top + chartH}
-                  stroke={hr % 2 !== 0 ? '#e2e8f0' : '#cbd5e1'}
+                  stroke={hr % 2 !== 0 ? '#111827' : '#1f2937'}
                   strokeWidth={hr % 2 !== 0 ? '0.75' : '1.5'}
                 />
 
@@ -179,7 +179,7 @@ export const LogGraph: React.FC<LogGraphProps> = ({ graphData, dayNumber, dateSt
                       textAnchor="middle"
                       fontSize="10"
                       fontWeight="600"
-                      fill="#64748b"
+                      fill="#6b7280"
                     >
                       {labelStr}
                     </text>
@@ -189,7 +189,7 @@ export const LogGraph: React.FC<LogGraphProps> = ({ graphData, dayNumber, dateSt
                       textAnchor="middle"
                       fontSize="10"
                       fontWeight="600"
-                      fill="#64748b"
+                      fill="#6b7280"
                     >
                       {labelStr}
                     </text>
@@ -214,18 +214,18 @@ export const LogGraph: React.FC<LogGraphProps> = ({ graphData, dayNumber, dateSt
                 width={Math.max(x2 - x1, 2)}
                 height={rowH}
                 fill="transparent"
-                className="hover:fill-blue-500/10 cursor-pointer transition-all"
+                className="hover:fill-sky-500/20 cursor-pointer transition-all"
                 onMouseEnter={() => setActiveSegment(seg)}
                 onMouseLeave={() => setActiveSegment(null)}
               />
             );
           })}
 
-          {/* Duty Status Blue Line Path */}
+          {/* Duty Status Glowing Sky Line Path */}
           <path
             d={pathD}
             fill="none"
-            stroke="#2563eb"
+            stroke="#38bdf8"
             strokeWidth="3.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -233,9 +233,9 @@ export const LogGraph: React.FC<LogGraphProps> = ({ graphData, dayNumber, dateSt
         </svg>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between text-xs text-neutral-500 pt-2 border-t border-neutral-200">
+      <div className="flex flex-wrap items-center justify-between text-xs text-neutral-400 pt-2 border-t border-neutral-800">
         <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 bg-blue-600 rounded-full inline-block"></span> Continuous Duty Line
+          <span className="w-3 h-3 bg-sky-400 rounded-full inline-block shadow-sm shadow-sky-400/50"></span> Continuous Duty Line
         </span>
         <span>Grid Resolution: 15-Minute Ticks (00:00 - 24:00)</span>
       </div>
