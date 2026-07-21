@@ -6,52 +6,143 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('trips', '0003_trip_distance_meters_trip_duration_seconds_and_more'),
+        ("trips", "0003_trip_distance_meters_trip_duration_seconds_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='DailyLog',
+            name="DailyLog",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('day_number', models.IntegerField(default=1)),
-                ('date', models.DateField()),
-                ('total_distance', models.FloatField(default=0.0, help_text='Miles driven on this day')),
-                ('driving_hours', models.FloatField(default=0.0, help_text='Total driving hours (max 11)')),
-                ('duty_hours', models.FloatField(default=0.0, help_text='Total on-duty non-driving hours')),
-                ('sleeper_hours', models.FloatField(default=0.0, help_text='Total sleeper berth hours')),
-                ('off_duty_hours', models.FloatField(default=0.0, help_text='Total off duty hours')),
-                ('cycle_hours', models.FloatField(default=0.0, help_text='Cumulative cycle hours used at day end')),
-                ('graph_data', models.JSONField(default=list, help_text='24-hour timeline grid segments')),
-                ('summary', models.JSONField(default=dict, help_text='Detailed metrics and stop counters')),
-                ('driver_info', models.JSONField(default=dict, help_text='Driver name, license, carrier, etc.')),
-                ('trip_info', models.JSONField(default=dict, help_text='Trip origin, pickup, dropoff, total dist')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('trip', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='daily_logs', to='trips.trip')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("day_number", models.IntegerField(default=1)),
+                ("date", models.DateField()),
+                (
+                    "total_distance",
+                    models.FloatField(
+                        default=0.0, help_text="Miles driven on this day"
+                    ),
+                ),
+                (
+                    "driving_hours",
+                    models.FloatField(
+                        default=0.0, help_text="Total driving hours (max 11)"
+                    ),
+                ),
+                (
+                    "duty_hours",
+                    models.FloatField(
+                        default=0.0, help_text="Total on-duty non-driving hours"
+                    ),
+                ),
+                (
+                    "sleeper_hours",
+                    models.FloatField(
+                        default=0.0, help_text="Total sleeper berth hours"
+                    ),
+                ),
+                (
+                    "off_duty_hours",
+                    models.FloatField(default=0.0, help_text="Total off duty hours"),
+                ),
+                (
+                    "cycle_hours",
+                    models.FloatField(
+                        default=0.0, help_text="Cumulative cycle hours used at day end"
+                    ),
+                ),
+                (
+                    "graph_data",
+                    models.JSONField(
+                        default=list, help_text="24-hour timeline grid segments"
+                    ),
+                ),
+                (
+                    "summary",
+                    models.JSONField(
+                        default=dict, help_text="Detailed metrics and stop counters"
+                    ),
+                ),
+                (
+                    "driver_info",
+                    models.JSONField(
+                        default=dict, help_text="Driver name, license, carrier, etc."
+                    ),
+                ),
+                (
+                    "trip_info",
+                    models.JSONField(
+                        default=dict,
+                        help_text="Trip origin, pickup, dropoff, total dist",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "trip",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="daily_logs",
+                        to="trips.trip",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['day_number', 'date'],
+                "ordering": ["day_number", "date"],
             },
         ),
         migrations.CreateModel(
-            name='DutyEvent',
+            name="DutyEvent",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('type', models.CharField(choices=[('OFF_DUTY', 'Off Duty'), ('SLEEPER_BERTH', 'Sleeper Berth'), ('DRIVING', 'Driving'), ('ON_DUTY', 'On Duty (Not Driving)')], max_length=20)),
-                ('start_time', models.DateTimeField()),
-                ('end_time', models.DateTimeField()),
-                ('duration', models.FloatField(help_text='Duration in hours')),
-                ('location', models.CharField(blank=True, default='', max_length=255)),
-                ('notes', models.TextField(blank=True, default='')),
-                ('daily_log', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='duty_events', to='eld.dailylog')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("OFF_DUTY", "Off Duty"),
+                            ("SLEEPER_BERTH", "Sleeper Berth"),
+                            ("DRIVING", "Driving"),
+                            ("ON_DUTY", "On Duty (Not Driving)"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("start_time", models.DateTimeField()),
+                ("end_time", models.DateTimeField()),
+                ("duration", models.FloatField(help_text="Duration in hours")),
+                ("location", models.CharField(blank=True, default="", max_length=255)),
+                ("notes", models.TextField(blank=True, default="")),
+                (
+                    "daily_log",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="duty_events",
+                        to="eld.dailylog",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['start_time'],
+                "ordering": ["start_time"],
             },
         ),
     ]
