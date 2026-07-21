@@ -19,23 +19,25 @@ class HOSGenerateView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         data = serializer.validated_data
-        trip_id = data.get('trip_id')
-        distance = data.get('distance')
-        duration = data.get('duration')
-        cycle_used = data.get('cycle_used', 0.0)
-        start_time = data.get('start_time')
+        trip_id = data.get("trip_id")
+        distance = data.get("distance")
+        duration = data.get("duration")
+        cycle_used = data.get("cycle_used", 0.0)
+        start_time = data.get("start_time")
 
         trip = None
         if trip_id:
             trip = get_object_or_404(Trip, id=trip_id)
             if trip.distance_meters is None or trip.duration_seconds is None:
                 return Response(
-                    {"error": "Trip route distance and duration are not calculated yet. Calculate route first."},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {
+                        "error": "Trip route distance and duration are not calculated yet. Calculate route first."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             distance = trip.distance_meters / 1609.344  # convert meters to miles
-            duration = trip.duration_seconds / 3600.0   # convert seconds to hours
-            if 'cycle_used' not in request.data:
+            duration = trip.duration_seconds / 3600.0  # convert seconds to hours
+            if "cycle_used" not in request.data:
                 cycle_used = float(trip.current_cycle_used)
 
         try:
@@ -45,9 +47,15 @@ class HOSGenerateView(APIView):
                 duration=duration,
                 cycle_used=cycle_used,
                 start_datetime=start_time,
-                origin_name=trip.current_location_name or trip.current_location if trip else "Origin",
-                pickup_name=trip.pickup_name or trip.pickup_location if trip else "Pickup",
-                dropoff_name=trip.dropoff_name or trip.dropoff_location if trip else "Destination",
+                origin_name=trip.current_location_name or trip.current_location
+                if trip
+                else "Origin",
+                pickup_name=trip.pickup_name or trip.pickup_location
+                if trip
+                else "Pickup",
+                dropoff_name=trip.dropoff_name or trip.dropoff_location
+                if trip
+                else "Destination",
             )
 
             # If associated with a DB Trip, persist TripSchedule records
@@ -67,11 +75,11 @@ class HOSGenerateView(APIView):
                             duration=ev["hours"],
                             distance=ev["distance"],
                             location=ev["location"],
-                            notes=ev["notes"]
+                            notes=ev["notes"],
                         )
                     )
                 TripSchedule.objects.bulk_create(schedule_objs)
-                
+
                 # Update trip status if draft
                 if trip.status == Trip.Status.DRAFT:
                     trip.status = Trip.Status.PLANNING
@@ -86,7 +94,7 @@ class HOSGenerateView(APIView):
         except Exception as e:
             return Response(
                 {"error": f"Failed to generate HOS schedule: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
@@ -95,9 +103,9 @@ class TripScheduleView(APIView):
 
     def get(self, request, trip_id):
         trip = get_object_or_404(Trip, id=trip_id)
-        schedules = TripSchedule.objects.filter(trip=trip).order_by('order')
+        schedules = TripSchedule.objects.filter(trip=trip).order_by("order")
         serializer = TripScheduleSerializer(schedules, many=True)
-        return Response({
-            "trip_id": str(trip.id),
-            "events": serializer.data
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {"trip_id": str(trip.id), "events": serializer.data},
+            status=status.HTTP_200_OK,
+        )
