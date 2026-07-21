@@ -8,9 +8,9 @@ from .views import (
 )
 
 urlpatterns = [
-    path('search', LocationSearchView.as_view(), name='location_search'),
-    path('reverse', LocationReverseView.as_view(), name='location_reverse'),
-    path('geocode', GeocodeView.as_view(), name='geocode'),
-    path('route', RouteView.as_view(), name='route'),
-    path('<uuid:trip_id>', RouteDetailView.as_view(), name='route_detail'),
+    path("search", LocationSearchView.as_view(), name="location_search"),
+    path("reverse", LocationReverseView.as_view(), name="location_reverse"),
+    path("geocode", GeocodeView.as_view(), name="geocode"),
+    path("route", RouteView.as_view(), name="route"),
+    path("<uuid:trip_id>", RouteDetailView.as_view(), name="route_detail"),
 ]
