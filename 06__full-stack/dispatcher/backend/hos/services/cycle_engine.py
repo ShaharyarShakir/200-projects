@@ -5,6 +5,7 @@ class CycleEngine:
     """
     Handles driver 70-hour / 8-day cycle calculations and validation.
     """
+
     def __init__(self, config=HOSConfig):
         self.config = config
 
@@ -15,7 +16,10 @@ class CycleEngine:
         if cycle_used < 0:
             return False, "Cycle hours cannot be negative."
         if cycle_used > self.config.CYCLE_MAX_HOURS:
-            return False, f"Cycle hours cannot exceed max limit of {self.config.CYCLE_MAX_HOURS} hours."
+            return (
+                False,
+                f"Cycle hours cannot exceed max limit of {self.config.CYCLE_MAX_HOURS} hours.",
+            )
         return True, ""
 
     def get_remaining_cycle(self, cycle_used: float) -> float:
