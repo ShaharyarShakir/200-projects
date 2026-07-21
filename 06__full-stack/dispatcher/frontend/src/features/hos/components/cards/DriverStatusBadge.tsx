@@ -1,6 +1,6 @@
 import React from 'react';
-import { HOSEventType } from '../../types/hos';
-import { SteeringWheel, Coffee, Fuel, BedDouble, PackageCheck, Truck, Clock } from 'lucide-react';
+import type { HOSEventType } from '../../types/hos';
+import { Coffee, Fuel, BedDouble, PackageCheck, Truck, Clock } from 'lucide-react';
 
 interface DriverStatusBadgeProps {
   type: HOSEventType | string;
