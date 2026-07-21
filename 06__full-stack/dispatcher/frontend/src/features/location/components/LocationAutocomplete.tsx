@@ -85,7 +85,7 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   return (
     <div className="flex flex-col gap-2 w-full" ref={containerRef}>
       <div className="flex items-center justify-between">
-        <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+        <label className="text-xs font-semibold text-neutral-300 flex items-center gap-1.5">
           {label}
           {isLocationSelected ? (
             <span className="inline-flex items-center text-[11px] font-normal text-emerald-400 gap-0.5">
@@ -104,28 +104,28 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
 
       <div className="relative">
         <div className="relative flex items-center">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
+          <Search className="w-4 h-4 text-neutral-400 absolute left-3 pointer-events-none" />
           <input
             type="text"
             value={searchTerm}
             onChange={handleInputChange}
             onFocus={() => setIsOpen(true)}
             placeholder={placeholder}
-            className={`w-full bg-slate-900 border ${
+            className={`w-full bg-neutral-900 border ${
               error
                 ? 'border-rose-500/80 focus:border-rose-500'
                 : isLocationSelected
                 ? 'border-emerald-500/50 focus:border-emerald-400'
-                : 'border-slate-700 focus:border-cyan-500'
-            } rounded-md pl-9 pr-8 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 ${
-              error ? 'focus:ring-rose-500' : 'focus:ring-cyan-500'
+                : 'border-neutral-700 focus:border-brand-500'
+            } rounded-xl pl-9 pr-8 py-2 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:ring-1 ${
+              error ? 'focus:ring-rose-500' : 'focus:ring-brand-500'
             } transition-colors`}
           />
           {searchTerm ? (
             <button
               type="button"
               onClick={handleInputClear}
-              className="absolute right-2 text-slate-400 hover:text-slate-200 p-1"
+              className="absolute right-2 text-neutral-400 hover:text-neutral-200 p-1 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -134,10 +134,10 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
 
         {/* Dropdown Suggestions & History */}
         {isOpen && (
-          <div className="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-md shadow-xl z-50 overflow-hidden max-h-64 flex flex-col">
+          <div className="absolute left-0 right-0 top-full mt-1 bg-neutral-900 border border-neutral-700 rounded-xl shadow-2xl z-50 overflow-hidden max-h-64 flex flex-col">
             {isLoading && (
-              <div className="flex items-center justify-center p-3 text-xs text-slate-400 gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
+              <div className="flex items-center justify-center p-3 text-xs text-neutral-400 gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-brand-400" />
                 <span>Searching...</span>
               </div>
             )}
@@ -149,20 +149,20 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
             )}
 
             {!isLoading && !isError && suggestions && suggestions.length > 0 && (
-              <div className="overflow-y-auto divide-y divide-slate-800/80">
+              <div className="overflow-y-auto divide-y divide-neutral-800/80">
                 {suggestions.map((item, idx) => (
                   <button
                     key={`${item.place_id}-${idx}`}
                     type="button"
                     onClick={() => handleSelect(item)}
-                    className="w-full text-left p-2.5 hover:bg-slate-800 transition-colors flex items-start gap-2 group"
+                    className="w-full text-left p-2.5 hover:bg-neutral-800 transition-colors flex items-start gap-2 group cursor-pointer"
                   >
-                    <MapPin className="w-4 h-4 text-slate-400 group-hover:text-cyan-400 shrink-0 mt-0.5" />
+                    <MapPin className="w-4 h-4 text-neutral-400 group-hover:text-brand-400 shrink-0 mt-0.5" />
                     <div className="flex flex-col min-w-0">
-                      <span className="text-xs text-slate-200 group-hover:text-white font-medium truncate">
+                      <span className="text-xs text-neutral-200 group-hover:text-white font-medium truncate">
                         {item.display_name}
                       </span>
-                      <span className="text-[10px] text-slate-500 font-mono">
+                      <span className="text-[10px] text-neutral-400 font-mono">
                         {item.lat.toFixed(4)}, {item.lng.toFixed(4)}
                       </span>
                     </div>
@@ -172,7 +172,7 @@ export const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
             )}
 
             {!isLoading && !isError && searchTerm.trim().length >= 2 && suggestions?.length === 0 && (
-              <div className="p-3 text-xs text-slate-400 text-center">
+              <div className="p-3 text-xs text-neutral-400 text-center">
                 No results found.
               </div>
             )}
