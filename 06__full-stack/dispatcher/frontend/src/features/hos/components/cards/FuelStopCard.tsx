@@ -1,6 +1,6 @@
 import React from 'react';
 import { Fuel, MapPin, Clock } from 'lucide-react';
-import { HOSEvent } from '../../types/hos';
+import type { HOSEvent } from '../../types/hos';
 
 interface FuelStopCardProps {
   event: HOSEvent;
