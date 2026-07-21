@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from trips.models import Trip
 from hos.services.schedule_engine import ScheduleEngine
-from .models import DailyLog, DutyEvent, DutyStatus
+from .models import DailyLog, DutyStatus
 from .services.log_generator import ELDLogGenerator
 from .services.pdf_export import ELDPDFExporter
 
@@ -12,14 +12,15 @@ User = get_user_model()
 
 
 class ELDLogEngineUnitTests(APITestCase):
-
     def setUp(self):
         self.engine = ScheduleEngine()
         self.log_gen = ELDLogGenerator()
 
     def test_single_day_log_generation_totals_24_hours(self):
         # Short 5 hour trip -> single calendar day
-        sched = self.engine.generate_schedule(distance=250, duration=5.0, cycle_used=0.0)
+        sched = self.engine.generate_schedule(
+            distance=250, duration=5.0, cycle_used=0.0
+        )
         logs = self.log_gen.generate_daily_logs(events=sched["events"], persist=False)
 
         self.assertGreaterEqual(len(logs), 1)
@@ -31,7 +32,9 @@ class ELDLogEngineUnitTests(APITestCase):
 
     def test_multi_day_log_generation_totals_24_hours_per_day(self):
         # 1,842 miles, 27.4 hours driving -> spans across ~3 to 4 days
-        sched = self.engine.generate_schedule(distance=1842, duration=27.4, cycle_used=25.0)
+        sched = self.engine.generate_schedule(
+            distance=1842, duration=27.4, cycle_used=25.0
+        )
         logs = self.log_gen.generate_daily_logs(events=sched["events"], persist=False)
 
         self.assertGreater(len(logs), 1)
@@ -48,7 +51,9 @@ class ELDLogEngineUnitTests(APITestCase):
         self.assertEqual(self.log_gen.map_event_type("dropoff"), DutyStatus.ON_DUTY)
 
     def test_pdf_export_byte_generation(self):
-        sched = self.engine.generate_schedule(distance=1842, duration=27.4, cycle_used=25.0)
+        sched = self.engine.generate_schedule(
+            distance=1842, duration=27.4, cycle_used=25.0
+        )
         logs = self.log_gen.generate_daily_logs(events=sched["events"], persist=False)
 
         exporter = ELDPDFExporter()
@@ -58,18 +63,19 @@ class ELDLogEngineUnitTests(APITestCase):
 
 
 class ELDAPITests(APITestCase):
-
     def setUp(self):
-        self.user = User.objects.create_user(email='driver_eld@example.com', password='Password123!')
+        self.user = User.objects.create_user(
+            email="driver_eld@example.com", password="Password123!"
+        )
         self.trip = Trip.objects.create(
             user=self.user,
-            current_location='New York, NY',
-            pickup_location='Chicago, IL',
-            dropoff_location='Los Angeles, CA',
+            current_location="New York, NY",
+            pickup_location="Chicago, IL",
+            dropoff_location="Los Angeles, CA",
             distance_meters=2800000.0,
             duration_seconds=97200.0,
-            current_cycle_used=Decimal('25.00'),
-            status=Trip.Status.DRAFT
+            current_cycle_used=Decimal("25.00"),
+            status=Trip.Status.DRAFT,
         )
 
     def test_generate_eld_logs_api_standalone(self):
@@ -77,20 +83,17 @@ class ELDAPITests(APITestCase):
             "distance": 1842,
             "duration": 27.4,
             "cycle_used": 25,
-            "driver_name": "Test Driver"
+            "driver_name": "Test Driver",
         }
-        res = self.client.post('/api/eld/generate', payload, format='json')
+        res = self.client.post("/api/eld/generate", payload, format="json")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertIn("logs", res.data)
         self.assertGreater(len(res.data["logs"]), 1)
         self.assertEqual(res.data["logs"][0]["summary"]["total_hours"], 24.0)
 
     def test_generate_eld_logs_api_with_trip_id(self):
-        payload = {
-            "trip_id": str(self.trip.id),
-            "driver_name": "Main Driver"
-        }
-        res = self.client.post('/api/eld/generate', payload, format='json')
+        payload = {"trip_id": str(self.trip.id), "driver_name": "Main Driver"}
+        res = self.client.post("/api/eld/generate", payload, format="json")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data["trip_id"], str(self.trip.id))
 
@@ -99,18 +102,18 @@ class ELDAPITests(APITestCase):
         self.assertEqual(logs_db.count(), res.data["total_days"])
 
         # GET API check
-        get_res = self.client.get(f'/api/eld/{self.trip.id}')
+        get_res = self.client.get(f"/api/eld/{self.trip.id}")
         self.assertEqual(get_res.status_code, status.HTTP_200_OK)
         self.assertEqual(get_res.data["total_days"], logs_db.count())
 
     def test_export_pdf_api_endpoint(self):
-        pdf_res = self.client.get(f'/api/eld/{self.trip.id}/pdf')
+        pdf_res = self.client.get(f"/api/eld/{self.trip.id}/pdf")
         self.assertEqual(pdf_res.status_code, status.HTTP_200_OK)
-        self.assertEqual(pdf_res['Content-Type'], 'application/pdf')
-        self.assertTrue(pdf_res.content.startswith(b'%PDF'))
+        self.assertEqual(pdf_res["Content-Type"], "application/pdf")
+        self.assertTrue(pdf_res.content.startswith(b"%PDF"))
 
     def test_sample_scenario_pdf_export_api(self):
-        pdf_res = self.client.get('/api/eld/sample/pdf')
+        pdf_res = self.client.get("/api/eld/sample/pdf")
         self.assertEqual(pdf_res.status_code, status.HTTP_200_OK)
-        self.assertEqual(pdf_res['Content-Type'], 'application/pdf')
-        self.assertTrue(pdf_res.content.startswith(b'%PDF'))
+        self.assertEqual(pdf_res["Content-Type"], "application/pdf")
+        self.assertTrue(pdf_res.content.startswith(b"%PDF"))
