@@ -1,6 +1,6 @@
 import React from 'react';
-import { HOSStatus } from '../../types/hos';
-import { Clock, ShieldAlert, CheckCircle } from 'lucide-react';
+import type { HOSStatus } from '../../types/hos';
+import { Clock, ShieldAlert } from 'lucide-react';
 
 interface RemainingHoursCardProps {
   status?: HOSStatus | null;
@@ -38,12 +38,12 @@ export const RemainingHoursCard: React.FC<RemainingHoursCardProps> = ({
   };
 
   return (
-    <div className="bg-neutral-50/90 border border-neutral-200 rounded-2xl p-6 shadow-xl space-y-5">
+    <div className="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl backdrop-blur-md space-y-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-bold text-neutral-900 flex items-center gap-2">
-          <Clock className="w-5 h-5 text-brand-600" /> Driver Hours Dashboard
+        <h3 className="text-base font-bold text-neutral-100 flex items-center gap-2">
+          <Clock className="w-5 h-5 text-brand-400" /> Driver Hours Dashboard
         </h3>
-        <span className="text-xs font-mono bg-neutral-100 border border-neutral-200 text-neutral-600 px-2.5 py-1 rounded-lg">
+        <span className="text-xs font-mono bg-neutral-800 border border-neutral-700 text-neutral-300 px-2.5 py-1 rounded-lg">
           FMCSA 70h/8d Rules
         </span>
       </div>
@@ -52,17 +52,17 @@ export const RemainingHoursCard: React.FC<RemainingHoursCardProps> = ({
         {/* Driving Progress */}
         <div className="space-y-1.5">
           <div className="flex justify-between items-center text-xs font-semibold">
-            <span className="text-neutral-700 flex items-center gap-1">
+            <span className="text-neutral-300 flex items-center gap-1">
               Driving
               {status && status.remaining_drive <= 1 && (
-                <ShieldAlert className="w-3.5 h-3.5 text-red-500 inline" />
+                <ShieldAlert className="w-3.5 h-3.5 text-rose-400 inline" />
               )}
             </span>
-            <span className="font-mono text-neutral-900">
+            <span className="font-mono text-neutral-100">
               {driveUsed.toFixed(1)} / {MAX_DRIVE} Hours ({MAX_DRIVE - driveUsed >= 0 ? (MAX_DRIVE - driveUsed).toFixed(1) : 0}h remaining)
             </span>
           </div>
-          <div className="w-full bg-neutral-200 rounded-full h-3 overflow-hidden p-0.5 border border-neutral-300">
+          <div className="w-full bg-neutral-800 rounded-full h-3 overflow-hidden p-0.5 border border-neutral-700">
             <div
               className={`h-full rounded-full transition-all duration-500 ${getBarColor(drivePct)}`}
               style={{ width: `${drivePct}%` }}
@@ -73,12 +73,12 @@ export const RemainingHoursCard: React.FC<RemainingHoursCardProps> = ({
         {/* Duty Progress */}
         <div className="space-y-1.5">
           <div className="flex justify-between items-center text-xs font-semibold">
-            <span className="text-neutral-700">Duty Window</span>
-            <span className="font-mono text-neutral-900">
+            <span className="text-neutral-300">Duty Window</span>
+            <span className="font-mono text-neutral-100">
               {dutyUsed.toFixed(1)} / {MAX_DUTY} Hours ({MAX_DUTY - dutyUsed >= 0 ? (MAX_DUTY - dutyUsed).toFixed(1) : 0}h remaining)
             </span>
           </div>
-          <div className="w-full bg-neutral-200 rounded-full h-3 overflow-hidden p-0.5 border border-neutral-300">
+          <div className="w-full bg-neutral-800 rounded-full h-3 overflow-hidden p-0.5 border border-neutral-700">
             <div
               className={`h-full rounded-full transition-all duration-500 ${getBarColor(dutyPct)}`}
               style={{ width: `${dutyPct}%` }}
@@ -89,12 +89,12 @@ export const RemainingHoursCard: React.FC<RemainingHoursCardProps> = ({
         {/* Cycle Progress */}
         <div className="space-y-1.5">
           <div className="flex justify-between items-center text-xs font-semibold">
-            <span className="text-neutral-700">70-Hour / 8-Day Cycle</span>
-            <span className="font-mono text-neutral-900">
+            <span className="text-neutral-300">70-Hour / 8-Day Cycle</span>
+            <span className="font-mono text-neutral-100">
               {cycleUsed.toFixed(1)} / {MAX_CYCLE} Hours ({MAX_CYCLE - cycleUsed >= 0 ? (MAX_CYCLE - cycleUsed).toFixed(1) : 0}h remaining)
             </span>
           </div>
-          <div className="w-full bg-neutral-200 rounded-full h-3 overflow-hidden p-0.5 border border-neutral-300">
+          <div className="w-full bg-neutral-800 rounded-full h-3 overflow-hidden p-0.5 border border-neutral-700">
             <div
               className={`h-full rounded-full transition-all duration-500 ${getBarColor(cyclePct)}`}
               style={{ width: `${cyclePct}%` }}
