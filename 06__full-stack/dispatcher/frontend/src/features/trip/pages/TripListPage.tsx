@@ -96,11 +96,11 @@ export const TripListPage: React.FC<TripListPageProps> = ({ onCalculateRoute }) 
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-neutral-50/90 border border-neutral-200 rounded-2xl p-6 shadow-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-neutral-900/90 border border-neutral-800 rounded-2xl p-6 shadow-xl backdrop-blur-md">
         <div>
-          <div className="flex items-center gap-2 text-brand-600 mb-1">
+          <div className="flex items-center gap-2 text-brand-400 mb-1">
             <Route className="w-5 h-5" />
-            <h1 className="text-xl font-bold text-neutral-900 tracking-tight">Trip Management</h1>
+            <h1 className="text-xl font-bold text-neutral-100 tracking-tight">Trip Management</h1>
           </div>
           <p className="text-xs text-neutral-400">
             Create, view, update, and manage trip records stored in PostgreSQL.
@@ -110,7 +110,7 @@ export const TripListPage: React.FC<TripListPageProps> = ({ onCalculateRoute }) 
         <button
           onClick={handleOpenCreate}
           disabled={!isAuthenticated}
-          className="bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-neutral-0 font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-brand-600/30 transition-all flex items-center justify-center gap-2 text-xs cursor-pointer shrink-0"
+          className="bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-brand-600/30 transition-all flex items-center justify-center gap-2 text-xs cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           Create Trip Record
@@ -118,7 +118,7 @@ export const TripListPage: React.FC<TripListPageProps> = ({ onCalculateRoute }) 
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-neutral-50/90 border border-neutral-200 rounded-2xl p-4 shadow-lg">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-neutral-900/90 border border-neutral-800 rounded-2xl p-4 shadow-lg backdrop-blur-md">
         {/* Search */}
         <div className="relative w-full sm:w-72">
           <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-2.5" />
@@ -130,7 +130,7 @@ export const TripListPage: React.FC<TripListPageProps> = ({ onCalculateRoute }) 
               setCurrentPage(1);
             }}
             placeholder="Search locations or notes..."
-            className="w-full bg-neutral-0 border border-neutral-200 focus:border-brand-500 rounded-xl pl-9 pr-3 py-2 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none transition-colors"
+            className="w-full bg-neutral-800 border border-neutral-700 focus:border-brand-500 rounded-xl pl-9 pr-3 py-2 text-xs text-neutral-100 placeholder-neutral-400 focus:outline-none transition-colors"
           />
         </div>
 
@@ -144,21 +144,21 @@ export const TripListPage: React.FC<TripListPageProps> = ({ onCalculateRoute }) 
                 setSelectedStatus(e.target.value);
                 setCurrentPage(1);
               }}
-              className="bg-neutral-0 border border-neutral-200 focus:border-brand-500 text-neutral-800 rounded-xl px-3 py-2 text-xs focus:outline-none transition-colors cursor-pointer"
+              className="bg-neutral-800 border border-neutral-700 focus:border-brand-500 text-neutral-200 rounded-xl px-3 py-2 text-xs focus:outline-none transition-colors cursor-pointer"
             >
-              <option value="">All Statuses</option>
-              <option value="Draft">Draft</option>
-              <option value="Planning">Planning</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
+              <option value="" className="bg-neutral-900 text-neutral-100">All Statuses</option>
+              <option value="Draft" className="bg-neutral-900 text-neutral-100">Draft</option>
+              <option value="Planning" className="bg-neutral-900 text-neutral-100">Planning</option>
+              <option value="Completed" className="bg-neutral-900 text-neutral-100">Completed</option>
+              <option value="Cancelled" className="bg-neutral-900 text-neutral-100">Cancelled</option>
             </select>
           </div>
 
-          <div className="flex items-center bg-neutral-0 border border-neutral-200 rounded-xl p-1 gap-1">
+          <div className="flex items-center bg-neutral-800 border border-neutral-700 rounded-xl p-1 gap-1">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                viewMode === 'grid' ? 'bg-brand-600 text-neutral-0' : 'text-neutral-400 hover:text-neutral-900'
+                viewMode === 'grid' ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-neutral-100'
               }`}
               title="Grid View"
             >
@@ -167,7 +167,7 @@ export const TripListPage: React.FC<TripListPageProps> = ({ onCalculateRoute }) 
             <button
               onClick={() => setViewMode('table')}
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                viewMode === 'table' ? 'bg-brand-600 text-neutral-0' : 'text-neutral-400 hover:text-neutral-900'
+                viewMode === 'table' ? 'bg-brand-600 text-white' : 'text-neutral-400 hover:text-neutral-100'
               }`}
               title="Table View"
             >
@@ -179,12 +179,12 @@ export const TripListPage: React.FC<TripListPageProps> = ({ onCalculateRoute }) 
 
       {/* Main Content Area */}
       {!isAuthenticated ? (
-        <div className="bg-neutral-50/90 border border-neutral-200 rounded-2xl p-12 text-center space-y-4 shadow-xl">
-          <div className="w-16 h-16 bg-brand-50 border border-brand-200 rounded-2xl text-brand-600 flex items-center justify-center mx-auto">
+        <div className="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-12 text-center space-y-4 shadow-xl backdrop-blur-md">
+          <div className="w-16 h-16 bg-brand-500/10 border border-brand-500/30 rounded-2xl text-brand-400 flex items-center justify-center mx-auto">
             <Lock className="w-8 h-8" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-lg font-bold text-neutral-900">Sign In Required</h3>
+            <h3 className="text-lg font-bold text-neutral-100">Sign In Required</h3>
             <p className="text-xs text-neutral-400 max-w-sm mx-auto">
               Please sign in to view, create, edit, and delete your saved trip records.
             </p>
@@ -195,27 +195,27 @@ export const TripListPage: React.FC<TripListPageProps> = ({ onCalculateRoute }) 
           {[1, 2, 3].map((n) => (
             <div
               key={n}
-              className="h-44 bg-neutral-50/60 border border-neutral-200 rounded-2xl p-5 animate-pulse space-y-4"
+              className="h-44 bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5 animate-pulse space-y-4"
             >
-              <div className="h-4 bg-neutral-200 rounded w-1/3"></div>
-              <div className="h-6 bg-neutral-200 rounded w-2/3"></div>
-              <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
+              <div className="h-4 bg-neutral-800 rounded w-1/3"></div>
+              <div className="h-6 bg-neutral-800 rounded w-2/3"></div>
+              <div className="h-4 bg-neutral-800 rounded w-1/2"></div>
             </div>
           ))}
         </div>
       ) : isError ? (
-        <div className="bg-error-50 border border-error-200 rounded-2xl p-6 text-center text-error-600 space-y-2">
-          <AlertCircle className="w-8 h-8 text-error-600 mx-auto" />
+        <div className="bg-rose-950/30 border border-rose-500/40 rounded-2xl p-6 text-center text-rose-300 space-y-2">
+          <AlertCircle className="w-8 h-8 text-rose-400 mx-auto" />
           <p className="font-bold text-sm">Failed to load trip records</p>
-          <p className="text-xs text-error-500">{(error as any)?.message || 'Please check API connection.'}</p>
+          <p className="text-xs text-rose-400">{(error as any)?.message || 'Please check API connection.'}</p>
         </div>
       ) : trips.length === 0 ? (
-        <div className="bg-neutral-50/90 border border-neutral-200 rounded-2xl p-12 text-center space-y-4 shadow-xl">
-          <div className="w-16 h-16 bg-brand-50 border border-brand-200 rounded-2xl text-brand-600 flex items-center justify-center mx-auto">
+        <div className="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-12 text-center space-y-4 shadow-xl backdrop-blur-md">
+          <div className="w-16 h-16 bg-brand-500/10 border border-brand-500/30 rounded-2xl text-brand-400 flex items-center justify-center mx-auto">
             <Route className="w-8 h-8" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-bold text-neutral-900">No Trips Found</h3>
+            <h3 className="text-base font-bold text-neutral-100">No Trips Found</h3>
             <p className="text-xs text-neutral-400 max-w-sm mx-auto">
               {searchTerm || selectedStatus
                 ? 'No trips matched your active search or filter criteria.'
@@ -224,7 +224,7 @@ export const TripListPage: React.FC<TripListPageProps> = ({ onCalculateRoute }) 
           </div>
           <button
             onClick={handleOpenCreate}
-            className="bg-brand-600 hover:bg-brand-700 text-neutral-0 font-semibold px-4 py-2 rounded-xl text-xs transition-all inline-flex items-center gap-2 cursor-pointer"
+            className="bg-brand-600 hover:bg-brand-500 text-white font-semibold px-4 py-2 rounded-xl text-xs transition-all inline-flex items-center gap-2 cursor-pointer shadow-md"
           >
             <Plus className="w-4 h-4" />
             Create Your First Trip

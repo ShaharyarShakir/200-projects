@@ -56,35 +56,35 @@ export const RouteMap: React.FC<RouteMapProps> = ({
   };
 
   return (
-    <div className="relative w-full h-[520px] rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-950 flex">
+    <div className="relative w-full h-[520px] rounded-2xl overflow-hidden border border-neutral-800 shadow-2xl bg-neutral-950 flex">
       {/* Map Content Area */}
       <div className="relative flex-1 h-full">
         {/* Loading Overlay */}
         {isLoading && (
-          <div className="absolute inset-0 z-[1100] bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center text-blue-400 gap-3 font-medium text-xs">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <div className="absolute inset-0 z-[1100] bg-neutral-950/80 backdrop-blur-sm flex flex-col items-center justify-center text-brand-400 gap-3 font-medium text-xs">
+            <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
             <div className="text-center space-y-1">
-              <span className="font-bold text-slate-100 text-sm">Calculating Optimal Truck Route...</span>
-              <p className="text-slate-400 text-xs">Evaluating OpenRouteService geometry and turn directions</p>
+              <span className="font-bold text-neutral-100 text-sm">Calculating Optimal Truck Route...</span>
+              <p className="text-neutral-400 text-xs">Evaluating OpenRouteService geometry and turn directions</p>
             </div>
           </div>
         )}
 
         {/* Legend Overlay */}
-        <div className="absolute top-4 left-4 z-[1000] bg-slate-900/90 backdrop-blur-md border border-slate-700/60 rounded-xl px-3 py-2 text-xs font-medium text-slate-200 shadow-xl flex items-center gap-3">
+        <div className="absolute top-4 left-4 z-[1000] bg-neutral-900/90 backdrop-blur-md border border-neutral-800 rounded-xl px-3 py-2 text-xs font-medium text-neutral-200 shadow-xl flex items-center gap-3">
           <div className="flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-blue-400" />
-            <span className="font-bold text-slate-100">Layers</span>
+            <Layers className="w-3.5 h-3.5 text-brand-400" />
+            <span className="font-bold text-neutral-100">Layers</span>
           </div>
-          <span className="h-3 w-px bg-slate-700"></span>
-          <span className="flex items-center gap-1 text-[11px] text-slate-300">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Current
+          <span className="h-3 w-px bg-neutral-700"></span>
+          <span className="flex items-center gap-1 text-[11px] text-neutral-300">
+            <span className="w-2.5 h-2.5 rounded-full bg-brand-500"></span> Current
           </span>
-          <span className="flex items-center gap-1 text-[11px] text-slate-300">
+          <span className="flex items-center gap-1 text-[11px] text-neutral-300">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Pickup
           </span>
-          <span className="flex items-center gap-1 text-[11px] text-slate-300">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span> Dropoff
+          <span className="flex items-center gap-1 text-[11px] text-neutral-300">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Dropoff
           </span>
         </div>
 
@@ -97,7 +97,7 @@ export const RouteMap: React.FC<RouteMapProps> = ({
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
           />
 
           <RouteMarkers
