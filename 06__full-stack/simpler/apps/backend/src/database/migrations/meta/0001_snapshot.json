@@ -42,9 +42,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -129,12 +127,8 @@
           "name": "tasks_user_id_users_id_fk",
           "tableFrom": "tasks",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -150,20 +144,12 @@
     "public.task_priority": {
       "name": "task_priority",
       "schema": "public",
-      "values": [
-        "LOW",
-        "MEDIUM",
-        "HIGH"
-      ]
+      "values": ["LOW", "MEDIUM", "HIGH"]
     },
     "public.task_status": {
       "name": "task_status",
       "schema": "public",
-      "values": [
-        "TODO",
-        "IN_PROGRESS",
-        "DONE"
-      ]
+      "values": ["TODO", "IN_PROGRESS", "DONE"]
     }
   },
   "schemas": {},

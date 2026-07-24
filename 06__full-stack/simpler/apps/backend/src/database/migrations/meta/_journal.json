@@ -15,6 +15,13 @@
       "when": 1784818741091,
       "tag": "0001_previous_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784886757455,
+      "tag": "0002_silly_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }
