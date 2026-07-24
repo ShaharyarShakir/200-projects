@@ -1,9 +1,10 @@
+import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
-
+import cookieParser from 'cookie-parser';
 async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Simpler API')
@@ -18,6 +19,9 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+  app.use(cookieParser());
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+
   app.useGlobalFilters(new HttpExceptionFilter());
   app.enableCors({
     origin: 'http://localhost:5173',
@@ -29,6 +33,7 @@ async function bootstrap() {
     app,
     SwaggerModule.createDocument(app, config),
   );
+
   await app.listen(process.env.PORT ?? 3001);
 }
 bootstrap();
