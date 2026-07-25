@@ -1,0 +1,14 @@
+{
+  "name": "ai-notes",
+  "private": true,
+  "packageManager": "pnpm@11.12.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "check": "turbo check"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.6"
+  }
+}
