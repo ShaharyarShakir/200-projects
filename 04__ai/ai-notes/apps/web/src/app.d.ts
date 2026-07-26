@@ -1,9 +1,12 @@
-// See https://svelte.dev/docs/kit/types#app.d.ts
-// for information about these interfaces
+import type { authClient } from "$lib/auth/client.js";
+
 declare global {
 	namespace App {
 		// interface Error {}
-		// interface Locals {}
+		interface Locals {
+			user: typeof authClient.$Infer.Session.user | null;
+			session: typeof authClient.$Infer.Session.session | null;
+		}
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}
@@ -11,3 +14,4 @@ declare global {
 }
 
 export {};
+
