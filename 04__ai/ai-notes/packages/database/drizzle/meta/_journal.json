@@ -8,6 +8,20 @@
       "when": 1784985897065,
       "tag": "0000_quick_chimera",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785061380089,
+      "tag": "0001_useful_exiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785063737345,
+      "tag": "0002_serious_george_stacy",
+      "breakpoints": true
     }
   ]
 }
