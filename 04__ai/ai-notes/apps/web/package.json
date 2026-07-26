@@ -43,6 +43,7 @@
 		"vitest-browser-svelte": "^2.1.1"
 	},
 	"dependencies": {
-		"@repo/shared": "workspace:*"
+		"@repo/shared": "workspace:*",
+		"better-auth": "^1.6.25"
 	}
 }
