@@ -5,6 +5,8 @@ import { APP_NAME } from "@repo/shared";
 import health from "./routes/health.js";
 import dbRoute from "./routes/db.js";
 import authRoute from "./routes/auth.js";
+import notebooksRoute from "./modules/notebook/routes.js";
+import notesRoute from "./modules/note/routes.js";
 import { requireAuth } from "./middleware/auth.js";
 
 const app = new Hono();
@@ -15,7 +17,7 @@ app.use(
   cors({
     origin: "http://localhost:5173",
     allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     credentials: true,
   }),
 );
@@ -28,6 +30,8 @@ app.get("/", (c) => {
 app.route("/health", health);
 app.route("/db", dbRoute);
 app.route("/api/auth", authRoute);
+app.route("/api/notebooks", notebooksRoute);
+app.route("/api/notes", notesRoute);
 
 // Test protected route
 app.get("/api/me", requireAuth, (c) => {
@@ -44,4 +48,3 @@ serve(
     console.log(`Server is running on http://localhost:${info.port}`);
   },
 );
-
