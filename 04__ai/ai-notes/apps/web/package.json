@@ -44,6 +44,14 @@
 	},
 	"dependencies": {
 		"@repo/shared": "workspace:*",
+		"@tanstack/svelte-query": "^6.1.38",
+		"@tiptap/core": "^3.29.0",
+		"@tiptap/extension-code-block": "^3.29.0",
+		"@tiptap/extension-image": "^3.29.0",
+		"@tiptap/extension-link": "^3.29.0",
+		"@tiptap/extension-placeholder": "^3.29.0",
+		"@tiptap/pm": "^3.29.0",
+		"@tiptap/starter-kit": "^3.29.0",
 		"better-auth": "^1.6.25"
 	}
 }
