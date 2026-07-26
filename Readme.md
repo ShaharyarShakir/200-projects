@@ -2,7 +2,7 @@
 
 A comprehensive collection of projects spanning multiple technologies and domains, organized by stack and complexity.
 
-## 📁 Project Structure
+## Project Structure
 
 ### 01_Vanilla-JS
 
