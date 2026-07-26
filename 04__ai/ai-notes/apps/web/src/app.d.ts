@@ -1,4 +1,4 @@
-import type { authClient } from "$lib/auth/client.js";
+import type { authClient } from '$lib/auth/client.js';
 
 declare global {
 	namespace App {
@@ -14,4 +14,3 @@ declare global {
 }
 
 export {};
-
