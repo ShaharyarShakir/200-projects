@@ -1,56 +1,73 @@
 <script lang="ts">
-    import { APP_NAME } from "@repo/shared";
+	import { APP_NAME } from '@repo/shared';
+	import GlowBg from '../components/GlowBg.svelte';
+	import Button from '../components/Button.svelte';
+
 	let { data } = $props();
 	let user = $derived(data?.user);
 </script>
 
 <svelte:head>
 	<title>AI Notes | Intelligent Note Taking</title>
-	<meta name="description" content="Organize your thoughts with the power of artificial intelligence." />
+	<meta
+		name="description"
+		content="Organize your thoughts with the power of artificial intelligence."
+	/>
 </svelte:head>
 
-<div class="flex-grow flex flex-col items-center justify-center bg-radial from-slate-900 to-black px-6 py-20 text-center relative overflow-hidden">
-	<!-- Background glow circles -->
-	<div class="absolute w-[500px] h-[500px] rounded-full bg-violet-600/5 blur-3xl -top-20 -left-20 pointer-events-none"></div>
-	<div class="absolute w-[500px] h-[500px] rounded-full bg-indigo-600/5 blur-3xl -bottom-20 -right-20 pointer-events-none"></div>
+<div
+	class="relative flex flex-grow flex-col items-center justify-center bg-slate-950 px-6 py-20 text-center"
+>
+	<!-- Background Orbs Component -->
+	<GlowBg />
 
-	<div class="max-w-3xl mx-auto space-y-8 relative z-10">
-		<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20">
+	<div class="relative z-10 mx-auto max-w-3xl space-y-8">
+		<span
+			class="inline-flex items-center gap-1.5 rounded-full border border-violet-500/20 bg-violet-500/10 px-4 py-2 text-xs font-semibold text-violet-400 shadow-inner"
+		>
 			✨ Powered by Groq & LangChain
 		</span>
-		
-		<h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-white leading-tight">
+
+		<h1 class="text-5xl leading-tight font-extrabold tracking-tight text-white md:text-7xl">
 			Note-taking, <br />
-			<span class="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent">
+			<span
+				class="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent drop-shadow-sm"
+			>
 				re-imagined with AI
 			</span>
 		</h1>
 
-		<p class="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-			Capture ideas, draft documents, and organize your knowledge with real-time AI assistance, auto-formatting, translations, and intelligent search.
+		<p class="mx-auto max-w-2xl text-lg leading-relaxed font-light text-slate-400 md:text-xl">
+			Capture ideas, draft documents, and organize your knowledge with real-time AI assistance,
+			auto-formatting, translations, and intelligent search.
 		</p>
 
-		<div class="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4">
+		<div
+			class="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-4 pt-4 sm:flex-row"
+		>
 			{#if user}
-				<a 
-					href="/dashboard" 
-					class="w-full sm:w-auto bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium rounded-xl px-8 py-3.5 text-base shadow-lg shadow-violet-950/20 active:scale-[0.98] transition-all duration-200"
+				<Button
+					variant="primary"
+					class="w-full px-8 py-3.5 text-base sm:w-auto"
+					onclick={() => (window.location.href = '/dashboard')}
 				>
 					Go to Dashboard
-				</a>
+				</Button>
 			{:else}
-				<a 
-					href="/register" 
-					class="w-full sm:w-auto bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-medium rounded-xl px-8 py-3.5 text-base shadow-lg shadow-violet-950/20 active:scale-[0.98] transition-all duration-200"
+				<Button
+					variant="primary"
+					class="w-full px-8 py-3.5 text-base sm:w-auto"
+					onclick={() => (window.location.href = '/register')}
 				>
 					Get Started Free
-				</a>
-				<a 
-					href="/login" 
-					class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium rounded-xl px-8 py-3.5 text-base active:scale-[0.98] transition-all duration-200"
+				</Button>
+				<Button
+					variant="secondary"
+					class="w-full px-8 py-3.5 text-base sm:w-auto"
+					onclick={() => (window.location.href = '/login')}
 				>
 					Sign In
-				</a>
+				</Button>
 			{/if}
 		</div>
 	</div>
