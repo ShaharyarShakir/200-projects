@@ -1,13 +1,24 @@
 import type { Context } from 'hono';
 import { AIService } from './service.js';
-import { summarizeSchema, explainSchema, rewriteSchema } from './schema';
+import { summarizeSchema, explainSchema, rewriteSchema } from './schema.js';
+import { db, note, eq, and } from '@repo/database';
 
 export class AIController {
   static async summarize(c: Context) {
     const body = await c.req.json();
-    const { content } = summarizeSchema.parse(body);
+    const { content, noteId } = summarizeSchema.parse(body);
 
     const result = await AIService.summarize(content);
+
+    if (noteId) {
+      const user = (c as any).get("user");
+      if (user && user.id) {
+        await db
+          .update(note)
+          .set({ summary: result })
+          .where(and(eq(note.id, noteId), eq(note.userId, user.id)));
+      }
+    }
 
     return c.json({ success: true, data: result });
   }
