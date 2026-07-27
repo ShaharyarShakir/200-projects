@@ -1,42 +1,73 @@
-# sv
+# GitDash - GitHub Analytics Dashboard
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+GitDash is a premium GitHub analytics and repository insights dashboard built using SvelteKit, TypeScript, TailwindCSS, Drizzle ORM, and PostgreSQL.
 
-## Creating a project
+## Getting Started
 
-If you're seeing this, you've probably already done this step. Congrats!
+### 1. Installation
 
-```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
+Install the project dependencies using `pnpm`:
 
 ```sh
-# recreate this project
-bun x sv@0.16.6 create --template minimal --types ts --add prettier eslint vitest="usages:unit,component" tailwindcss="plugins:none" drizzle="database:postgresql+postgresql:postgres.js+docker:yes" better-auth="demo:password,github" --install bun github-dashboard
+pnpm install
 ```
 
-## Developing
+### 2. Run PostgreSQL Database
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Start the local PostgreSQL container using Docker Compose:
 
 ```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+pnpm run db:start
+# or run in the background:
+docker compose up -d
 ```
 
-## Building
+This runs a local PostgreSQL instance on port `5432` with username `root` and password `mysecretpassword`, initialized with a database named `local`.
 
-To create a production version of your app:
+### 3. Environment Setup
+
+Copy the example environment file and configure any client credentials:
 
 ```sh
-npm run build
+cp .env.example .env
 ```
 
-You can preview the production build with `npm run preview`.
+The database connection string in `.env` is preconfigured to match the local Docker container:
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+```env
+DATABASE_URL="postgres://root:mysecretpassword@localhost:5432/local"
+```
+
+### 4. Generate & Run Database Migrations
+
+Generate the Drizzle migrations based on the schema definitions:
+
+```sh
+pnpm run db:generate
+```
+
+Push the schema definitions directly to your database (recommended for development):
+
+```sh
+pnpm run db:push
+# or run standard migrations
+pnpm run db:migrate
+```
+
+### 5. Seed the Database
+
+Seed the database with 5 sample repositories representing various codebases (TypeScript, Rust, Go, Python, Svelte) and metric counts:
+
+```sh
+pnpm run db:seed
+```
+
+### 6. Start Development Server
+
+Launch the local Vite development server:
+
+```sh
+pnpm run dev -- --open
+```
+
+Navigate to [http://localhost:5173/dashboard](http://localhost:5173/dashboard) to view your dynamic repository insights dashboard.
