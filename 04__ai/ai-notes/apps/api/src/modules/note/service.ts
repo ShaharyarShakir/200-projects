@@ -40,6 +40,7 @@ export class NoteService {
       title?: string;
       notebookId?: string | null;
       content?: any;
+      summary?: string | null;
       isFavorite?: boolean;
       isPinned?: boolean;
       isArchived?: boolean;
