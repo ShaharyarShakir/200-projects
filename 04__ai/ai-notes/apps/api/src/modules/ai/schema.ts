@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const summarizeSchema = z.object({
   content: z.string().min(10),
+  noteId: z.string().uuid().optional(),
 });
 
 export const explainSchema = z.object({
