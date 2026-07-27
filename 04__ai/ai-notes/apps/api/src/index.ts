@@ -8,6 +8,7 @@ import authRoute from "./routes/auth.js";
 import notebooksRoute from "./modules/notebook/routes.js";
 import notesRoute from "./modules/note/routes.js";
 import { requireAuth } from "./middleware/auth.js";
+import aiRoutes from './modules/ai/routes.js';
 
 const app = new Hono();
 
@@ -32,7 +33,7 @@ app.route("/db", dbRoute);
 app.route("/api/auth", authRoute);
 app.route("/api/notebooks", notebooksRoute);
 app.route("/api/notes", notesRoute);
-
+app.route('/api/ai', aiRoutes);
 // Test protected route
 app.get("/api/me", requireAuth, (c) => {
   const user = (c as any).get("user");
