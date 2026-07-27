@@ -51,27 +51,29 @@
 	/>
 </svelte:head>
 
-<div class="relative flex min-h-screen items-center justify-center bg-slate-950 px-4">
-	<!-- Background Orbs -->
-	<GlowBg />
+<div class="relative flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 transition-colors duration-300">
+	<!-- Background Orbs (only in dark mode) -->
+	<div class="hidden dark:block">
+		<GlowBg />
+	</div>
 
 	<div
-		class="relative z-10 w-full max-w-md rounded-2xl border border-slate-800/80 bg-slate-900/40 p-8 shadow-2xl backdrop-blur-xl"
+		class="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 p-8 shadow-xl dark:shadow-2xl backdrop-blur-xl transition-colors duration-350"
 	>
 		<div class="mb-8 text-center">
 			<h1
-				class="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent text-white"
+				class="text-3xl font-extrabold tracking-tight text-slate-800 dark:text-white"
 			>
 				Create Account
 			</h1>
-			<p class="mt-2 text-sm font-light text-slate-400">
+			<p class="mt-2 text-sm font-light text-slate-500 dark:text-slate-400">
 				Join AI Notes and experience intelligent productivity
 			</p>
 		</div>
 
 		{#if error}
 			<div
-				class="mb-6 animate-pulse rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-center text-sm text-red-400"
+				class="mb-6 animate-pulse rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-center text-sm text-red-650 dark:text-red-400"
 			>
 				{error}
 			</div>
@@ -112,13 +114,14 @@
 			</div>
 		</form>
 
-		<div class="text-slate-550 mt-8 text-center text-sm">
+		<div class="text-slate-500 dark:text-slate-450 mt-8 text-center text-sm">
 			Already have an account?
 			<a
 				href="/login"
-				class="font-medium text-violet-400 underline decoration-violet-500/30 underline-offset-4 transition duration-200 hover:text-violet-300"
-				>Sign In</a
+				class="font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
 			>
+				Sign In
+			</a>
 		</div>
 	</div>
 </div>
