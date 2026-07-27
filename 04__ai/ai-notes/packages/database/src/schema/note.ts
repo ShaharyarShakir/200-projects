@@ -19,6 +19,7 @@ export const note = pgTable("note", {
   }),
   title: text("title").notNull(),
   content: jsonb("content"),
+  summary: text("summary"),
   isFavorite: boolean("is_favorite").default(false).notNull(),
   isPinned: boolean("is_pinned").default(false).notNull(),
   isArchived: boolean("is_archived").default(false).notNull(),
