@@ -22,6 +22,13 @@
       "when": 1785063737345,
       "tag": "0002_serious_george_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785162761995,
+      "tag": "0003_flowery_exodus",
+      "breakpoints": true
     }
   ]
 }
