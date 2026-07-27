@@ -63,6 +63,7 @@ export const notesApi = {
 			isFavorite?: boolean;
 			isPinned?: boolean;
 			isArchived?: boolean;
+			summary?: string | null;
 		}
 	) => apiRequest(`/notes/${id}`, 'PATCH', data),
 	softDelete: (id: string) => apiRequest(`/notes/${id}`, 'DELETE'),
