@@ -1,11 +1,11 @@
 const API = 'http://localhost:3000/api/ai';
 
-export async function summarize(content: string) {
+export async function summarize(content: string, noteId?: string) {
   const res = await fetch(`${API}/summarize`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, noteId }),
   });
 
   return res.json();

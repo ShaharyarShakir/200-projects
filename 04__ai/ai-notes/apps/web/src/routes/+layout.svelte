@@ -6,6 +6,7 @@
 	import Navbar from '../components/Navbar.svelte';
 	import { QueryClientProvider } from '@tanstack/svelte-query';
 	import { queryClient } from '$lib/api.js';
+	import { theme } from '../stores/theme.svelte.js';
 
 	let { children, data } = $props();
 	let user = $derived(data?.user);
@@ -53,7 +54,7 @@
 </svelte:head>
 
 <QueryClientProvider client={queryClient}>
-	<div class="relative flex min-h-screen flex-col overflow-hidden bg-slate-950 text-slate-100">
+	<div class="relative flex min-h-screen flex-col overflow-hidden transition-colors duration-300 {theme.current === 'dark' ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}">
 		<!-- Navbar component -->
 		<Navbar {user} {loggingOut} onlogout={handleLogout} />
 
