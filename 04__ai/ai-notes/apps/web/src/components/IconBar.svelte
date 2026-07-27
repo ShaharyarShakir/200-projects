@@ -35,9 +35,9 @@
   ];
 </script>
 
-<div class="w-16 bg-slate-50 border-r border-slate-200 flex flex-col justify-between items-center py-6 h-full shrink-0 select-none">
+<div class="w-16 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between items-center py-6 h-full shrink-0 select-none transition-colors duration-200">
   <!-- Top Logo/Icon (Vibrant Star Sparkle) -->
-  <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-violet-100 text-violet-600 mb-6 active:scale-95 transition-transform duration-200">
+  <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 mb-6 active:scale-95 transition-all duration-200">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
       <path d="M11.644 1.59a.75.75 0 01.712 0l9.75 5.633a.75.75 0 010 1.298l-9.75 5.633a.75.75 0 01-.712 0L1.894 8.52a.75.75 0 010-1.298l9.75-5.633zM2.511 11.25a.75.75 0 00-.511.66v4.59a3.75 3.75 0 002.348 3.486l7.352 2.94a.75.75 0 00.56 0l7.353-2.94a3.75 3.75 0 002.348-3.485v-4.59a.75.75 0 00-.511-.66l-7.5-2.58a.75.75 0 00-.498 0l-7.5 2.58z" />
     </svg>
@@ -48,12 +48,7 @@
     {#each menuItems as item}
       <button
         onclick={() => onchangeTab?.(item.id)}
-        class="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 cursor-pointer active:scale-95 relative group"
-        class:bg-violet-100={activeTab === item.id}
-        class:text-violet-600={activeTab === item.id}
-        class:text-slate-400={activeTab !== item.id}
-        class:hover:bg-slate-100={activeTab !== item.id}
-        class:hover:text-slate-700={activeTab !== item.id}
+        class="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 cursor-pointer active:scale-95 relative group {activeTab === item.id ? 'bg-violet-100 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200'}"
         title={item.label}
       >
         <!-- Render Icon -->
@@ -76,7 +71,7 @@
   <div class="flex flex-col items-center space-y-4 w-full mt-6">
     <!-- Help Button -->
     <button
-      class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-all duration-200 cursor-pointer"
+      class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-all duration-200 cursor-pointer"
       title="Help"
     >
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
@@ -86,7 +81,7 @@
 
     <!-- Settings Button -->
     <button
-      class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-all duration-200 cursor-pointer"
+      class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200 transition-all duration-200 cursor-pointer"
       title="Settings"
     >
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">

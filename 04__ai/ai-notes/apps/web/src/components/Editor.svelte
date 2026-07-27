@@ -53,7 +53,6 @@
   let bubbleMenuCoords = $state({ top: 0, left: 0 });
   let selectedText = $state("");
   let showRewriteDropdown = $state(false);
-  let showSummaryCollapse = $state(true);
 
   // Debounced auto-save logic
   let saveTimeout: number;
@@ -117,23 +116,23 @@
           Link.configure({
             openOnClick: false,
             HTMLAttributes: {
-              class: "text-violet-600 underline cursor-pointer",
+              class: "text-violet-650 dark:text-violet-400 underline cursor-pointer",
             },
           }),
           CodeBlock.configure({
             HTMLAttributes: {
-              class: "bg-slate-50 border border-slate-200 rounded-xl p-4 font-mono text-xs my-4 text-violet-700 overflow-x-auto",
+              class: "bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 font-mono text-xs my-4 text-violet-700 dark:text-violet-400 overflow-x-auto",
             },
           }),
           Image.configure({
             HTMLAttributes: {
-              class: "rounded-xl border border-slate-200 max-w-full my-4",
+              class: "rounded-xl border border-slate-200 dark:border-slate-850 max-w-full my-4",
             },
           }),
         ],
         editorProps: {
           attributes: {
-            class: "prose prose-slate focus:outline-none max-w-none min-h-[400px] text-slate-800 text-sm leading-relaxed font-sans",
+            class: "prose prose-slate dark:prose-invert focus:outline-none max-w-none min-h-[400px] text-slate-800 dark:text-slate-200 text-sm leading-relaxed font-sans",
           },
         },
         content: initialContent,
@@ -201,6 +200,7 @@
     triggerSave(localTitle, editor?.getJSON() || {}, localNotebookId ? localNotebookId : null, localSummary ? localSummary : null);
   }
 
+  // Type annotations
   function handleNotebookChange(e: Event) {
     if (!note) return;
     const val = (e.target as HTMLSelectElement).value;
@@ -215,9 +215,9 @@
       .map((line) => {
         const trimmed = line.trim();
         if (trimmed.startsWith("-") || trimmed.startsWith("*")) {
-          return `<li class="ml-4 list-disc text-slate-650 py-0.5">${trimmed.substring(1).trim()}</li>`;
+          return `<li class="ml-4 list-disc text-slate-650 dark:text-slate-400 py-0.5">${trimmed.substring(1).trim()}</li>`;
         }
-        return trimmed ? `<p class="py-1 text-slate-700 font-light">${trimmed}</p>` : "";
+        return trimmed ? `<p class="py-1 text-slate-705 dark:text-slate-300 font-light">${trimmed}</p>` : "";
       })
       .join("");
   }
@@ -285,22 +285,22 @@
   }
 </script>
 
-<div class="relative z-10 flex h-full flex-grow flex-col bg-white select-none">
+<div class="relative z-10 flex h-full flex-grow flex-col bg-white dark:bg-slate-950 transition-colors duration-200 select-none">
   {#if !note}
-    <div class="flex flex-grow flex-col items-center justify-center p-8 text-center text-slate-400">
+    <div class="flex flex-grow flex-col items-center justify-center p-8 text-center text-slate-400 dark:text-slate-600">
       <span class="mb-4 text-5xl opacity-40">🖊</span>
       <p class="text-sm italic font-light">Select or create a note to begin writing</p>
     </div>
   {:else}
     <!-- Top Bar: Autosave Indicator, Notebook Select, Title & Subtitle Group -->
-    <div class="flex items-center justify-between gap-4 border-b border-slate-100 px-8 py-5 bg-white">
+    <div class="flex items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-850 px-8 py-5 bg-white dark:bg-slate-950 transition-colors duration-200">
       <div class="flex flex-col flex-grow max-w-xl">
         <div class="flex items-center gap-3">
           <!-- Notebook Dropdown Selector -->
           <select
             value={localNotebookId || ""}
             onchange={handleNotebookChange}
-            class="cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-550 outline-none focus:border-violet-500 transition-colors"
+            class="cursor-pointer rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 px-2.5 py-1.5 text-xs text-slate-550 dark:text-slate-400 outline-none focus:border-violet-500 transition-colors"
           >
             <option value="">No Project</option>
             {#each notebooks as n}
@@ -314,7 +314,7 @@
             value={localTitle}
             oninput={handleTitleChange}
             placeholder="Untitled Note"
-            class="flex-grow border-none bg-transparent text-lg font-bold text-slate-800 outline-none placeholder:text-slate-300"
+            class="flex-grow border-none bg-transparent text-lg font-bold text-slate-800 dark:text-white outline-none placeholder:text-slate-350 dark:placeholder:text-slate-700"
           />
         </div>
         <!-- Subtitle/Metadata Field -->
@@ -323,7 +323,7 @@
           value={localSummary}
           oninput={handleSummaryChange}
           placeholder="Add description/metadata..."
-          class="w-full border-none bg-transparent text-xs text-slate-400 focus:outline-none outline-none placeholder:text-slate-300 font-light mt-1 ml-[94px]"
+          class="w-full border-none bg-transparent text-xs text-slate-400 dark:text-slate-550 focus:outline-none outline-none placeholder:text-slate-300 dark:placeholder:text-slate-700 font-light mt-1 ml-[94px]"
         />
       </div>
 
@@ -331,29 +331,21 @@
       <div class="flex shrink-0 items-center gap-2 text-xs">
         {#if saveStatus === "saving"}
           <span class="h-2 w-2 animate-ping rounded-full bg-yellow-500"></span>
-          <span class="font-light text-slate-400">Saving...</span>
-        {:else if saveStatus === "offline"}
-          <span class="h-2 w-2 rounded-full bg-red-500"></span>
-          <span class="font-medium text-red-500">Offline</span>
+          <span class="font-light text-slate-400 dark:text-slate-500">Saving...</span>
         {:else}
-          <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-          <span class="font-light text-slate-400">Saved</span>
+          <span class="h-2 w-2 rounded-full" class:bg-emerald-500={saveStatus === "saved"} class:bg-red-500={saveStatus === "offline"}></span>
+          <span class="font-light text-slate-400 dark:text-slate-500">{saveStatus === "saved" ? "Saved" : "Offline"}</span>
         {/if}
       </div>
     </div>
 
     <!-- Formatting Toolbar (Obsidian/Notelify Premium look) -->
     {#if editor}
-      <div class="flex flex-wrap items-center gap-1.5 border-b border-slate-100 bg-slate-50/40 px-8 py-2">
+      <div class="flex flex-wrap items-center gap-1.5 border-b border-slate-100 dark:border-slate-850 bg-slate-50/40 dark:bg-slate-900/20 px-8 py-2 transition-colors">
         <!-- Font Selection dropdown -->
         <select
           bind:value={activeFont}
-          onchange={() => {
-            if (editor) {
-              // Custom class style toggle example
-            }
-          }}
-          class="bg-white border border-slate-200 text-xs text-slate-650 rounded-lg px-2 py-1 cursor-pointer focus:border-violet-500 outline-none"
+          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-650 dark:text-slate-300 rounded-lg px-2 py-1 cursor-pointer focus:border-violet-500 outline-none"
         >
           <option value="Inter">Inter</option>
           <option value="Outfit">Outfit</option>
@@ -364,7 +356,7 @@
         <!-- Font Size dropdown -->
         <select
           bind:value={activeSize}
-          class="bg-white border border-slate-200 text-xs text-slate-650 rounded-lg px-2 py-1 cursor-pointer focus:border-violet-500 outline-none"
+          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-650 dark:text-slate-300 rounded-lg px-2 py-1 cursor-pointer focus:border-violet-500 outline-none"
         >
           <option value="12">12</option>
           <option value="14">14</option>
@@ -372,97 +364,76 @@
           <option value="18">18</option>
         </select>
 
-        <div class="h-4 w-px bg-slate-200 mx-1.5"></div>
+        <div class="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1.5"></div>
 
         <button
           onclick={() => editor!.chain().focus().toggleBold().run()}
-          class="cursor-pointer rounded-lg p-2 text-xs font-semibold hover:bg-slate-100 hover:text-slate-800 transition-colors"
-          class:bg-violet-100={editor.isActive("bold")}
-          class:text-violet-700={editor.isActive("bold")}
-          class:text-slate-500={!editor.isActive("bold")}
+          class="cursor-pointer rounded-lg p-2 text-xs font-semibold transition-all {editor.isActive('bold') ? 'bg-violet-100 text-violet-750 dark:bg-violet-950/40 dark:text-violet-400' : 'text-slate-500 dark:text-slate-450 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'}"
         >
           B
         </button>
         <button
           onclick={() => editor!.chain().focus().toggleItalic().run()}
-          class="cursor-pointer rounded-lg p-2 text-xs italic hover:bg-slate-100 hover:text-slate-800 transition-colors"
-          class:bg-violet-100={editor.isActive("italic")}
-          class:text-violet-700={editor.isActive("italic")}
-          class:text-slate-500={!editor.isActive("italic")}
+          class="cursor-pointer rounded-lg p-2 text-xs italic transition-all {editor.isActive('italic') ? 'bg-violet-100 text-violet-750 dark:bg-violet-950/40 dark:text-violet-400' : 'text-slate-500 dark:text-slate-455 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'}"
         >
           I
         </button>
         <button
           onclick={() => editor!.chain().focus().toggleHeading({ level: 1 }).run()}
-          class="cursor-pointer rounded-lg p-2 text-xs font-bold hover:bg-slate-100 hover:text-slate-800 transition-colors"
-          class:bg-violet-100={editor.isActive("heading", { level: 1 })}
-          class:text-violet-700={editor.isActive("heading", { level: 1 })}
-          class:text-slate-500={!editor.isActive("heading", { level: 1 })}
+          class="cursor-pointer rounded-lg p-2 text-xs font-bold transition-all {editor.isActive('heading', { level: 1 }) ? 'bg-violet-100 text-violet-750 dark:bg-violet-950/40 dark:text-violet-400' : 'text-slate-500 dark:text-slate-455 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'}"
         >
           H1
         </button>
         <button
           onclick={() => editor!.chain().focus().toggleHeading({ level: 2 }).run()}
-          class="cursor-pointer rounded-lg p-2 text-xs font-bold hover:bg-slate-100 hover:text-slate-800 transition-colors"
-          class:bg-violet-100={editor.isActive("heading", { level: 2 })}
-          class:text-violet-700={editor.isActive("heading", { level: 2 })}
-          class:text-slate-500={!editor.isActive("heading", { level: 2 })}
+          class="cursor-pointer rounded-lg p-2 text-xs font-bold transition-all {editor.isActive('heading', { level: 2 }) ? 'bg-violet-100 text-violet-750 dark:bg-violet-950/40 dark:text-violet-400' : 'text-slate-500 dark:text-slate-455 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'}"
         >
           H2
         </button>
 
-        <div class="h-4 w-px bg-slate-200 mx-1.5"></div>
+        <div class="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1.5"></div>
 
         <button
           onclick={() => editor!.chain().focus().toggleBulletList().run()}
-          class="cursor-pointer rounded-lg p-2 text-xs hover:bg-slate-100 hover:text-slate-800 transition-colors"
-          class:bg-violet-100={editor.isActive("bulletList")}
-          class:text-violet-700={editor.isActive("bulletList")}
-          class:text-slate-500={!editor.isActive("bulletList")}
+          class="cursor-pointer rounded-lg p-2 text-xs transition-all {editor.isActive('bulletList') ? 'bg-violet-100 text-violet-755 dark:bg-violet-950/40 dark:text-violet-400' : 'text-slate-500 dark:text-slate-455 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'}"
         >
           • List
         </button>
         <button
           onclick={() => editor!.chain().focus().toggleOrderedList().run()}
-          class="cursor-pointer rounded-lg p-2 text-xs hover:bg-slate-100 hover:text-slate-800 transition-colors"
-          class:bg-violet-100={editor.isActive("orderedList")}
-          class:text-violet-700={editor.isActive("orderedList")}
-          class:text-slate-500={!editor.isActive("orderedList")}
+          class="cursor-pointer rounded-lg p-2 text-xs transition-all {editor.isActive('orderedList') ? 'bg-violet-100 text-violet-755 dark:bg-violet-950/40 dark:text-violet-400' : 'text-slate-500 dark:text-slate-455 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'}"
         >
           1. List
         </button>
         <button
           onclick={() => editor!.chain().focus().toggleBlockquote().run()}
-          class="cursor-pointer rounded-lg p-2 font-serif text-xs hover:bg-slate-100 hover:text-slate-800 transition-colors"
-          class:bg-violet-100={editor.isActive("blockquote")}
-          class:text-violet-700={editor.isActive("blockquote")}
-          class:text-slate-500={!editor.isActive("blockquote")}
+          class="cursor-pointer rounded-lg p-2 font-serif text-xs transition-all {editor.isActive('blockquote') ? 'bg-violet-100 text-violet-755 dark:bg-violet-950/40 dark:text-violet-400' : 'text-slate-500 dark:text-slate-455 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'}"
         >
           “ Quote
         </button>
 
-        <div class="h-4 w-px bg-slate-200 mx-1.5"></div>
+        <div class="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1.5"></div>
 
         <button
           onclick={() => editor!.chain().focus().undo().run()}
-          class="cursor-pointer rounded-lg p-2 text-xs text-slate-500 hover:bg-slate-100 transition-colors"
+          class="cursor-pointer rounded-lg p-2 text-xs text-slate-500 dark:text-slate-450 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
           ↶ Undo
         </button>
         <button
           onclick={() => editor!.chain().focus().redo().run()}
-          class="cursor-pointer rounded-lg p-2 text-xs text-slate-500 hover:bg-slate-100 transition-colors"
+          class="cursor-pointer rounded-lg p-2 text-xs text-slate-500 dark:text-slate-450 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
           ↷ Redo
         </button>
 
-        <div class="h-4 w-px bg-slate-200 mx-1.5"></div>
+        <div class="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1.5"></div>
 
         <!-- AI Assistant actions trigger -->
         <button
           onclick={handleSummarize}
           disabled={aiLoading}
-          class="cursor-pointer rounded-xl bg-violet-50 hover:bg-violet-100 border border-violet-100 px-3 py-1.5 text-xs font-bold text-violet-700 transition-all disabled:opacity-50 flex items-center gap-1 active:scale-95"
+          class="cursor-pointer rounded-xl bg-violet-50 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-900 border border-violet-100 dark:border-violet-850 px-3 py-1.5 text-xs font-bold text-violet-700 dark:text-violet-400 transition-all disabled:opacity-50 flex items-center gap-1 active:scale-95"
           title="Summarize Note"
         >
           ✨ Summarize
@@ -472,7 +443,7 @@
 
     <!-- Error Banner -->
     {#if aiError}
-      <div class="mx-8 mt-4 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-xs text-red-700 shadow-sm">
+      <div class="mx-8 mt-4 flex items-center justify-between rounded-xl border border-red-200 dark:border-red-900/30 bg-red-50 dark:bg-red-950/20 px-5 py-3 text-xs text-red-700 dark:text-red-400 shadow-sm">
         <div class="flex items-center gap-2">
           <span>⚠️</span>
           <span>{aiError}</span>
@@ -482,26 +453,26 @@
     {/if}
 
     <!-- Workspace Main Editor Canvas & Floating selections -->
-    <div class="flex flex-grow overflow-hidden relative bg-white">
+    <div class="flex flex-grow overflow-hidden relative bg-white dark:bg-slate-950 transition-colors">
       
       <!-- Content Canvas -->
-      <div class="flex-grow scrollbar-thin overflow-y-auto px-8 py-6">
+      <div class="flex-grow scrollbar-thin overflow-y-auto px-8 py-6 bg-white dark:bg-slate-950">
         <div bind:this={element} class="w-full"></div>
       </div>
 
       <!-- AI Selection Floating Tooltip (Bubble Menu) -->
       {#if showBubbleMenu && editor}
         <div
-          class="absolute z-50 flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-900 shadow-xl px-3 py-2 transition-all duration-200"
+          class="absolute z-50 flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-900 dark:bg-slate-950 shadow-xl px-3 py-2 transition-all duration-200"
           style="top: {bubbleMenuCoords.top}px; left: {bubbleMenuCoords.left}px; transform: translate(-50%, -125%);"
         >
-          <span class="px-1 text-[10px] font-extrabold tracking-wider text-violet-300 uppercase">✨ Assistant</span>
-          <div class="h-4 w-px bg-slate-700"></div>
+          <span class="px-1 text-[10px] font-extrabold tracking-wider text-violet-300 dark:text-violet-400 uppercase">✨ Assistant</span>
+          <div class="h-4 w-px bg-slate-700 dark:bg-slate-800"></div>
 
           <button
             onclick={handleExplain}
             disabled={aiLoading}
-            class="cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-slate-200 hover:bg-slate-800 transition-colors"
+            class="cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-slate-200 dark:text-slate-350 hover:bg-slate-800 dark:hover:bg-slate-900 transition-colors"
           >
             🔍 Explain
           </button>
@@ -510,12 +481,12 @@
             <button
               onclick={() => (showRewriteDropdown = !showRewriteDropdown)}
               disabled={aiLoading}
-              class="cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-slate-200 hover:bg-slate-800 transition-colors flex items-center gap-1"
+              class="cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-slate-200 dark:text-slate-350 hover:bg-slate-800 dark:hover:bg-slate-900 transition-colors flex items-center gap-1"
             >
               ✍️ Rewrite
             </button>
             {#if showRewriteDropdown}
-              <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl flex flex-col gap-0.5 z-55">
+              <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-32 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-xl flex flex-col gap-0.5 z-55">
                 {#each ["professional", "friendly", "shorter", "longer", "grammar"] as style}
                   <button
                     type="button"
@@ -523,7 +494,7 @@
                       handleRewrite(style);
                       showRewriteDropdown = false;
                     }}
-                    class="cursor-pointer w-full text-left px-2 py-1.5 text-xs text-slate-600 hover:bg-slate-50 hover:text-violet-700 rounded-lg capitalize transition-colors"
+                    class="cursor-pointer w-full text-left px-2 py-1.5 text-xs text-slate-650 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-violet-705 dark:hover:text-violet-400 rounded-lg capitalize transition-colors"
                   >
                     {style}
                   </button>
@@ -536,48 +507,48 @@
 
       <!-- AI Side Panel for selection explanations -->
       {#if showExplanationPanel}
-        <div class="w-80 shrink-0 border-l border-slate-100 bg-slate-50/50 p-6 flex flex-col justify-between overflow-y-auto scrollbar-thin">
+        <div class="w-80 shrink-0 border-l border-slate-100 dark:border-slate-850 bg-slate-50/50 dark:bg-slate-900/10 p-6 flex flex-col justify-between overflow-y-auto scrollbar-thin transition-colors">
           <div class="space-y-6">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <span class="text-violet-600">✨</span>
-                <h3 class="text-xs font-bold tracking-wider text-slate-800 uppercase">AI Explanation</h3>
+                <span class="text-violet-650 dark:text-violet-400">✨</span>
+                <h3 class="text-xs font-bold tracking-wider text-slate-800 dark:text-white uppercase">AI Explanation</h3>
               </div>
               <button
                 onclick={() => {
                   showExplanationPanel = false;
                   aiExplanation = "";
                 }}
-                class="cursor-pointer text-slate-400 hover:text-slate-600 transition-colors"
+                class="cursor-pointer text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
               >
                 ✕
               </button>
             </div>
 
             <!-- Context snippet -->
-            <div class="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm">
-              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Selection</span>
-              <p class="text-xs text-slate-650 italic line-clamp-3">"{selectedText}"</p>
+            <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3.5 shadow-sm">
+              <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Selection</span>
+              <p class="text-xs text-slate-650 dark:text-slate-400 italic line-clamp-3">"{selectedText}"</p>
             </div>
 
             <!-- Content -->
             <div class="space-y-2">
-              <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Explanation</span>
+              <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Explanation</span>
               {#if aiLoading}
                 <div class="space-y-2.5 animate-pulse">
-                  <div class="h-3 bg-slate-200 rounded w-full"></div>
-                  <div class="h-3 bg-slate-200 rounded w-11/12"></div>
-                  <div class="h-3 bg-slate-200 rounded w-5/6"></div>
+                  <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-full"></div>
+                  <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-11/12"></div>
+                  <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-5/6"></div>
                 </div>
               {:else}
-                <div class="text-xs leading-relaxed text-slate-700 whitespace-pre-wrap font-light">
+                <div class="text-xs leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-light">
                   {aiExplanation || "No explanation generated yet."}
                 </div>
               {/if}
             </div>
           </div>
 
-          <div class="pt-4 border-t border-slate-200 text-[9px] text-slate-400 text-center select-none font-light">
+          <div class="pt-4 border-t border-slate-200 dark:border-slate-800 text-[9px] text-slate-400 dark:text-slate-500 text-center select-none font-light">
             AI responses are generated by Groq (Llama 3).
           </div>
         </div>
@@ -586,3 +557,14 @@
     </div>
   {/if}
 </div>
+
+<style>
+  /* TipTap placeholder styling */
+  :global(.tiptap p.is-editor-empty:first-child::before) {
+    color: rgba(148, 163, 184, 0.3);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+</style>
