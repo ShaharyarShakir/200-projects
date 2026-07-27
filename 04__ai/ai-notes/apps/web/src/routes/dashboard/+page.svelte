@@ -59,7 +59,7 @@
 	});
 </script>
 
-<div class="relative flex h-[calc(100vh-65px)] flex-col overflow-hidden bg-white text-slate-900">
+<div class="relative flex h-[calc(100vh-65px)] flex-col overflow-hidden bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
 	<div class="relative z-10 flex h-full flex-grow">
 		<!-- 1. Far Left Pane: Icon Bar (64px) -->
 		<IconBar activeTab="notes" />
@@ -92,14 +92,14 @@
 		<div class="relative flex h-full flex-grow flex-col overflow-hidden">
 			<!-- Floating Navigation Helper for Mobile Devices -->
 			<div
-				class="sticky top-0 z-30 flex items-center justify-between border-b border-slate-100 bg-slate-50 p-3.5 md:hidden"
+				class="sticky top-0 z-30 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-3.5 md:hidden transition-colors"
 			>
 				<button
 					onclick={() => {
 						dashboard.showMobileSidebar = !dashboard.showMobileSidebar;
 						dashboard.showMobileNotes = false;
 					}}
-					class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
+					class="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs font-medium text-slate-655 dark:text-slate-350"
 				>
 					{dashboard.showMobileSidebar ? 'Close Sidebar' : '📁 Notebooks'}
 				</button>
@@ -109,9 +109,9 @@
 						dashboard.showMobileNotes = !dashboard.showMobileNotes;
 						dashboard.showMobileSidebar = false;
 					}}
-					class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
+					class="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs font-medium text-slate-655 dark:text-slate-350"
 				>
-					{dashboard.showMobileNotes ? 'Hide List' : '📝 Notes List'}
+					{dashboard.showMobileNotes ? 'Close List' : '📝 Notes List'}
 				</button>
 			</div>
 

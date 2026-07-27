@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
 	--animate-float-slow: float-slow 18s ease-in-out infinite;
 	--animate-float-slower: float-slower 22s ease-in-out infinite;
