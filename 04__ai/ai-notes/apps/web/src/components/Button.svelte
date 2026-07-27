@@ -27,11 +27,11 @@
 			case 'primary':
 				return 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-950/20 border border-violet-500/30 hover:border-violet-400/50 hover:shadow-violet-500/20 active:scale-[0.98]';
 			case 'secondary':
-				return 'bg-slate-900/60 backdrop-blur-md border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-850/80 hover:border-slate-700 active:scale-[0.98]';
+				return 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 dark:bg-slate-900/60 dark:backdrop-blur-md dark:border-slate-800 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 active:scale-[0.98]';
 			case 'danger':
-				return 'bg-red-950/20 hover:bg-red-900/30 border border-red-900/30 hover:border-red-500/40 text-red-400 hover:text-red-300 active:scale-[0.98]';
+				return 'bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 dark:bg-red-950/20 dark:hover:bg-red-900/30 dark:border-red-900/30 dark:text-red-400 dark:hover:text-red-300 active:scale-[0.98]';
 			case 'ghost':
-				return 'text-slate-400 hover:text-white hover:bg-slate-900/60 active:scale-[0.98]';
+				return 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-900/60 active:scale-[0.98]';
 			default:
 				return '';
 		}

@@ -97,16 +97,16 @@
   }
 </script>
 
-<div class="w-80 bg-white border-l border-slate-200 flex flex-col h-full shrink-0 select-none shadow-sm relative z-10">
+<div class="w-80 bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 flex flex-col h-full shrink-0 select-none shadow-sm relative z-10 transition-colors duration-200">
   <!-- Header -->
-  <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+  <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-850 flex items-center justify-between">
     <div class="flex items-center gap-2">
       <span class="text-violet-600 text-sm">✨</span>
-      <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Assistant</span>
+      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Assistant</span>
     </div>
     <!-- Clean Slate Menu Icon -->
     <button
-      class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+      class="text-slate-400 dark:text-slate-550 hover:text-slate-600 dark:hover:text-slate-350 p-1 cursor-pointer"
       aria-label="Menu"
       title="Menu"
     >
@@ -129,7 +129,9 @@
           class:bg-violet-600={msg.sender === "user"}
           class:text-white={msg.sender === "user"}
           class:bg-slate-100={msg.sender === "assistant"}
+          class:dark:bg-slate-900={msg.sender === "assistant"}
           class:text-slate-800={msg.sender === "assistant"}
+          class:dark:text-slate-200={msg.sender === "assistant"}
         >
           {#if msg.sender === "assistant"}
             {@html formatMessageText(msg.text)}
@@ -138,30 +140,30 @@
           {/if}
         </div>
         <!-- Time stamp -->
-        <span class="text-[9px] text-slate-400 px-1">{msg.timestamp}</span>
+        <span class="text-[9px] text-slate-400 dark:text-slate-500 px-1">{msg.timestamp}</span>
       </div>
     {/each}
 
     <!-- Thinking indicator loader -->
     {#if isThinking}
       <div class="flex flex-col space-y-1 items-start">
-        <div class="bg-slate-100 text-slate-500 rounded-2xl px-4 py-3 text-xs flex items-center gap-1.5 shadow-sm">
-          <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
-          <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
-          <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+        <div class="bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 rounded-2xl px-4 py-3 text-xs flex items-center gap-1.5 shadow-sm">
+          <span class="w-1.5 h-1.5 bg-slate-400 dark:bg-slate-550 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+          <span class="w-1.5 h-1.5 bg-slate-400 dark:bg-slate-550 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+          <span class="w-1.5 h-1.5 bg-slate-400 dark:bg-slate-550 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
         </div>
       </div>
     {/if}
   </div>
 
   <!-- Bottom actions and Input text box -->
-  <div class="p-4 border-t border-slate-100 bg-slate-50/50 space-y-3">
+  <div class="p-4 border-t border-slate-100 dark:border-slate-850 bg-slate-50/50 dark:bg-slate-900/20 space-y-3">
     <!-- Suggestions Pills list -->
     <div class="flex flex-wrap gap-1.5">
       {#each promptSuggestions as suggestion}
         <button
           onclick={() => handleSuggestionClick(suggestion)}
-          class="text-[10px] bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors duration-150 active:scale-95 whitespace-nowrap"
+          class="text-[10px] bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-655 dark:text-slate-300 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors duration-150 active:scale-95 whitespace-nowrap"
         >
           {suggestion}
         </button>
@@ -175,7 +177,7 @@
         placeholder="Ask me anything..."
         bind:value={inputVal}
         onkeydown={(e) => e.key === "Enter" && handleSend(inputVal)}
-        class="w-full light-input rounded-xl pl-4 pr-10 py-2.5 text-xs outline-none bg-white placeholder:text-slate-400"
+        class="w-full light-input dark:bg-slate-900 dark:border-slate-800 dark:text-white rounded-xl pl-4 pr-10 py-2.5 text-xs outline-none bg-white placeholder:text-slate-400 dark:placeholder:text-slate-600"
       />
       <!-- Send Button -->
       <button
