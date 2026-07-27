@@ -75,12 +75,12 @@
 </script>
 
 <div
-	class="relative z-10 flex h-full w-full shrink-0 flex-col border-r border-slate-900 bg-slate-950/10 md:w-80"
+	class="relative z-10 flex h-full w-full shrink-0 flex-col border-r border-slate-200 bg-slate-50/50 dark:border-slate-900 dark:bg-slate-950/10 md:w-80 transition-colors duration-300"
 >
 	<!-- Header / Search -->
-	<div class="space-y-3 border-b border-slate-900/60 p-4">
+	<div class="space-y-3 border-b border-slate-100 dark:border-slate-900/60 p-4">
 		<div class="flex items-center justify-between">
-			<h2 class="text-sm font-bold tracking-wide text-white uppercase">
+			<h2 class="text-sm font-bold tracking-wide text-slate-800 dark:text-white uppercase">
 				{#if currentView === 'all'}
 					All Notes
 				{:else}
@@ -91,7 +91,7 @@
 			{#if currentView !== 'trash'}
 				<button
 					onclick={oncreateNote}
-					class="hover:bg-slate-850 cursor-pointer rounded-lg border border-slate-800 bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-300 transition-all duration-200 hover:text-white active:scale-95"
+					class="cursor-pointer rounded-lg border border-slate-200 bg-white hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-650 dark:text-slate-300 transition-all duration-200 hover:text-slate-950 dark:hover:text-white active:scale-95"
 					title="New Note (Ctrl+N)"
 				>
 					➕ New
@@ -102,7 +102,7 @@
 		<!-- Search Input -->
 		<div class="relative">
 			<span
-				class="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-xs text-slate-500"
+				class="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-xs text-slate-400 dark:text-slate-500"
 				>🔍</span
 			>
 			<input
@@ -110,7 +110,7 @@
 				placeholder="Search notes..."
 				value={searchQuery}
 				oninput={handleSearchInput}
-				class="glass-input placeholder:text-slate-650 w-full rounded-xl py-2.5 pr-4 pl-9 text-xs text-white outline-none focus:outline-none"
+				class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-4 pl-9 text-xs text-slate-800 dark:border-slate-800 dark:bg-slate-900/40 dark:text-white outline-none focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all"
 			/>
 		</div>
 	</div>
@@ -130,12 +130,12 @@
 					onclick={() => onselectNote(n.id)}
 					class="group relative flex cursor-pointer flex-col justify-between overflow-hidden rounded-xl border p-4 transition-all duration-250 {selectedNoteId ===
 					n.id
-						? 'border-violet-500/40 bg-slate-900/55'
-						: 'border-slate-900 bg-slate-900/10 hover:border-slate-800'}"
+						? 'border-violet-300 bg-violet-50/40 dark:border-violet-500/40 dark:bg-slate-900/55'
+						: 'border-slate-200 bg-white hover:border-slate-350 dark:border-slate-900 dark:bg-slate-900/10 dark:hover:border-slate-800'}"
 				>
 					<!-- Pin and Favorites Status Badges -->
 					<div class="mb-2 flex items-center justify-between">
-						<span class="text-[10px] font-medium text-slate-500">
+						<span class="text-[10px] font-medium text-slate-400 dark:text-slate-500">
 							{new Date(n.updatedAt).toLocaleDateString(undefined, {
 								month: 'short',
 								day: 'numeric'
@@ -155,20 +155,22 @@
 					<!-- Note Title -->
 					<h3
 						class="truncate text-sm font-semibold transition-colors duration-200"
-						class:text-violet-400={selectedNoteId === n.id}
-						class:text-white={selectedNoteId !== n.id}
+						class:text-violet-650={selectedNoteId === n.id}
+						class:dark:text-violet-400={selectedNoteId === n.id}
+						class:text-slate-800={selectedNoteId !== n.id}
+						class:dark:text-white={selectedNoteId !== n.id}
 					>
 						{n.title || 'Untitled Note'}
 					</h3>
 
 					<!-- Note Content Snippet -->
-					<p class="mt-1 line-clamp-2 text-xs leading-relaxed font-light text-slate-400">
+					<p class="mt-1 line-clamp-2 text-xs leading-relaxed font-light text-slate-500 dark:text-slate-400">
 						{getPreviewSnippet(n.content)}
 					</p>
 
 					<!-- List Row Hover Action Icons -->
 					<div
-						class="relative z-20 mt-3.5 flex justify-end gap-2 border-t border-slate-900/40 pt-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+						class="relative z-20 mt-3.5 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-900/40 pt-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
 					>
 						{#if currentView === 'trash'}
 							<button
