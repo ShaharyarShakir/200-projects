@@ -40,44 +40,64 @@
 		0%,
 		100% {
 			opacity: 0.8;
-			box-shadow: 0 0 15px rgba(139, 92, 246, 0.15);
+			box-shadow: 0 0 15px rgba(124, 58, 237, 0.15);
 		}
 		50% {
 			opacity: 1;
-			box-shadow: 0 0 25px rgba(139, 92, 246, 0.3);
+			box-shadow: 0 0 25px rgba(124, 58, 237, 0.3);
 		}
 	}
 }
 
-/* Glassmorphism custom components */
-.glass-panel {
-	background: rgba(15, 23, 42, 0.4);
-	backdrop-filter: blur(20px);
-	-webkit-backdrop-filter: blur(20px);
-	border: 1px solid rgba(255, 255, 255, 0.05);
+/* Premium Light Theme styles */
+.light-input {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	color: #0f172a;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.glass-panel-glow {
-	background: rgba(15, 23, 42, 0.45);
-	backdrop-filter: blur(24px);
-	-webkit-backdrop-filter: blur(24px);
-	border: 1px solid rgba(139, 92, 246, 0.15);
+.light-input:focus {
+	background: #ffffff;
+	border-color: #7c3aed;
+	box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+	outline: none;
 }
 
-.glass-panel-glow:hover {
-	border-color: rgba(139, 92, 246, 0.35);
-	box-shadow: 0 0 30px rgba(139, 92, 246, 0.1);
+/* Custom Scrollbar Styles */
+.scrollbar-thin::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
 }
 
-/* Input custom focus styles */
-.glass-input {
-	background: rgba(8, 10, 15, 0.4);
-	border: 1px solid rgba(255, 255, 255, 0.06);
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.scrollbar-thin::-webkit-scrollbar-track {
+	background: transparent;
 }
 
-.glass-input:focus {
-	border-color: rgba(139, 92, 246, 0.5);
-	box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
-	background: rgba(8, 10, 15, 0.6);
+.scrollbar-thin::-webkit-scrollbar-thumb {
+	background: #cbd5e1;
+	border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+	background: #94a3b8;
+}
+
+/* Editor Styling Overrides */
+.tiptap {
+	min-height: 400px;
+	padding: 1rem 0;
+}
+
+.tiptap focus {
+	outline: none;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+	color: #94a3b8;
+	content: attr(data-placeholder);
+	float: left;
+	height: 0;
+	pointer-events: none;
+	font-style: italic;
 }

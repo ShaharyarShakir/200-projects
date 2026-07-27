@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { createDashboardState } from './dashboard.svelte.js';
-	import GlowBg from '../../components/GlowBg.svelte';
+	import IconBar from '../../components/IconBar.svelte';
 	import Sidebar from '../../components/Sidebar.svelte';
-	import NoteList from '../../components/NoteList.svelte';
 	import Editor from '../../components/Editor.svelte';
+	import Assistant from '../../components/Assistant.svelte';
 
 	let { data } = $props();
 	let user = $derived(data.user);
@@ -26,14 +26,17 @@
 				dashboard.saveNote(dashboard.activeNote.id, {
 					title: dashboard.activeNote.title,
 					content: dashboard.activeNote.content,
-					notebookId: dashboard.activeNote.notebookId
+					notebookId: dashboard.activeNote.notebookId,
+					summary: dashboard.activeNote.summary
 				});
 			}
 		}
 		// Ctrl+/: Focus Search
 		if ((e.ctrlKey || e.metaKey) && e.key === '/') {
 			e.preventDefault();
-			const input = document.querySelector('input[placeholder="Search notes..."]') as HTMLInputElement;
+			const input = document.querySelector(
+				'input[placeholder="Search notes or projects..."]'
+			) as HTMLInputElement;
 			if (input) input.focus();
 		}
 		// Ctrl+P: Toggle Pin
@@ -56,12 +59,12 @@
 	});
 </script>
 
-<div class="relative flex h-[calc(100vh-65px)] flex-col overflow-hidden bg-slate-950 text-slate-100">
-	<!-- Ambient Glow BG -->
-	<GlowBg />
-
+<div class="relative flex h-[calc(100vh-65px)] flex-col overflow-hidden bg-white text-slate-900">
 	<div class="relative z-10 flex h-full flex-grow">
-		<!-- 1. Left Sidebar Pane (Notebook list, quick navigation) -->
+		<!-- 1. Far Left Pane: Icon Bar (64px) -->
+		<IconBar activeTab="notes" />
+
+		<!-- 2. Middle Left Pane: Sidebar (Redesigned with embedded lists) -->
 		<div
 			class="hidden h-full shrink-0 md:block"
 			class:block={dashboard.showMobileSidebar}
@@ -69,52 +72,34 @@
 		>
 			<Sidebar
 				notebooks={dashboard.notebooks}
-				currentView={dashboard.currentView}
-				selectedNotebookId={dashboard.selectedNotebookId}
-				onselectView={(view, id) => dashboard.selectView(view, id)}
-				oncreateNotebook={(name: string, color: string, icon: string) =>
-					dashboard.createNotebook(name, color, icon)}
-				ondeleteNotebook={(id: string) => dashboard.deleteNotebook(id)}
-			/>
-		</div>
-
-		<!-- 2. Middle Pane (Notes list matching filters, search input) -->
-		<div
-			class="hidden h-full shrink-0 md:block"
-			class:block={dashboard.showMobileNotes}
-			class:hidden={!dashboard.showMobileNotes}
-		>
-			<NoteList
 				notes={dashboard.sortedNotes}
+				selectedNotebookId={dashboard.selectedNotebookId}
 				selectedNoteId={dashboard.selectedNoteId}
 				currentView={dashboard.currentView}
 				bind:searchQuery={dashboard.searchQuery}
-				onselectNote={(id: string) => {
-					dashboard.selectedNoteId = id;
-					dashboard.showMobileNotes = false; // Redirect list pane to editor on small screens
-				}}
+				onselectView={(view: "all" | "favorites" | "trash" | "notebook", id: string | null) => dashboard.selectView(view, id)}
+				onselectNote={(id: string) => (dashboard.selectedNoteId = id)}
 				oncreateNote={() => dashboard.createNote()}
+				oncreateNotebook={(name: string, color: string, icon: string) => dashboard.createNotebook(name, color, icon)}
+				ondeleteNotebook={(id: string) => dashboard.deleteNotebook(id)}
 				ontoggleFavorite={(id: string) => dashboard.toggleFavoriteNote(id)}
 				ontogglePin={(id: string) => dashboard.togglePinNote(id)}
 				onsoftDelete={(id: string) => dashboard.softDeleteNote(id)}
-				onrestore={(id: string) => dashboard.restoreNote(id)}
-				onpermanentDelete={(id: string) => dashboard.permanentDeleteNote(id)}
-				onsearchQueryChange={(q: string) => (dashboard.searchQuery = q)}
 			/>
 		</div>
 
-		<!-- 3. Right Pane (Active Rich Text Workspace & Toolbars) -->
+		<!-- 3. Active Rich Text Document Workspace -->
 		<div class="relative flex h-full flex-grow flex-col overflow-hidden">
 			<!-- Floating Navigation Helper for Mobile Devices -->
 			<div
-				class="sticky top-0 z-30 flex items-center justify-between border-b border-slate-900/60 bg-slate-950/80 p-3.5 md:hidden"
+				class="sticky top-0 z-30 flex items-center justify-between border-b border-slate-100 bg-slate-50 p-3.5 md:hidden"
 			>
 				<button
 					onclick={() => {
 						dashboard.showMobileSidebar = !dashboard.showMobileSidebar;
 						dashboard.showMobileNotes = false;
 					}}
-					class="rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-300"
+					class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
 				>
 					{dashboard.showMobileSidebar ? 'Close Sidebar' : '📁 Notebooks'}
 				</button>
@@ -124,7 +109,7 @@
 						dashboard.showMobileNotes = !dashboard.showMobileNotes;
 						dashboard.showMobileSidebar = false;
 					}}
-					class="rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-300"
+					class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600"
 				>
 					{dashboard.showMobileNotes ? 'Hide List' : '📝 Notes List'}
 				</button>
@@ -137,5 +122,11 @@
 				onsave={(id, updates) => dashboard.saveNote(id, updates)}
 			/>
 		</div>
+
+		<!-- 4. Far Right Pane: AI Assistant Panel -->
+		<Assistant
+			activeNoteTitle={dashboard.activeNote?.title || ''}
+			activeNoteContent={dashboard.activeNote ? JSON.stringify(dashboard.activeNote.content) : ''}
+		/>
 	</div>
 </div>
