@@ -104,15 +104,15 @@
   const grouped = $derived(getGroupedNotes(notes));
 </script>
 
-<div class="w-72 bg-slate-50/50 border-r border-slate-200 flex flex-col h-full shrink-0 select-none">
+<div class="w-72 bg-slate-50/50 dark:bg-slate-900/40 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full shrink-0 select-none transition-colors duration-200">
   <!-- Sidebar Branding & Header -->
-  <div class="px-6 py-5 flex items-center justify-between border-b border-slate-100 bg-white">
+  <div class="px-6 py-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 transition-colors duration-200">
     <div class="flex items-center gap-2.5">
-      <span class="text-xl font-extrabold text-slate-800 tracking-tight font-sans">Notelify</span>
+      <span class="text-xl font-extrabold text-slate-800 dark:text-white tracking-tight font-sans">Notelify</span>
     </div>
     <!-- Small Collapse Sidebar Icon -->
     <button
-      class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer"
+      class="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer"
       aria-label="Collapse sidebar"
       title="Collapse sidebar"
     >
@@ -123,7 +123,7 @@
   </div>
 
   <!-- Search Input & Action Button Container -->
-  <div class="p-4 space-y-3 bg-white border-b border-slate-100 shadow-sm">
+  <div class="p-4 space-y-3 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 shadow-sm transition-colors duration-200">
     <div class="relative">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
@@ -134,7 +134,7 @@
         type="text"
         placeholder="Search notes or projects..."
         bind:value={searchQuery}
-        class="w-full light-input rounded-xl pl-9 pr-4 py-2 text-xs placeholder:text-slate-400"
+        class="w-full light-input dark:bg-slate-900 dark:border-slate-850 dark:text-white dark:focus:bg-slate-950 rounded-xl pl-9 pr-4 py-2 text-xs placeholder:text-slate-400 dark:placeholder:text-slate-600"
       />
     </div>
 
@@ -156,7 +156,7 @@
     <!-- 1. PROJECTS (Notebooks) SECTION -->
     <div class="space-y-1.5">
       <div class="flex items-center justify-between px-2 mb-1.5">
-        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Projects</span>
+        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Projects</span>
         <button
           onclick={() => (showAddNotebook = !showAddNotebook)}
           class="text-slate-400 hover:text-slate-700 p-0.5 rounded cursor-pointer"
@@ -172,14 +172,14 @@
       {#if showAddNotebook}
         <form
           onsubmit={handleCreateNotebook}
-          class="bg-white border border-slate-200 rounded-xl p-3 space-y-2.5 mb-2.5 shadow-sm animate-fade-in"
+          class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl p-3 space-y-2.5 mb-2.5 shadow-sm animate-fade-in"
         >
           <input
             type="text"
             placeholder="Project name..."
             bind:value={newNotebookName}
             required
-            class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 outline-none focus:border-violet-500"
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-805 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:border-violet-500"
           />
           <div class="flex items-center justify-between gap-2">
             <!-- Colors list -->
@@ -201,7 +201,7 @@
               <button
                 type="button"
                 onclick={() => (showAddNotebook = false)}
-                class="text-[10px] text-slate-500 hover:text-slate-800 font-medium px-2 py-1 rounded cursor-pointer"
+                class="text-[10px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium px-2 py-1 rounded cursor-pointer"
               >
                 Cancel
               </button>
@@ -223,7 +223,7 @@
           <!-- svelte-ignore a11y_no_static_element_interactions -->
           <div
             onclick={() => onselectView("notebook", n.id)}
-            class="group flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-150 {(currentView === 'notebook' && selectedNotebookId === n.id) ? 'bg-slate-100 text-slate-800' : 'text-slate-500 hover:bg-slate-100/60 hover:text-slate-700'}"
+            class="group flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all duration-150 {(currentView === 'notebook' && selectedNotebookId === n.id) ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 hover:text-slate-700 dark:hover:text-slate-200'}"
           >
             <span class="flex items-center gap-2 truncate">
               <!-- Emojis/custom colored icons -->
@@ -239,7 +239,7 @@
                   ondeleteNotebook(n.id);
                 }
               }}
-              class="opacity-0 group-hover:opacity-100 hover:text-red-600 transition-opacity p-0.5 rounded text-slate-400 cursor-pointer"
+              class="opacity-0 group-hover:opacity-100 hover:text-red-650 transition-opacity p-0.5 rounded text-slate-400 cursor-pointer"
               title="Delete Project"
             >
               🗑
@@ -254,7 +254,7 @@
       <div class="space-y-1">
         <div class="flex items-center gap-1.5 px-2 mb-1">
           <span class="text-slate-400 text-xs">📌</span>
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pinned</span>
+          <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Pinned</span>
         </div>
         <div class="space-y-0.5">
           {#each pinnedNotes as n}
@@ -262,7 +262,7 @@
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
               onclick={() => onselectNote(n.id)}
-              class="group flex items-center justify-between px-3 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 border border-transparent {selectedNoteId === n.id ? 'bg-white border-slate-200 shadow-sm text-slate-800 font-semibold' : 'text-slate-500 hover:bg-slate-100/60'}"
+              class="group flex items-center justify-between px-3 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 border border-transparent {selectedNoteId === n.id ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-slate-800 dark:text-white font-semibold' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-slate-800/40'}"
             >
               <span class="truncate">{n.title || "Untitled Note"}</span>
               
@@ -287,19 +287,19 @@
     <!-- TODAY -->
     {#if grouped.today.length > 0}
       <div class="space-y-1">
-        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 block mb-1">Today</span>
+        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2 block mb-1">Today</span>
         <div class="space-y-0.5">
           {#each grouped.today as n}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
               onclick={() => onselectNote(n.id)}
-              class="group flex items-center justify-between px-3 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 border border-transparent relative {selectedNoteId === n.id ? 'bg-white border-slate-200 shadow-sm text-slate-800 font-bold' : 'text-slate-500 hover:bg-slate-100/60'}"
+              class="group flex items-center justify-between px-3 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 border border-transparent relative {selectedNoteId === n.id ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-slate-800 dark:text-white font-bold' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-slate-800/40'}"
             >
               <div class="flex flex-col truncate w-full pr-4">
                 <span class="truncate font-medium">{n.title || "Untitled Note"}</span>
                 {#if n.summary}
-                  <span class="text-[10px] text-slate-400 font-light truncate mt-0.5">{n.summary}</span>
+                  <span class="text-[10px] text-slate-400 dark:text-slate-500 font-light truncate mt-0.5">{n.summary}</span>
                 {/if}
               </div>
 
@@ -310,7 +310,7 @@
                     e.stopPropagation();
                     ontogglePin(n.id);
                   }}
-                  class="hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                  class="hover:text-slate-600 dark:hover:text-slate-300 p-0.5 rounded cursor-pointer"
                   title="Pin Note"
                 >
                   📌
@@ -335,19 +335,19 @@
     <!-- YESTERDAY -->
     {#if grouped.yesterday.length > 0}
       <div class="space-y-1">
-        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 block mb-1">Yesterday</span>
+        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2 block mb-1">Yesterday</span>
         <div class="space-y-0.5">
           {#each grouped.yesterday as n}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
               onclick={() => onselectNote(n.id)}
-              class="group flex items-center justify-between px-3 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 border border-transparent {selectedNoteId === n.id ? 'bg-white border-slate-200 shadow-sm text-slate-800 font-bold' : 'text-slate-500 hover:bg-slate-100/60'}"
+              class="group flex items-center justify-between px-3 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 border border-transparent {selectedNoteId === n.id ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-slate-800 dark:text-white font-bold' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-slate-800/40'}"
             >
               <div class="flex flex-col truncate w-full pr-4">
                 <span class="truncate font-medium">{n.title || "Untitled Note"}</span>
                 {#if n.summary}
-                  <span class="text-[10px] text-slate-400 font-light truncate mt-0.5">{n.summary}</span>
+                  <span class="text-[10px] text-slate-400 dark:text-slate-500 font-light truncate mt-0.5">{n.summary}</span>
                 {/if}
               </div>
 
@@ -358,7 +358,7 @@
                     e.stopPropagation();
                     ontogglePin(n.id);
                   }}
-                  class="hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                  class="hover:text-slate-600 dark:hover:text-slate-300 p-0.5 rounded cursor-pointer"
                   title="Pin Note"
                 >
                   📌
@@ -383,19 +383,19 @@
     <!-- OLDER -->
     {#if grouped.older.length > 0}
       <div class="space-y-1">
-        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 block mb-1">Older</span>
+        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2 block mb-1">Older</span>
         <div class="space-y-0.5">
           {#each grouped.older as n}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
               onclick={() => onselectNote(n.id)}
-              class="group flex items-center justify-between px-3 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 border border-transparent {selectedNoteId === n.id ? 'bg-white border-slate-200 shadow-sm text-slate-800 font-bold' : 'text-slate-500 hover:bg-slate-100/60'}"
+              class="group flex items-center justify-between px-3 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 border border-transparent {selectedNoteId === n.id ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm text-slate-800 dark:text-white font-bold' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100/60 dark:hover:bg-slate-800/40'}"
             >
               <div class="flex flex-col truncate w-full pr-4">
                 <span class="truncate font-medium">{n.title || "Untitled Note"}</span>
                 {#if n.summary}
-                  <span class="text-[10px] text-slate-400 font-light truncate mt-0.5">{n.summary}</span>
+                  <span class="text-[10px] text-slate-400 dark:text-slate-500 font-light truncate mt-0.5">{n.summary}</span>
                 {/if}
               </div>
 
@@ -406,7 +406,7 @@
                     e.stopPropagation();
                     ontogglePin(n.id);
                   }}
-                  class="hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                  class="hover:text-slate-600 dark:hover:text-slate-300 p-0.5 rounded cursor-pointer"
                   title="Pin Note"
                 >
                   📌

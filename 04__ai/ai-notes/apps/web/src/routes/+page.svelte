@@ -16,28 +16,30 @@
 </svelte:head>
 
 <div
-	class="relative flex flex-grow flex-col items-center justify-center bg-slate-950 px-6 py-20 text-center"
+	class="relative flex flex-grow flex-col items-center justify-center bg-white dark:bg-slate-950 px-6 py-20 text-center transition-colors duration-300"
 >
-	<!-- Background Orbs Component -->
-	<GlowBg />
+	<!-- Background Orbs Component (Only in dark mode) -->
+	<div class="hidden dark:block">
+		<GlowBg />
+	</div>
 
 	<div class="relative z-10 mx-auto max-w-3xl space-y-8">
 		<span
-			class="inline-flex items-center gap-1.5 rounded-full border border-violet-500/20 bg-violet-500/10 px-4 py-2 text-xs font-semibold text-violet-400 shadow-inner"
+			class="inline-flex items-center gap-1.5 rounded-full border border-violet-500/20 bg-violet-50 dark:bg-violet-500/10 px-4 py-2 text-xs font-semibold text-violet-750 dark:text-violet-400 shadow-xs"
 		>
 			✨ Powered by Groq & LangChain
 		</span>
 
-		<h1 class="text-5xl leading-tight font-extrabold tracking-tight text-white md:text-7xl">
+		<h1 class="text-5xl leading-tight font-extrabold tracking-tight text-slate-900 dark:text-white md:text-7xl">
 			Note-taking, <br />
 			<span
-				class="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent drop-shadow-sm"
+				class="bg-gradient-to-r from-violet-600 to-fuchsia-600 dark:from-violet-400 dark:via-fuchsia-400 dark:to-indigo-400 bg-clip-text text-transparent drop-shadow-sm"
 			>
 				re-imagined with AI
 			</span>
 		</h1>
 
-		<p class="mx-auto max-w-2xl text-lg leading-relaxed font-light text-slate-400 md:text-xl">
+		<p class="mx-auto max-w-2xl text-lg leading-relaxed font-light text-slate-655 dark:text-slate-400 md:text-xl">
 			Capture ideas, draft documents, and organize your knowledge with real-time AI assistance,
 			auto-formatting, translations, and intelligent search.
 		</p>
