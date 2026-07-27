@@ -34,7 +34,7 @@
 			<!-- Theme Toggle Button -->
 			<button
 				onclick={() => theme.toggle()}
-				class="cursor-pointer rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-405 dark:hover:bg-slate-900 dark:hover:text-white transition duration-200"
+				class="cursor-pointer rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white transition duration-200"
 				aria-label="Toggle theme"
 			>
 				{#if theme.current === 'dark'}

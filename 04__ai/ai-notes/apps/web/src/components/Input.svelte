@@ -37,7 +37,7 @@
 			bind:value
 			{required}
 			{placeholder}
-			class="glass-input placeholder:text-slate-650 w-full rounded-xl px-4 py-3 text-sm text-white outline-none focus:outline-none"
+			class="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200 bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-violet-600 dark:bg-slate-900 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600 dark:focus:bg-slate-950 dark:focus:border-violet-500 focus:outline-none"
 			class:border-red-500={error}
 			class:focus:border-red-500={error}
 			class:focus:ring-red-500={error}
