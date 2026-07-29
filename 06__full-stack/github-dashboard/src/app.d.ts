@@ -1,4 +1,8 @@
-import type { User, Session } from 'better-auth';
+import type { User as BetterAuthUser, Session } from 'better-auth';
+
+export interface User extends BetterAuthUser {
+	username?: string | null;
+}
 
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
