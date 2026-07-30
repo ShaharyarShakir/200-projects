@@ -5,6 +5,7 @@ const sampleRepositories = [
 	{
 		githubId: 100000001n,
 		name: 'SvelteKit Dashboard',
+		fullName: 'svelte-admin/SvelteKit-Dashboard',
 		owner: 'svelte-admin',
 		language: 'TypeScript',
 		stars: 342,
@@ -16,6 +17,7 @@ const sampleRepositories = [
 	{
 		githubId: 100000002n,
 		name: 'GitHub Dashboard',
+		fullName: 'git-dash-dev/GitHub-Dashboard',
 		owner: 'git-dash-dev',
 		language: 'Svelte',
 		stars: 1205,
@@ -27,6 +29,7 @@ const sampleRepositories = [
 	{
 		githubId: 100000003n,
 		name: 'Portfolio',
+		fullName: 'portfolio-creator/Portfolio',
 		owner: 'portfolio-creator',
 		language: 'Rust',
 		stars: 89,
@@ -38,17 +41,20 @@ const sampleRepositories = [
 	{
 		githubId: 100000004n,
 		name: 'AI Notes',
+		fullName: 'ai-notes-corp/AI-Notes',
 		owner: 'ai-notes-corp',
 		language: 'Python',
 		stars: 450,
 		forks: 92,
 		openIssues: 34,
-		description: 'AI-powered note taking and organization application with LLM search capabilities.',
+		description:
+			'AI-powered note taking and organization application with LLM search capabilities.',
 		updatedAt: new Date()
 	},
 	{
 		githubId: 100000005n,
 		name: 'Expense Tracker',
+		fullName: 'tracker-master/Expense-Tracker',
 		owner: 'tracker-master',
 		language: 'Go',
 		stars: 182,
