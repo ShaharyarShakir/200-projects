@@ -1,0 +1,2 @@
+# DevBoard 
+It is a full-stack Agile project management platform built with MERN stack. It enables teams to manage software projects using Kanban boards, sprint planning, issue tracking, real-time collaboration, GitHub integration, and analytics dashboards.
