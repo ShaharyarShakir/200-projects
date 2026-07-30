@@ -1,0 +1,7 @@
+{
+  "name": "serverpilot",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
+}
