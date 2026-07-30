@@ -1,0 +1,30 @@
+export interface Repository {
+	id: number;
+	githubId: bigint;
+	owner: string | null;
+	ownerAvatar: string | null;
+	name: string;
+	fullName: string;
+	private: boolean;
+	visibility: string | null;
+	defaultBranch: string | null;
+	description: string | null;
+	language: string | null;
+	license: string | null;
+	homepage: string | null;
+	stars: number | null;
+	watchers: number | null;
+	forks: number | null;
+	openIssues: number | null;
+	size: number | null;
+	archived: boolean;
+	disabled: boolean;
+	hasIssues: boolean;
+	hasProjects: boolean;
+	hasWiki: boolean;
+	createdAt: Date | null;
+	updatedAt: Date | null;
+	pushedAt: Date | null;
+	syncedAt: Date;
+	userId: string | null;
+}
