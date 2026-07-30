@@ -78,7 +78,9 @@ Navigate to [http://localhost:5173](http://localhost:5173) to view the public la
 ## Technical Implementations
 
 ### 1. Expanded Repository Synchronization
+
 GitScope synchronizes granular details for every repository tracked in your database. During synchronization:
+
 - **Repository List**: Fetches all user repositories recursively, resolving pagination.
 - **Languages**: Stores the breakdown of languages (in bytes) fetched from `/repos/{owner}/{repo}/languages`.
 - **Branches**: Lists all branches, identifies branch protection statuses, default branch marks, and references the latest commit SHA.
@@ -89,9 +91,11 @@ GitScope synchronizes granular details for every repository tracked in your data
 - **README**: Caches raw markdown readmes from `/repos/{owner}/{repo}/readme` using custom media header `application/vnd.github.raw`. This markdown is rendered into safe HTML on the SvelteKit server using `marked` and styled via premium custom global stylesheets supporting Dark Mode.
 
 ### 2. GitHub GraphQL API Integration
+
 Instead of fetching daily commits across hundreds of repositories which would trigger rate limit locks, GitScope utilizes the **GitHub GraphQL API** to fetch the authenticated user's daily contribution calendar in a single request:
+
 ```graphql
-query($username: String!, $from: DateTime!, $to: DateTime!) {
+query ($username: String!, $from: DateTime!, $to: DateTime!) {
 	user(login: $username) {
 		contributionsCollection(from: $from, to: $to) {
 			contributionCalendar {
@@ -107,10 +111,13 @@ query($username: String!, $from: DateTime!, $to: DateTime!) {
 	}
 }
 ```
+
 This payload is parsed and synced to the `user_contributions` table to power calendars and streaks.
 
 ### 3. Contribution Heatmap Calendar
+
 The contribution calendar is rendered using Svelte's reactive states:
+
 - Days are fetched for the last 365 days.
 - Padded at the start based on the day of the week of the start date (e.g. padding Sunday/Monday empty boxes if the start date is a Tuesday) to align all dates into weekly rows.
 - Chunked into columns of 7 days representing 53 weeks.
@@ -118,22 +125,28 @@ The contribution calendar is rendered using Svelte's reactive states:
 - Provides native localized date-specific hover tooltips.
 
 ### 4. Streak Calculation Engine
+
 Our DB service calculates contribution streaks chronologically:
+
 - **Total Contributions**: The sum of contribution counts across the last 365 days.
 - **Contribution Days**: Count of all individual calendar days where the count is greater than 0.
 - **Longest Streak**: The maximum consecutive days in the dataset with contributions > 0. If a day has 0 contributions, the current running streak resets, and the maximum streak index updates.
 - **Current Streak**: Evaluates the consecutive contribution days trailing backward. The streak is marked as active if the user has recorded a contribution either **today** or **yesterday** (accounting for local timezone date drift). If the last contribution is older than yesterday, the current streak is reset to 0.
 
 ### 5. Repository Search
+
 Repository search is optimized on the database layer. When searching, GitScope runs a left-join query using `exists` clauses to scan:
+
 - Repository names
 - Associated language names
 - Contributor usernames
 - Repository topics/tags
-This ensures search results match various indices without returning duplicate rows in the SQL response.
+  This ensures search results match various indices without returning duplicate rows in the SQL response.
 
 ### 6. Interactive Analytics Dashboard
+
 The analytics page renders statistics using **ECharts**:
+
 - **Commits per Month**: Line bar chart displaying development volume trends.
 - **Repository Growth**: Cumulative line chart showing codebase counts over time.
 - **Language Distribution**: Doughnut charts displaying primary language representation.
