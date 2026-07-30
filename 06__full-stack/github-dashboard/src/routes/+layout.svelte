@@ -2,6 +2,7 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import AppLayout from '$lib/components/layout/AppLayout.svelte';
+	import ToastContainer from '$lib/components/ui/ToastContainer.svelte';
 	import { ModeWatcher } from 'mode-watcher';
 
 	let { children } = $props();
@@ -13,6 +14,7 @@
 </svelte:head>
 
 <ModeWatcher />
+<ToastContainer />
 
 <AppLayout>
 	{@render children()}
