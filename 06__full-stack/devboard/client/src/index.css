@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  font-family: Inter, system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f8fafc;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.dark body {
+  background: #020617;
+}
