@@ -1,12 +1,16 @@
+// Package config loads and validates the application configuration from environment variables.
 package config
 
 import (
-	"log"
+	"errors"
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
 
+// Config holds the application configuration.
 type Config struct {
 	Port             string
 	DBURL            string
@@ -17,34 +21,66 @@ type Config struct {
 	Env              string
 }
 
-func LoadConfig() *Config {
-	// Load .env file if it exists, otherwise fall back to environment variables.
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, reading from environment variables")
+// LoadConfig loads the configuration from .env and system environment.
+// It performs startup validation and returns an error if the config is invalid.
+func LoadConfig() (*Config, error) {
+	// Attempt to load .env file; ignore error if it doesn't exist
+	_ = godotenv.Load()
+
+	cfg := &Config{
+		Port:             getEnv("PORT", "8080"),
+		DBURL:            os.Getenv("DB_URL"),
+		DBAuthToken:      os.Getenv("DB_AUTH_TOKEN"),
+		JWTAccessSecret:  os.Getenv("JWT_ACCESS_SECRET"),
+		JWTRefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
+		AllowedOrigin:    getEnv("ALLOWED_ORIGIN", "http://localhost:5173"),
+		Env:              getEnv("ENV", "development"),
 	}
 
-	port := getEnv("PORT", "8080")
-	dbURL := getEnv("DB_URL", "file:serverpilot.db")
-	dbAuthToken := getEnv("DB_AUTH_TOKEN", "")
-	jwtAccessSecret := getEnv("JWT_ACCESS_SECRET", "default_access_secret_key_12345!")
-	jwtRefreshSecret := getEnv("JWT_REFRESH_SECRET", "default_refresh_secret_key_98765!")
-	allowedOrigin := getEnv("ALLOWED_ORIGIN", "http://localhost:5173")
-	env := getEnv("ENV", "development")
-
-	return &Config{
-		Port:             port,
-		DBURL:            dbURL,
-		DBAuthToken:      dbAuthToken,
-		JWTAccessSecret:  jwtAccessSecret,
-		JWTRefreshSecret: jwtRefreshSecret,
-		AllowedOrigin:    allowedOrigin,
-		Env:              env,
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("configuration validation failed: %w", err)
 	}
+
+	return cfg, nil
 }
 
-func getEnv(key, fallback string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
+// Validate checks the configuration for required variables and safety limits.
+func (c *Config) Validate() error {
+	if c.DBURL == "" {
+		return errors.New("DB_URL environment variable is required")
 	}
-	return fallback
+
+	if c.JWTAccessSecret == "" {
+		return errors.New("JWT_ACCESS_SECRET environment variable is required")
+	}
+	if len(c.JWTAccessSecret) < 16 {
+		return fmt.Errorf("JWT_ACCESS_SECRET is too short (must be at least 16 characters for production security)")
+	}
+
+	if c.JWTRefreshSecret == "" {
+		return errors.New("JWT_REFRESH_SECRET environment variable is required")
+	}
+	if len(c.JWTRefreshSecret) < 16 {
+		return fmt.Errorf("JWT_REFRESH_SECRET is too short (must be at least 16 characters for production security)")
+	}
+
+	validEnvs := map[string]bool{"development": true, "production": true, "test": true}
+	c.Env = strings.ToLower(c.Env)
+	if !validEnvs[c.Env] {
+		return fmt.Errorf("ENV must be one of: development, production, test")
+	}
+
+	return nil
+}
+
+// IsProduction returns true if the application is running in production.
+func (c *Config) IsProduction() bool {
+	return c.Env == "production"
+}
+
+func getEnv(key, defaultVal string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
+	}
+	return defaultVal
 }
