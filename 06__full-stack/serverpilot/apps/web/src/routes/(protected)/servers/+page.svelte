@@ -1,0 +1,757 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { fade, fly, slide } from 'svelte/transition';
+	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
+	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
+	import { apiFetch } from '$lib/api';
+	import { toast } from '$lib/toast.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import Card from '$lib/components/Card.svelte';
+	import {
+		Search,
+		Plus,
+		LayoutGrid,
+		List,
+		RotateCw,
+		Play,
+		Square,
+		Trash2,
+		SlidersHorizontal,
+		Check,
+		X,
+		MapPin,
+		Terminal,
+		Cpu,
+		Activity,
+		HardDrive,
+		ChevronLeft,
+		ChevronRight,
+		Filter,
+		Info,
+		Server,
+		AlertOctagon
+	} from 'lucide-svelte';
+
+	const queryClient = useQueryClient();
+
+	// Component UI state
+	let viewMode = $state<'table' | 'grid'>('table');
+	let isAddModalOpen = $state(false);
+	let selectedServerIDs = $state<string[]>([]);
+	
+	// Query filters
+	let searchQuery = $state('');
+	let statusFilter = $state('');
+	let providerFilter = $state('');
+	
+	// Pagination state
+	let currentPage = $state(1);
+	const itemsPerPage = 5;
+
+	// Add Server Form variables
+	let newServerName = $state('');
+	let newServerIP = $state('');
+	let newServerOS = $state('Ubuntu 22.04 LTS');
+	let newServerProvider = $state('AWS');
+	let newServerLocation = $state('Virginia, USA');
+	let newServerTagsInput = $state('');
+
+	// Sync filter parameters with URL search query
+	onMount(() => {
+		const searchParam = $page.url.searchParams.get('search');
+		if (searchParam) {
+			searchQuery = searchParam;
+		}
+		const addParam = $page.url.searchParams.get('add');
+		if (addParam === 'true') {
+			isAddModalOpen = true;
+			// Clean URL parameter
+			goto('/servers', { replaceState: true });
+		}
+	});
+
+	// Reactively close modal and reset fields
+	function closeModal() {
+		isAddModalOpen = false;
+		newServerName = '';
+		newServerIP = '';
+		newServerOS = 'Ubuntu 22.04 LTS';
+		newServerProvider = 'AWS';
+		newServerLocation = 'Virginia, USA';
+		newServerTagsInput = '';
+	}
+
+	interface ServerNode {
+		id: string;
+		name: string;
+		ip: string;
+		status: 'online' | 'offline' | 'maintenance';
+		os: string;
+		cpu_usage: number;
+		memory_usage: number;
+		memory_total: number;
+		disk_usage: number;
+		disk_total: number;
+		network_in: number;
+		network_out: number;
+		uptime: number;
+		location: string;
+		provider: string;
+		tags: string[];
+	}
+
+	// Fetch Servers with filtering parameters
+	const serversQuery = createQuery(() => {
+		const params = new URLSearchParams();
+		if (searchQuery) params.append('search', searchQuery);
+		if (statusFilter) params.append('status', statusFilter);
+		if (providerFilter) params.append('provider', providerFilter);
+		return {
+			queryKey: ['servers', searchQuery, statusFilter, providerFilter],
+			queryFn: () => apiFetch<ServerNode[]>(`/api/servers?${params.toString()}`)
+		};
+	});
+
+	// Mutation: Add Server
+	const addServerMutation = createMutation(() => ({
+		mutationFn: (newServer: {
+			name: string;
+			ip: string;
+			os: string;
+			provider: string;
+			location: string;
+			tags: string[];
+		}) =>
+			apiFetch<ServerNode>('/api/servers/create', {
+				method: 'POST',
+				body: JSON.stringify(newServer)
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['servers'] });
+			queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+			queryClient.invalidateQueries({ queryKey: ['activity'] });
+			toast.success('New node added to virtual cluster');
+			closeModal();
+		},
+		onError: (err: any) => {
+			toast.error('Failed to create server: ' + err.message);
+		}
+	}));
+
+	// Mutation: Power Operations (Reboot, Shutdown, Start)
+	const powerMutation = createMutation(() => ({
+		mutationFn: (payload: { ids: string[]; action: string }) =>
+			apiFetch<{ message: string }>('/api/servers/power', {
+				method: 'POST',
+				body: JSON.stringify(payload)
+			}),
+		onSuccess: (_: any, variables: { ids: string[]; action: string }) => {
+			queryClient.invalidateQueries({ queryKey: ['servers'] });
+			queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+			queryClient.invalidateQueries({ queryKey: ['activity'] });
+			toast.success(`Power operation (${variables.action}) completed`);
+			selectedServerIDs = [];
+		},
+		onError: (err: any) => {
+			toast.error('Power action failed: ' + err.message);
+		}
+	}));
+
+	// Mutation: Bulk Delete
+	const deleteMutation = createMutation(() => ({
+		mutationFn: (payload: { ids: string[] }) =>
+			apiFetch<{ message: string }>('/api/servers/delete', {
+				method: 'POST',
+				body: JSON.stringify(payload)
+			}),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['servers'] });
+			queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+			queryClient.invalidateQueries({ queryKey: ['activity'] });
+			toast.success('Selected nodes removed from account');
+			selectedServerIDs = [];
+		},
+		onError: (err: any) => {
+			toast.error('Deletion failed: ' + err.message);
+		}
+	}));
+
+	// Derived items list
+	const servers = $derived(serversQuery.data || []);
+	const totalServersCount = $derived(servers.length);
+	
+	// Paginated subset
+	const paginatedServers = $derived.by(() => {
+		const start = (currentPage - 1) * itemsPerPage;
+		const end = start + itemsPerPage;
+		return servers.slice(start, end);
+	});
+
+	const totalPages = $derived(Math.ceil(totalServersCount / itemsPerPage) || 1);
+
+	// Handle checking all items on current page
+	const isAllCheckedOnPage = $derived.by(() => {
+		if (paginatedServers.length === 0) return false;
+		return paginatedServers.every((s: ServerNode) => selectedServerIDs.includes(s.id));
+	});
+
+	function toggleSelectAll() {
+		const pageIDs = paginatedServers.map((s: ServerNode) => s.id);
+		if (isAllCheckedOnPage) {
+			// Uncheck all page items
+			selectedServerIDs = selectedServerIDs.filter((id) => !pageIDs.includes(id));
+		} else {
+			// Check all page items, keeping existing selection
+			const union = new Set([...selectedServerIDs, ...pageIDs]);
+			selectedServerIDs = Array.from(union);
+		}
+	}
+
+	function toggleSelectServer(id: string) {
+		if (selectedServerIDs.includes(id)) {
+			selectedServerIDs = selectedServerIDs.filter((sid) => sid !== id);
+		} else {
+			selectedServerIDs = [...selectedServerIDs, id];
+		}
+	}
+
+	// Actions execution handlers
+	function executePowerAction(action: 'start' | 'stop' | 'restart') {
+		if (selectedServerIDs.length === 0) return;
+		powerMutation.mutate({ ids: selectedServerIDs, action });
+	}
+
+	function executeDeleteAction() {
+		if (selectedServerIDs.length === 0) return;
+		if (confirm(`Are you sure you want to remove ${selectedServerIDs.length} servers?`)) {
+			deleteMutation.mutate({ ids: selectedServerIDs });
+		}
+	}
+
+	function handleAddServerSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		if (!newServerName || !newServerIP) {
+			toast.error('Please fill in server Name and IP address');
+			return;
+		}
+
+		const tags = newServerTagsInput
+			.split(',')
+			.map((t) => t.trim().toLowerCase())
+			.filter((t) => t.length > 0);
+
+		addServerMutation.mutate({
+			name: newServerName,
+			ip: newServerIP,
+			os: newServerOS,
+			provider: newServerProvider,
+			location: newServerLocation,
+			tags
+		});
+	}
+</script>
+
+<svelte:head>
+	<title>Manage Servers | ServerPilot</title>
+	<meta name="description" content="View cluster hardware nodes, perform server power management, and configure integrations." />
+</svelte:head>
+
+<div class="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+	<!-- Page Header -->
+	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+		<div>
+			<h1 class="font-display text-2xl md:text-3xl font-extrabold tracking-tight text-zinc-100 dark:text-zinc-100 light:text-zinc-800">
+				Manage Cluster Nodes
+			</h1>
+			<p class="text-xs text-zinc-450 mt-1">
+				Provision new nodes, monitor usage levels, and trigger server orchestration actions.
+			</p>
+		</div>
+
+		<Button size="sm" onclick={() => isAddModalOpen = true}>
+			<Plus class="h-4 w-4" />
+			<span>Connect Server</span>
+		</Button>
+	</div>
+
+	<!-- Control bar: Search, Filter, Mode switch, Actions -->
+	<div class="flex flex-col gap-4 lg:flex-row lg:items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950/40 p-4 backdrop-blur-md">
+		<!-- Left: Filters & Search query -->
+		<div class="flex flex-wrap items-center gap-3 flex-1 min-w-0">
+			<!-- Text Search -->
+			<div class="relative w-full max-w-xs shrink-0">
+				<Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+				<input
+					type="text"
+					placeholder="Search by name, IP, tag..."
+					bind:value={searchQuery}
+					class="w-full pl-9 pr-4 py-1.5 bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-lg text-xs outline-none text-zinc-150 transition-all placeholder:text-zinc-500 focus:border-indigo-500"
+				/>
+			</div>
+
+			<!-- Status Filter -->
+			<select
+				bind:value={statusFilter}
+				class="bg-zinc-900/60 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-300 outline-none hover:bg-zinc-900 transition-colors"
+			>
+				<option value="">All Statuses</option>
+				<option value="online">Online</option>
+				<option value="offline">Offline</option>
+				<option value="maintenance">Maintenance</option>
+			</select>
+
+			<!-- Cloud Provider Filter -->
+			<select
+				bind:value={providerFilter}
+				class="bg-zinc-900/60 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs text-zinc-300 outline-none hover:bg-zinc-900 transition-colors"
+			>
+				<option value="">All Providers</option>
+				<option value="AWS">AWS</option>
+				<option value="GCP">GCP</option>
+				<option value="Hetzner">Hetzner</option>
+				<option value="DigitalOcean">DigitalOcean</option>
+				<option value="Scaleway">Scaleway</option>
+			</select>
+		</div>
+
+		<!-- Right: Grid/Table toggles and Bulk actions -->
+		<div class="flex items-center gap-3 shrink-0">
+			<!-- Bulk Action Panel -->
+			{#if selectedServerIDs.length > 0}
+				<div
+					transition:slide={{ axis: 'x', duration: 150 }}
+					class="flex items-center gap-1.5 bg-zinc-900/80 border border-zinc-800 rounded-lg p-1"
+				>
+					<span class="text-[10px] font-bold text-zinc-400 px-2">
+						{selectedServerIDs.length} selected
+					</span>
+					
+					<button
+						onclick={() => executePowerAction('start')}
+						class="p-1 rounded text-green-400 hover:bg-green-500/10 transition-colors"
+						title="Power On Selected"
+					>
+						<Play class="h-3.5 w-3.5" />
+					</button>
+					<button
+						onclick={() => executePowerAction('stop')}
+						class="p-1 rounded text-amber-500 hover:bg-amber-500/10 transition-colors"
+						title="Power Off Selected"
+					>
+						<Square class="h-3.5 w-3.5" />
+					</button>
+					<button
+						onclick={() => executePowerAction('restart')}
+						class="p-1 rounded text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+						title="Reboot Selected"
+					>
+						<RotateCw class="h-3.5 w-3.5" />
+					</button>
+					<div class="h-4 w-px bg-zinc-800"></div>
+					<button
+						onclick={executeDeleteAction}
+						class="p-1 rounded text-red-400 hover:bg-red-500/10 transition-colors"
+						title="Delete Selected"
+					>
+						<Trash2 class="h-3.5 w-3.5" />
+					</button>
+				</div>
+			{/if}
+
+			<!-- Toggle Views buttons -->
+			<div class="flex border border-zinc-800 rounded-lg p-1 bg-zinc-900/30">
+				<button
+					onclick={() => viewMode = 'table'}
+					class="p-1.5 rounded-md transition-colors {viewMode === 'table' ? 'bg-zinc-800 text-indigo-400' : 'text-zinc-500 hover:text-zinc-300'}"
+					title="Table View"
+				>
+					<List class="h-4 w-4" />
+				</button>
+				<button
+					onclick={() => viewMode = 'grid'}
+					class="p-1.5 rounded-md transition-colors {viewMode === 'grid' ? 'bg-zinc-800 text-indigo-400' : 'text-zinc-500 hover:text-zinc-300'}"
+					title="Grid View"
+				>
+					<LayoutGrid class="h-4 w-4" />
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- SERVERS LIST CONTENT -->
+	{#if serversQuery.isPending}
+		<div class="flex flex-col items-center justify-center py-24 gap-4">
+			<div class="h-10 w-10 animate-spin rounded-full border-2 border-indigo-600/15 border-t-indigo-500"></div>
+			<p class="text-xs text-zinc-500 animate-pulse font-bold tracking-wider uppercase">Loading infrastructure states...</p>
+		</div>
+	{:else if serversQuery.isError}
+		<div class="rounded-2xl border border-red-900/30 bg-red-950/20 p-6 text-center text-red-200">
+			<AlertOctagon class="h-10 w-10 text-red-400 mx-auto mb-2" />
+			<h3 class="font-semibold">Query Execution Failed</h3>
+			<p class="text-xs text-red-400 mt-1">{serversQuery.error?.message}</p>
+		</div>
+	{:else if totalServersCount === 0}
+		<div class="rounded-2xl border border-dashed border-zinc-800 p-12 text-center">
+			<Server class="h-12 w-12 text-zinc-600 mx-auto mb-3" />
+			<h3 class="text-sm font-bold text-zinc-300">No servers found</h3>
+			<p class="text-xs text-zinc-500 mt-1">Try tweaking your search terms or filter constraints.</p>
+			<Button size="sm" class="mt-4" onclick={() => { searchQuery = ''; statusFilter = ''; providerFilter = ''; }}>
+				Clear Filters
+			</Button>
+		</div>
+	{:else}
+		<div in:fade>
+			<!-- VIEW MODE: TABLE -->
+			{#if viewMode === 'table'}
+				<div class="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-950/25">
+					<table class="w-full border-collapse text-left text-sm min-w-[900px]">
+						<thead>
+							<tr class="border-b border-zinc-800 text-xs font-bold tracking-wider text-zinc-500 uppercase bg-zinc-900/20">
+								<th class="py-4 px-4 w-10">
+									<input
+										type="checkbox"
+										checked={isAllCheckedOnPage}
+										onclick={toggleSelectAll}
+										class="h-4 w-4 rounded border-zinc-800 bg-zinc-900 text-indigo-600 outline-none cursor-pointer focus:ring-0"
+									/>
+								</th>
+								<th class="py-4 px-4">Server Node</th>
+								<th class="py-4 px-4">Status</th>
+								<th class="py-4 px-4">IP Address</th>
+								<th class="py-4 px-4">Region</th>
+								<th class="py-4 px-4">Providers</th>
+								<th class="py-4 px-4">CPU Core</th>
+								<th class="py-4 px-4">RAM Allocation</th>
+								<th class="py-4 px-4">Disk Space</th>
+								<th class="py-4 px-4">Tags</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-zinc-900">
+							{#each paginatedServers as server (server.id)}
+								<tr class="group hover:bg-zinc-900/30 transition-colors {selectedServerIDs.includes(server.id) ? 'bg-indigo-600/5' : ''}">
+									<!-- Selection Checkbox -->
+									<td class="py-3 px-4">
+										<input
+											type="checkbox"
+											checked={selectedServerIDs.includes(server.id)}
+											onclick={() => toggleSelectServer(server.id)}
+											class="h-4 w-4 rounded border-zinc-800 bg-zinc-900 text-indigo-600 outline-none cursor-pointer focus:ring-0"
+										/>
+									</td>
+
+									<!-- Server details -->
+									<td class="py-3 px-4">
+										<div class="flex flex-col">
+											<span class="font-bold text-zinc-200 group-hover:text-white transition-colors">{server.name}</span>
+											<span class="text-[10px] text-zinc-500 font-medium">{server.os}</span>
+										</div>
+									</td>
+
+									<!-- Status -->
+									<td class="py-3 px-4">
+										{#if server.status === 'online'}
+											<span class="inline-flex items-center gap-1.5 rounded-full border border-green-500/10 bg-green-500/5 px-2.5 py-0.5 text-xs font-bold text-green-400">
+												<span class="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse"></span>
+												Online
+											</span>
+										{:else if server.status === 'offline'}
+											<span class="inline-flex items-center gap-1.5 rounded-full border border-red-500/10 bg-red-500/5 px-2.5 py-0.5 text-xs font-bold text-red-400">
+												<span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+												Offline
+											</span>
+										{:else}
+											<span class="inline-flex items-center gap-1.5 rounded-full border border-amber-500/10 bg-amber-500/5 px-2.5 py-0.5 text-xs font-bold text-amber-400">
+												<span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+												Maintenance
+											</span>
+										{/if}
+									</td>
+
+									<!-- IP Address -->
+									<td class="py-3 px-4 font-mono text-xs text-zinc-400">{server.ip}</td>
+
+									<!-- Location -->
+									<td class="py-3 px-4 text-xs text-zinc-400">
+										<div class="flex items-center gap-1">
+											<MapPin class="h-3.5 w-3.5 text-zinc-500" />
+											<span>{server.location}</span>
+										</div>
+									</td>
+
+									<!-- Provider -->
+									<td class="py-3 px-4 text-xs font-semibold text-zinc-400">{server.provider}</td>
+
+									<!-- CPU -->
+									<td class="py-3 px-4">
+										<div class="flex items-center gap-2">
+											<div class="h-1.5 w-12 overflow-hidden rounded-full bg-zinc-900">
+												<div class="h-1.5 rounded-full bg-indigo-500 transition-all duration-300" style="width: {server.cpu_usage}%"></div>
+											</div>
+											<span class="text-xs font-bold text-zinc-400">{Math.round(server.cpu_usage)}%</span>
+										</div>
+									</td>
+
+									<!-- RAM -->
+									<td class="py-3 px-4">
+										<div class="flex items-center gap-2">
+											<div class="h-1.5 w-12 overflow-hidden rounded-full bg-zinc-900">
+												<div class="h-1.5 rounded-full bg-cyan-500 transition-all duration-300" style="width: {server.memory_usage}%"></div>
+											</div>
+											<span class="text-xs font-bold text-zinc-400">{Math.round(server.memory_usage)}%</span>
+										</div>
+									</td>
+
+									<!-- Disk -->
+									<td class="py-3 px-4">
+										<div class="flex items-center gap-2">
+											<div class="h-1.5 w-12 overflow-hidden rounded-full bg-zinc-900">
+												<div class="h-1.5 rounded-full bg-emerald-500 transition-all duration-300" style="width: {server.disk_usage}%"></div>
+											</div>
+											<span class="text-xs font-bold text-zinc-400">{Math.round(server.disk_usage)}%</span>
+										</div>
+									</td>
+
+									<!-- Tags -->
+									<td class="py-3 px-4">
+										<div class="flex flex-wrap gap-1">
+											{#each server.tags.slice(0, 2) as tag}
+												<span class="rounded bg-zinc-900 border border-zinc-800 px-2 py-0.5 text-[9px] font-bold text-zinc-400 uppercase tracking-wide">
+													{tag}
+												</span>
+											{/each}
+											{#if server.tags.length > 2}
+												<span class="rounded bg-zinc-900/50 border border-zinc-800/50 px-1.5 py-0.5 text-[9px] font-bold text-zinc-500">
+													+{server.tags.length - 2}
+												</span>
+											{/if}
+										</div>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+			{:else}
+				<!-- VIEW MODE: GRID -->
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+					{#each paginatedServers as server (server.id)}
+						<div class="relative overflow-hidden rounded-2xl border transition-all duration-200 {selectedServerIDs.includes(server.id) ? 'border-indigo-500 bg-indigo-950/5' : 'border-zinc-800 bg-zinc-950/20 hover:border-zinc-700'}">
+							<!-- Selection Toggle -->
+							<input
+								type="checkbox"
+								checked={selectedServerIDs.includes(server.id)}
+								onclick={() => toggleSelectServer(server.id)}
+								class="absolute top-4 right-4 h-4.5 w-4.5 rounded border-zinc-800 bg-zinc-900 text-indigo-600 outline-none cursor-pointer focus:ring-0 z-10"
+							/>
+
+							<div class="p-5 flex flex-col gap-4">
+								<div>
+									<div class="flex items-center gap-2">
+										<h3 class="font-display font-bold text-base text-zinc-200">{server.name}</h3>
+										{#if server.status === 'online'}
+											<span class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
+										{:else if server.status === 'offline'}
+											<span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
+										{:else}
+											<span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+										{/if}
+									</div>
+									<div class="flex items-center gap-1.5 text-xs text-zinc-500 mt-0.5">
+										<span>{server.provider}</span>
+										<span>•</span>
+										<span>{server.location}</span>
+									</div>
+								</div>
+
+								<div class="grid grid-cols-3 gap-2 border-y border-zinc-900 py-3">
+									<div class="flex flex-col items-center justify-center text-center">
+										<Cpu class="h-4 w-4 text-indigo-400 mb-1" />
+										<span class="text-[10px] text-zinc-500 font-bold uppercase">CPU</span>
+										<span class="text-xs font-bold text-zinc-300 mt-0.5">{Math.round(server.cpu_usage)}%</span>
+									</div>
+									<div class="flex flex-col items-center justify-center text-center border-x border-zinc-900">
+										<Activity class="h-4 w-4 text-cyan-400 mb-1" />
+										<span class="text-[10px] text-zinc-500 font-bold uppercase">RAM</span>
+										<span class="text-xs font-bold text-zinc-300 mt-0.5">{Math.round(server.memory_usage)}%</span>
+									</div>
+									<div class="flex flex-col items-center justify-center text-center">
+										<HardDrive class="h-4 w-4 text-emerald-400 mb-1" />
+										<span class="text-[10px] text-zinc-500 font-bold uppercase">DISK</span>
+										<span class="text-xs font-bold text-zinc-300 mt-0.5">{Math.round(server.disk_usage)}%</span>
+									</div>
+								</div>
+
+								<div class="flex justify-between items-center text-xs text-zinc-400">
+									<span class="font-mono">{server.ip}</span>
+									<span>Uptime: {server.status === 'online' ? `${Math.floor(server.uptime / 86400)}d` : 'Offline'}</span>
+								</div>
+
+								<div class="flex flex-wrap gap-1 mt-1">
+									{#each server.tags as tag}
+										<span class="rounded bg-zinc-900 border border-zinc-850 px-2 py-0.5 text-[8px] font-bold text-zinc-400 uppercase tracking-wide">
+											{tag}
+										</span>
+									{/each}
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+
+			<!-- PAGINATION CONTROLS -->
+			{#if totalPages > 1}
+				<div class="flex items-center justify-between border-t border-zinc-900 pt-4 text-xs font-semibold text-zinc-500">
+					<span>
+						Showing <strong class="text-zinc-300">{(currentPage - 1) * itemsPerPage + 1}</strong> to
+						<strong class="text-zinc-300">{Math.min(currentPage * itemsPerPage, totalServersCount)}</strong> of
+						<strong class="text-zinc-300">{totalServersCount}</strong> nodes
+					</span>
+
+					<div class="flex items-center gap-1.5">
+						<Button
+							variant="outline"
+							size="sm"
+							class="px-2"
+							onclick={() => currentPage = Math.max(1, currentPage - 1)}
+							disabled={currentPage === 1}
+						>
+							<ChevronLeft class="h-4 w-4" />
+						</Button>
+						{#each Array(totalPages) as _, idx}
+							<button
+								onclick={() => currentPage = idx + 1}
+								class="h-8 w-8 rounded-lg border transition-all {currentPage === idx + 1 ? 'border-indigo-500 bg-indigo-600/10 text-indigo-400' : 'border-zinc-800 text-zinc-450 hover:bg-zinc-900/60 hover:text-zinc-200'}"
+							>
+								{idx + 1}
+							</button>
+						{/each}
+						<Button
+							variant="outline"
+							size="sm"
+							class="px-2"
+							onclick={() => currentPage = Math.min(totalPages, currentPage + 1)}
+							disabled={currentPage === totalPages}
+						>
+							<ChevronRight class="h-4 w-4" />
+						</Button>
+					</div>
+				</div>
+			{/if}
+		</div>
+	{/if}
+</div>
+
+<!-- CONNECT SERVER DIALOG / DRAWER OVERLAY -->
+{#if isAddModalOpen}
+	<!-- Backdrop -->
+	<button
+		onclick={closeModal}
+		class="fixed inset-0 z-[9998] bg-black/75 backdrop-blur-sm"
+		aria-label="Close dialog"
+	></button>
+
+	<!-- Modal -->
+	<div
+		transition:fly={{ y: 30, duration: 200 }}
+		class="fixed top-1/2 left-1/2 z-[9999] w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl overflow-hidden"
+	>
+		<div class="flex items-center justify-between border-b border-zinc-900 pb-4 mb-4">
+			<h2 class="font-display text-lg font-extrabold text-zinc-200 flex items-center gap-2">
+				<Server class="h-5 w-5 text-indigo-400" /> Connect Virtual Node
+			</h2>
+			<button onclick={closeModal} class="rounded-lg p-1 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300">
+				<X class="h-5 w-5" />
+			</button>
+		</div>
+
+		<form onsubmit={handleAddServerSubmit} class="space-y-4">
+			<div>
+				<label for="serverName" class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Server Name</label>
+				<input
+					id="serverName"
+					type="text"
+					bind:value={newServerName}
+					placeholder="api-cluster-node-01"
+					class="w-full bg-zinc-900 border border-zinc-850 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs outline-none text-zinc-150 transition-colors"
+					required
+				/>
+			</div>
+
+			<div class="grid grid-cols-2 gap-4">
+				<div>
+					<label for="serverIP" class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">IP Address</label>
+					<input
+						id="serverIP"
+						type="text"
+						bind:value={newServerIP}
+						placeholder="10.0.1.45"
+						class="w-full bg-zinc-900 border border-zinc-850 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs outline-none text-zinc-150 transition-colors"
+						required
+					/>
+				</div>
+				<div>
+					<label for="serverOS" class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Operating System</label>
+					<select
+						id="serverOS"
+						bind:value={newServerOS}
+						class="w-full bg-zinc-900 border border-zinc-850 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs outline-none text-zinc-150 transition-colors"
+					>
+						<option value="Ubuntu 22.04 LTS">Ubuntu 22.04</option>
+						<option value="Ubuntu 20.04 LTS">Ubuntu 20.04</option>
+						<option value="Debian 12 Bookworm">Debian 12</option>
+						<option value="Rocky Linux 9">Rocky Linux 9</option>
+					</select>
+				</div>
+			</div>
+
+			<div class="grid grid-cols-2 gap-4">
+				<div>
+					<label for="serverProvider" class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Cloud Provider</label>
+					<select
+						id="serverProvider"
+						bind:value={newServerProvider}
+						class="w-full bg-zinc-900 border border-zinc-850 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs outline-none text-zinc-150 transition-colors"
+					>
+						<option value="AWS">AWS</option>
+						<option value="GCP">GCP</option>
+						<option value="Hetzner">Hetzner</option>
+						<option value="DigitalOcean">DigitalOcean</option>
+						<option value="Scaleway">Scaleway</option>
+					</select>
+				</div>
+				<div>
+					<label for="serverLocation" class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Geo Region</label>
+					<input
+						id="serverLocation"
+						type="text"
+						bind:value={newServerLocation}
+						placeholder="Frankfurt, DE"
+						class="w-full bg-zinc-900 border border-zinc-850 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs outline-none text-zinc-150 transition-colors"
+					/>
+				</div>
+			</div>
+
+			<div>
+				<label for="serverTags" class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Tags (comma separated)</label>
+				<input
+					id="serverTags"
+					type="text"
+					bind:value={newServerTagsInput}
+					placeholder="production, proxy, database"
+					class="w-full bg-zinc-900 border border-zinc-850 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs outline-none text-zinc-150 transition-colors"
+				/>
+			</div>
+
+			<div class="border-t border-zinc-900 pt-4 mt-6 flex justify-end gap-2">
+				<Button variant="ghost" size="sm" onclick={closeModal}>
+					Cancel
+				</Button>
+				<Button type="submit" size="sm" loading={addServerMutation.isPending}>
+					Connect Node
+				</Button>
+			</div>
+		</form>
+	</div>
+{/if}
