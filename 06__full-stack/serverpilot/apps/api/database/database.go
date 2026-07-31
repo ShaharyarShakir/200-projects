@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
+	_ "modernc.org/sqlite"
 )
 
 // Connect opens a connection to SQLite/Turso database.
