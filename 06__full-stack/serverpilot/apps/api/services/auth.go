@@ -2,19 +2,13 @@ package services
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/ShaharyarShakir/serverpilot/apps/api/auth"
+	apperrors "github.com/ShaharyarShakir/serverpilot/apps/api/errors"
 	"github.com/ShaharyarShakir/serverpilot/apps/api/models"
 	"github.com/ShaharyarShakir/serverpilot/apps/api/repository"
 	"github.com/google/uuid"
-)
-
-var (
-	ErrUserAlreadyExists  = errors.New("user already exists")
-	ErrInvalidCredentials = errors.New("invalid email or password")
-	ErrInvalidToken       = errors.New("invalid or expired token")
 )
 
 // AuthService handles authentication business logic.
@@ -40,16 +34,16 @@ func (s *AuthService) Register(ctx context.Context, email, password string) (*mo
 	// Check if user already exists
 	existingUser, err := s.userRepo.GetByEmail(ctx, email)
 	if err != nil {
-		return nil, "", "", err
+		return nil, "", "", apperrors.Wrap(apperrors.CodeDatabase, "failed to query existing user", 500, err)
 	}
 	if existingUser != nil {
-		return nil, "", "", ErrUserAlreadyExists
+		return nil, "", "", apperrors.ErrUserAlreadyExists
 	}
 
 	// Hash password
 	passwordHash, err := models.HashPassword(password)
 	if err != nil {
-		return nil, "", "", err
+		return nil, "", "", apperrors.Wrap(apperrors.CodeInternal, "failed to hash password", 500, err)
 	}
 
 	// Create user
@@ -63,7 +57,7 @@ func (s *AuthService) Register(ctx context.Context, email, password string) (*mo
 	}
 
 	if err := s.userRepo.Create(ctx, user); err != nil {
-		return nil, "", "", err
+		return nil, "", "", apperrors.Wrap(apperrors.CodeDatabase, "failed to create user", 500, err)
 	}
 
 	// Issue tokens
@@ -79,15 +73,15 @@ func (s *AuthService) Register(ctx context.Context, email, password string) (*mo
 func (s *AuthService) Login(ctx context.Context, email, password string) (*models.UserResponse, string, string, error) {
 	user, err := s.userRepo.GetByEmail(ctx, email)
 	if err != nil {
-		return nil, "", "", err
+		return nil, "", "", apperrors.Wrap(apperrors.CodeDatabase, "failed to query user", 500, err)
 	}
 	if user == nil {
-		return nil, "", "", ErrInvalidCredentials
+		return nil, "", "", apperrors.ErrInvalidCredentials
 	}
 
 	// Verify password
 	if !models.ComparePassword(password, user.PasswordHash) {
-		return nil, "", "", ErrInvalidCredentials
+		return nil, "", "", apperrors.ErrInvalidCredentials
 	}
 
 	// Issue tokens
@@ -106,49 +100,52 @@ func (s *AuthService) Logout(ctx context.Context, token string) error {
 	}
 
 	// Revoke token from database
-	return s.tokenRepo.DeleteByToken(ctx, token)
+	if err := s.tokenRepo.DeleteByToken(ctx, token); err != nil {
+		return apperrors.Wrap(apperrors.CodeDatabase, "failed to delete refresh token", 500, err)
+	}
+	return nil
 }
 
 // Refresh generates a new access token using a valid refresh token.
 func (s *AuthService) Refresh(ctx context.Context, token string) (string, error) {
 	if token == "" {
-		return "", ErrInvalidToken
+		return "", apperrors.ErrInvalidToken
 	}
 
 	// Parse and validate token signature
 	claims, err := auth.ParseRefreshToken(token, s.jwtRefreshSecret)
 	if err != nil {
-		return "", ErrInvalidToken
+		return "", apperrors.ErrInvalidToken
 	}
 
 	// Look up token in database
 	userID, _, expiresAt, err := s.tokenRepo.GetByToken(ctx, token)
 	if err != nil {
-		return "", err
+		return "", apperrors.Wrap(apperrors.CodeDatabase, "failed to lookup refresh token", 500, err)
 	}
 	if userID == "" {
-		return "", ErrInvalidToken // Token was revoked/deleted
+		return "", apperrors.ErrInvalidToken // Token was revoked/deleted
 	}
 
 	// Check expiry
 	if time.Now().After(expiresAt) {
-		s.tokenRepo.DeleteByToken(ctx, token) // Clean up expired token
-		return "", ErrInvalidToken
+		_ = s.tokenRepo.DeleteByToken(ctx, token) // Clean up expired token
+		return "", apperrors.ErrInvalidToken
 	}
 
 	// Fetch user details
 	user, err := s.userRepo.GetByID(ctx, claims.UserID)
 	if err != nil {
-		return "", err
+		return "", apperrors.Wrap(apperrors.CodeDatabase, "failed to lookup user", 500, err)
 	}
 	if user == nil {
-		return "", ErrInvalidToken
+		return "", apperrors.ErrInvalidToken
 	}
 
 	// Generate a new access token
 	newAccessToken, err := auth.GenerateAccessToken(user.ID, user.Email, s.jwtAccessSecret)
 	if err != nil {
-		return "", err
+		return "", apperrors.Wrap(apperrors.CodeInternal, "failed to generate access token", 500, err)
 	}
 
 	return newAccessToken, nil
@@ -159,21 +156,21 @@ func (s *AuthService) issueTokens(ctx context.Context, user *models.User) (acces
 	// Access token
 	accessToken, err = auth.GenerateAccessToken(user.ID, user.Email, s.jwtAccessSecret)
 	if err != nil {
-		return "", "", err
+		return "", "", apperrors.Wrap(apperrors.CodeInternal, "failed to generate access token", 500, err)
 	}
 
 	// Refresh token ID
 	tokenID := uuid.New().String()
 	refreshToken, err = auth.GenerateRefreshToken(user.ID, tokenID, s.jwtRefreshSecret)
 	if err != nil {
-		return "", "", err
+		return "", "", apperrors.Wrap(apperrors.CodeInternal, "failed to generate refresh token", 500, err)
 	}
 
 	// Save to DB
 	expiresAt := time.Now().Add(7 * 24 * time.Hour)
 	err = s.tokenRepo.Create(ctx, tokenID, user.ID, refreshToken, expiresAt)
 	if err != nil {
-		return "", "", err
+		return "", "", apperrors.Wrap(apperrors.CodeDatabase, "failed to save refresh token", 500, err)
 	}
 
 	return accessToken, refreshToken, nil
