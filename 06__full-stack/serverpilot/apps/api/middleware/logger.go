@@ -1,9 +1,10 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/ShaharyarShakir/serverpilot/apps/api/logging"
 )
 
 type responseWriter struct {
@@ -26,23 +27,26 @@ func (rw *responseWriter) Write(b []byte) (int, error) {
 	return n, err
 }
 
-// Logger logs detailed metrics of each incoming request.
-func Logger(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		reqID := GetRequestID(r.Context())
+// Logger returns a middleware that logs detailed HTTP request info using the structured logger.
+func Logger(logger *logging.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			start := time.Now()
+			reqID := GetRequestID(r.Context())
 
-		rw := &responseWriter{ResponseWriter: w, status: http.StatusOK}
-		next.ServeHTTP(rw, r)
+			rw := &responseWriter{ResponseWriter: w, status: http.StatusOK}
+			next.ServeHTTP(rw, r)
 
-		log.Printf("[%s] %s %s - %d (%d bytes) - %s in %v",
-			reqID,
-			r.Method,
-			r.URL.Path,
-			rw.status,
-			rw.written,
-			r.RemoteAddr,
-			time.Since(start),
-		)
-	})
+			// Log the completed request using the structured logger
+			logger.Request(
+				reqID,
+				r.Method,
+				r.URL.Path,
+				rw.status,
+				time.Since(start),
+				rw.written,
+				r.RemoteAddr,
+			)
+		})
+	}
 }
