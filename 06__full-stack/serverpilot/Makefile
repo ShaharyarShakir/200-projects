@@ -1,5 +1,7 @@
 .PHONY: dev dev-api dev-web build build-api build-web lint lint-api lint-web docker-up docker-down clean help
 
+AIR := go tool air
+
 help:
 	@echo "ServerPilot Development Makefile Commands:"
 	@echo "  make dev         Run both API (Go) and web (SvelteKit) in development mode concurrently"
@@ -16,8 +18,8 @@ dev:
 	@make -j2 dev-api dev-web
 
 dev-api:
-	@echo "Starting Go API..."
-	@cd apps/api && go run main.go
+	@echo "Starting Go API with live reload (Air)..."
+	@cd apps/api && $(AIR)
 
 dev-web:
 	@echo "Starting SvelteKit frontend..."
