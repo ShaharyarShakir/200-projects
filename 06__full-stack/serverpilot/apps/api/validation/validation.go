@@ -33,12 +33,18 @@ type LoginInput struct {
 
 // CreateServerInput holds validated server creation payload fields.
 type CreateServerInput struct {
-	Name     string
-	IP       string
-	OS       string
-	Provider string
-	Location string
-	Tags     []string
+	Name            string
+	IP              string
+	OS              string
+	Provider        string
+	Location        string
+	Tags            []string
+	SSHPort         int
+	SSHUser         string
+	SSHAuthMethod   string
+	SSHPassword     string
+	SSHPrivateKey   string
+	SSHPassphrase   string
 }
 
 // PowerActionInput holds validated power action payload fields.
@@ -106,8 +112,13 @@ func ValidateLoginInput(email, password string) (*LoginInput, error) {
 	return &LoginInput{Email: validEmail, Password: password}, nil
 }
 
-// ValidateCreateServerInput validates server creation fields.
-func ValidateCreateServerInput(name, ip, os, provider, location string, tags []string) (*CreateServerInput, error) {
+// ValidateCreateServerInput validates server creation fields including SSH configurations.
+func ValidateCreateServerInput(
+	name, ip, os, provider, location string,
+	tags []string,
+	sshPort int,
+	sshUser, sshAuthMethod, sshPassword, sshPrivateKey, sshPassphrase string,
+) (*CreateServerInput, error) {
 	name = strings.TrimSpace(name)
 	ip = strings.TrimSpace(ip)
 
@@ -134,13 +145,39 @@ func ValidateCreateServerInput(name, ip, os, provider, location string, tags []s
 		location = "Virginia, USA"
 	}
 
+	// Validate SSH fields
+	if sshPort <= 0 || sshPort > 65535 {
+		sshPort = 22
+	}
+	sshUser = strings.TrimSpace(sshUser)
+	if sshUser == "" {
+		sshUser = "root"
+	}
+	sshAuthMethod = strings.ToLower(strings.TrimSpace(sshAuthMethod))
+	if sshAuthMethod != "password" && sshAuthMethod != "private_key" {
+		sshAuthMethod = "password"
+	}
+
+	if sshAuthMethod == "password" && strings.TrimSpace(sshPassword) == "" {
+		return nil, apperrors.New(apperrors.CodeValidation, "SSH Password is required for Password auth method", 400)
+	}
+	if sshAuthMethod == "private_key" && strings.TrimSpace(sshPrivateKey) == "" {
+		return nil, apperrors.New(apperrors.CodeValidation, "SSH Private Key is required for Private Key auth method", 400)
+	}
+
 	return &CreateServerInput{
-		Name:     name,
-		IP:       ip,
-		OS:       os,
-		Provider: provider,
-		Location: location,
-		Tags:     tags,
+		Name:            name,
+		IP:              ip,
+		OS:              os,
+		Provider:        provider,
+		Location:        location,
+		Tags:            tags,
+		SSHPort:         sshPort,
+		SSHUser:         sshUser,
+		SSHAuthMethod:   sshAuthMethod,
+		SSHPassword:     sshPassword,
+		SSHPrivateKey:   sshPrivateKey,
+		SSHPassphrase:   sshPassphrase,
 	}, nil
 }
 
