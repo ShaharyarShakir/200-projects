@@ -33,18 +33,18 @@ type LoginInput struct {
 
 // CreateServerInput holds validated server creation payload fields.
 type CreateServerInput struct {
-	Name            string
-	IP              string
-	OS              string
-	Provider        string
-	Location        string
-	Tags            []string
-	SSHPort         int
-	SSHUser         string
-	SSHAuthMethod   string
-	SSHPassword     string
-	SSHPrivateKey   string
-	SSHPassphrase   string
+	Name          string
+	IP            string
+	OS            string
+	Provider      string
+	Location      string
+	Tags          []string
+	SSHPort       int
+	SSHUser       string
+	SSHAuthMethod string
+	SSHPassword   string
+	SSHPrivateKey string
+	SSHPassphrase string
 }
 
 // PowerActionInput holds validated power action payload fields.
@@ -166,18 +166,18 @@ func ValidateCreateServerInput(
 	}
 
 	return &CreateServerInput{
-		Name:            name,
-		IP:              ip,
-		OS:              os,
-		Provider:        provider,
-		Location:        location,
-		Tags:            tags,
-		SSHPort:         sshPort,
-		SSHUser:         sshUser,
-		SSHAuthMethod:   sshAuthMethod,
-		SSHPassword:     sshPassword,
-		SSHPrivateKey:   sshPrivateKey,
-		SSHPassphrase:   sshPassphrase,
+		Name:          name,
+		IP:            ip,
+		OS:            os,
+		Provider:      provider,
+		Location:      location,
+		Tags:          tags,
+		SSHPort:       sshPort,
+		SSHUser:       sshUser,
+		SSHAuthMethod: sshAuthMethod,
+		SSHPassword:   sshPassword,
+		SSHPrivateKey: sshPrivateKey,
+		SSHPassphrase: sshPassphrase,
 	}, nil
 }
 
