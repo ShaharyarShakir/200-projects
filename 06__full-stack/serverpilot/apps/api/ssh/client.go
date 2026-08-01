@@ -31,11 +31,11 @@ func HostKeyFingerprint(key ssh.PublicKey) string {
 // Supports encrypted private keys (PEM block with passphrase).
 func parsePrivateKey(keyStr string, passphrase string) (ssh.Signer, error) {
 	keyBytes := []byte(keyStr)
-	
+
 	if passphrase != "" {
 		return ssh.ParsePrivateKeyWithPassphrase(keyBytes, []byte(passphrase))
 	}
-	
+
 	return ssh.ParsePrivateKey(keyBytes)
 }
 
