@@ -9,19 +9,19 @@
 	import Input from '$lib/components/Input.svelte';
 	import Card from '$lib/components/Card.svelte';
 	import { KeyRound, Mail } from 'lucide-svelte';
- 
- 	// Validation Schema
- 	const loginSchema = z.object({
- 		email: z.string().email('Please enter a valid email address'),
- 		password: z.string().min(6, 'Password must be at least 6 characters')
- 	});
- 
- 	let loading = $state(false);
- 
- 	// Setup Superform in SPA mode
- 	const { form, errors, enhance } = superForm(defaults(zod4(loginSchema)), {
- 		SPA: true,
- 		validators: zod4(loginSchema),
+
+	// Validation Schema
+	const loginSchema = z.object({
+		email: z.string().email('Please enter a valid email address'),
+		password: z.string().min(6, 'Password must be at least 6 characters')
+	});
+
+	let loading = $state(false);
+
+	// Setup Superform in SPA mode
+	const { form, errors, enhance } = superForm(defaults(zod4(loginSchema)), {
+		SPA: true,
+		validators: zod4(loginSchema),
 		async onUpdate({ form }) {
 			if (!form.valid) return;
 
