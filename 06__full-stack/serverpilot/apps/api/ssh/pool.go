@@ -52,16 +52,16 @@ func (p *SSHConnectionPool) RemoveServer(serverID string) {
 // GetClient retrieves an active SSH client or connects on-demand if offline.
 func (p *SSHConnectionPool) GetClient(serverID string) (*ssh.Client, error) {
 	p.mu.Lock()
-	
+
 	// Check cached client first
 	if client, ok := p.clients[serverID]; ok {
 		p.mu.Unlock()
 		return client, nil
 	}
-	
+
 	cfg, ok := p.configs[serverID]
 	p.mu.Unlock() // unlock to dial, preventing blocking the pool
-	
+
 	if !ok {
 		return nil, fmt.Errorf("no SSH configuration registered for server ID %s", serverID)
 	}
