@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"time"
 
 	"github.com/ShaharyarShakir/serverpilot/apps/api/models"
+	"github.com/ShaharyarShakir/serverpilot/apps/api/repository/db"
 )
 
 // UserRepository defines database interactions for users.
@@ -18,27 +18,32 @@ type UserRepository interface {
 
 // SQLUserRepository implements UserRepository.
 type SQLUserRepository struct {
-	db *sql.DB
+	queries *db.Queries
+	db      *sql.DB
 }
 
 // NewUserRepository returns an instance of SQLUserRepository.
-func NewUserRepository(db *sql.DB) UserRepository {
-	return &SQLUserRepository{db: db}
+func NewUserRepository(dbConn *sql.DB) UserRepository {
+	return &SQLUserRepository{
+		queries: db.New(dbConn),
+		db:      dbConn,
+	}
 }
 
 // Create inserts a user into the database.
 func (r *SQLUserRepository) Create(ctx context.Context, user *models.User) error {
-	query := `INSERT INTO users (id, email, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`
-	_, err := r.db.ExecContext(ctx, query, user.ID, user.Email, user.PasswordHash, user.CreatedAt.Format(time.RFC3339), user.UpdatedAt.Format(time.RFC3339))
-	return err
+	return r.queries.CreateUser(ctx, db.CreateUserParams{
+		ID:           user.ID,
+		Email:        user.Email,
+		PasswordHash: user.PasswordHash,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
+	})
 }
 
 // GetByID fetches a user by their ID.
 func (r *SQLUserRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
-	query := `SELECT id, email, password_hash, created_at, updated_at FROM users WHERE id = ?`
-	var user models.User
-	var createdAtStr, updatedAtStr string
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&user.ID, &user.Email, &user.PasswordHash, &createdAtStr, &updatedAtStr)
+	row, err := r.queries.GetUserByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -46,24 +51,18 @@ func (r *SQLUserRepository) GetByID(ctx context.Context, id string) (*models.Use
 		return nil, err
 	}
 
-	user.CreatedAt, _ = time.Parse(time.RFC3339, createdAtStr)
-	if user.CreatedAt.IsZero() {
-		user.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAtStr)
-	}
-	user.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAtStr)
-	if user.UpdatedAt.IsZero() {
-		user.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05", updatedAtStr)
-	}
-
-	return &user, nil
+	return &models.User{
+		ID:           row.ID,
+		Email:        row.Email,
+		PasswordHash: row.PasswordHash,
+		CreatedAt:    row.CreatedAt,
+		UpdatedAt:    row.UpdatedAt,
+	}, nil
 }
 
 // GetByEmail fetches a user by their email address.
 func (r *SQLUserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
-	query := `SELECT id, email, password_hash, created_at, updated_at FROM users WHERE email = ?`
-	var user models.User
-	var createdAtStr, updatedAtStr string
-	err := r.db.QueryRowContext(ctx, query, email).Scan(&user.ID, &user.Email, &user.PasswordHash, &createdAtStr, &updatedAtStr)
+	row, err := r.queries.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -71,14 +70,11 @@ func (r *SQLUserRepository) GetByEmail(ctx context.Context, email string) (*mode
 		return nil, err
 	}
 
-	user.CreatedAt, _ = time.Parse(time.RFC3339, createdAtStr)
-	if user.CreatedAt.IsZero() {
-		user.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAtStr)
-	}
-	user.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAtStr)
-	if user.UpdatedAt.IsZero() {
-		user.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05", updatedAtStr)
-	}
-
-	return &user, nil
+	return &models.User{
+		ID:           row.ID,
+		Email:        row.Email,
+		PasswordHash: row.PasswordHash,
+		CreatedAt:    row.CreatedAt,
+		UpdatedAt:    row.UpdatedAt,
+	}, nil
 }
