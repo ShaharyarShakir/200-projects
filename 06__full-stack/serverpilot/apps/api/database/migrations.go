@@ -12,8 +12,8 @@ var migrations = []string{
 		id TEXT PRIMARY KEY,
 		email TEXT UNIQUE NOT NULL,
 		password_hash TEXT NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 	);`,
 
 	// 2. Create refresh_tokens table
@@ -21,8 +21,8 @@ var migrations = []string{
 		id TEXT PRIMARY KEY,
 		user_id TEXT NOT NULL,
 		token TEXT UNIQUE NOT NULL,
-		expires_at DATETIME NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);`,
 
@@ -33,14 +33,14 @@ var migrations = []string{
 		ip TEXT NOT NULL,
 		os TEXT,
 		status TEXT NOT NULL DEFAULT 'offline',
-		cpu_usage REAL DEFAULT 0,
-		memory_usage REAL DEFAULT 0,
-		memory_total REAL DEFAULT 0,
-		disk_usage REAL DEFAULT 0,
-		disk_total REAL DEFAULT 0,
-		network_in REAL DEFAULT 0,
-		network_out REAL DEFAULT 0,
-		uptime INTEGER DEFAULT 0,
+		cpu_usage DOUBLE PRECISION DEFAULT 0,
+		memory_usage DOUBLE PRECISION DEFAULT 0,
+		memory_total DOUBLE PRECISION DEFAULT 0,
+		disk_usage DOUBLE PRECISION DEFAULT 0,
+		disk_total DOUBLE PRECISION DEFAULT 0,
+		network_in DOUBLE PRECISION DEFAULT 0,
+		network_out DOUBLE PRECISION DEFAULT 0,
+		uptime BIGINT DEFAULT 0,
 		location TEXT,
 		provider TEXT,
 		tags TEXT,
@@ -51,20 +51,20 @@ var migrations = []string{
 		ssh_private_key TEXT,
 		ssh_passphrase TEXT,
 		host_key TEXT,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 	);`,
 
 	// 4. Create monitoring_snapshots table
 	`CREATE TABLE IF NOT EXISTS monitoring_snapshots (
 		id TEXT PRIMARY KEY,
 		server_id TEXT NOT NULL,
-		cpu_usage REAL NOT NULL,
-		memory_usage REAL NOT NULL,
-		disk_usage REAL NOT NULL,
-		network_in REAL NOT NULL,
-		network_out REAL NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		cpu_usage DOUBLE PRECISION NOT NULL,
+		memory_usage DOUBLE PRECISION NOT NULL,
+		disk_usage DOUBLE PRECISION NOT NULL,
+		network_in DOUBLE PRECISION NOT NULL,
+		network_out DOUBLE PRECISION NOT NULL,
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (server_id) REFERENCES servers(id) ON DELETE CASCADE
 	);`,
 
@@ -73,9 +73,9 @@ var migrations = []string{
 		id TEXT PRIMARY KEY,
 		message TEXT NOT NULL,
 		type TEXT NOT NULL,
-		user TEXT NOT NULL,
+		"user" TEXT NOT NULL,
 		server_id TEXT,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 	);`,
 
 	// 6. Create notifications table
@@ -84,8 +84,8 @@ var migrations = []string{
 		title TEXT NOT NULL,
 		message TEXT NOT NULL,
 		type TEXT NOT NULL,
-		read INTEGER DEFAULT 0,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		read BOOLEAN DEFAULT FALSE,
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 	);`,
 }
 
@@ -125,7 +125,7 @@ func RunMigrations(db *sql.DB) error {
 			return fmt.Errorf("failed to run migration %d query: %w", version, err)
 		}
 
-		if _, err := tx.Exec("INSERT INTO schema_migrations (version) VALUES (?)", version); err != nil {
+		if _, err := tx.Exec("INSERT INTO schema_migrations (version) VALUES ($1)", version); err != nil {
 			tx.Rollback()
 			return fmt.Errorf("failed to record migration %d version: %w", version, err)
 		}
