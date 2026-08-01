@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { createQuery, useQueryClient } from '@tanstack/svelte-query';
 	import { apiFetch } from '$lib/api';
@@ -15,7 +15,6 @@
 		RefreshCw,
 		Plus,
 		ArrowRight,
-		Server,
 		AlertTriangle,
 		CheckCircle2,
 		Info,
@@ -79,7 +78,6 @@
 			const labels = stats.cpu_history.map((h: any) => h.timestamp);
 			const cpuData = stats.cpu_history.map((h: any) => h.value);
 			const memData = stats.memory_history.map((h: any) => h.value);
-			const netData = stats.network_history.map((h: any) => h.value);
 
 			chartInstance = new Chart(chartCanvas, {
 				type: 'line',
@@ -165,24 +163,36 @@
 
 <svelte:head>
 	<title>Infrastructure Overview | ServerPilot</title>
-	<meta name="description" content="Global cluster diagnostics, cluster loads and telemetry plots." />
+	<meta
+		name="description"
+		content="Global cluster diagnostics, cluster loads and telemetry plots."
+	/>
 </svelte:head>
 
-<div class="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+<div class="mx-auto max-w-7xl space-y-6 p-6 md:p-8">
 	<!-- Dashboard Header -->
-	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+	<div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
 		<div>
-			<h1 class="font-display text-2xl md:text-3xl font-extrabold tracking-tight text-zinc-100 dark:text-zinc-100 light:text-zinc-800">
+			<h1
+				class="light:text-zinc-800 font-display text-2xl font-extrabold tracking-tight text-zinc-100 md:text-3xl dark:text-zinc-100"
+			>
 				Infrastructure Telemetry
 			</h1>
-			<p class="text-xs text-zinc-450 mt-1">
+			<p class="text-zinc-450 mt-1 text-xs">
 				Real-time monitoring diagnostics and cluster health statistics.
 			</p>
 		</div>
 
 		<div class="flex items-center gap-2">
-			<Button variant="outline" size="sm" onclick={refreshTelemetry} disabled={isRefreshing || dashboardQuery.isFetching}>
-				<RefreshCw class="h-3.5 w-3.5 {isRefreshing || dashboardQuery.isFetching ? 'animate-spin' : ''}" />
+			<Button
+				variant="outline"
+				size="sm"
+				onclick={refreshTelemetry}
+				disabled={isRefreshing || dashboardQuery.isFetching}
+			>
+				<RefreshCw
+					class="h-3.5 w-3.5 {isRefreshing || dashboardQuery.isFetching ? 'animate-spin' : ''}"
+				/>
 				<span>Refresh Metrics</span>
 			</Button>
 			<Button size="sm" href="/servers?add=true">
@@ -195,20 +205,27 @@
 	{#if dashboardQuery.isPending}
 		<!-- Loading skeletons -->
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-			{#each Array(4) as _}
+			{#each Array(4) as _, i (i)}
 				<div class="h-32 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/30"></div>
 			{/each}
 		</div>
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-			<div class="h-96 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/30 lg:col-span-2"></div>
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+			<div
+				class="h-96 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/30 lg:col-span-2"
+			></div>
 			<div class="h-96 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/30"></div>
 		</div>
 	{:else if dashboardQuery.isError}
 		<div class="rounded-2xl border border-red-900/30 bg-red-950/20 p-6 text-center text-red-200">
-			<AlertTriangle class="h-10 w-10 text-red-400 mx-auto mb-2" />
+			<AlertTriangle class="mx-auto mb-2 h-10 w-10 text-red-400" />
 			<h3 class="font-semibold">Failed to fetch server statistics</h3>
-			<p class="text-xs text-red-400 mt-1">{dashboardQuery.error?.message}</p>
-			<Button variant="outline" size="sm" class="mt-4 border-red-800 text-red-300 hover:bg-red-900/20" onclick={refreshTelemetry}>
+			<p class="mt-1 text-xs text-red-400">{dashboardQuery.error?.message}</p>
+			<Button
+				variant="outline"
+				size="sm"
+				class="mt-4 border-red-800 text-red-300 hover:bg-red-900/20"
+				onclick={refreshTelemetry}
+			>
 				Retry Connection
 			</Button>
 		</div>
@@ -219,13 +236,20 @@
 			<!-- CPU Stats -->
 			<Card>
 				<div class="mb-3 flex items-center justify-between">
-					<span class="text-zinc-500 dark:text-zinc-500 light:text-zinc-400 text-xs font-bold tracking-wider uppercase">CPU Utilization</span>
-					<div class="flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10">
+					<span
+						class="light:text-zinc-400 text-xs font-bold tracking-wider text-zinc-500 uppercase dark:text-zinc-500"
+						>CPU Utilization</span
+					>
+					<div
+						class="flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10"
+					>
 						<Cpu class="h-4 w-4 text-indigo-400" />
 					</div>
 				</div>
 				<div class="flex items-baseline gap-2">
-					<span class="font-display text-2xl font-bold tracking-tight text-zinc-150">{stats.avg_cpu_usage}%</span>
+					<span class="text-zinc-150 font-display text-2xl font-bold tracking-tight"
+						>{stats.avg_cpu_usage}%</span
+					>
 					<span class="text-[10px] font-semibold text-green-400">Avg load</span>
 				</div>
 				<div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-900">
@@ -239,14 +263,21 @@
 			<!-- Memory Allocation -->
 			<Card>
 				<div class="mb-3 flex items-center justify-between">
-					<span class="text-zinc-500 dark:text-zinc-500 light:text-zinc-400 text-xs font-bold tracking-wider uppercase">Memory Allocation</span>
-					<div class="flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-500/20 bg-cyan-500/10">
+					<span
+						class="light:text-zinc-400 text-xs font-bold tracking-wider text-zinc-500 uppercase dark:text-zinc-500"
+						>Memory Allocation</span
+					>
+					<div
+						class="flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-500/20 bg-cyan-500/10"
+					>
 						<Activity class="h-4 w-4 text-cyan-400" />
 					</div>
 				</div>
 				<div class="flex items-baseline gap-2">
-					<span class="font-display text-2xl font-bold tracking-tight text-zinc-150">{stats.avg_memory_usage}%</span>
-					<span class="text-zinc-400 text-[10px]">Avg consumption</span>
+					<span class="text-zinc-150 font-display text-2xl font-bold tracking-tight"
+						>{stats.avg_memory_usage}%</span
+					>
+					<span class="text-[10px] text-zinc-400">Avg consumption</span>
 				</div>
 				<div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-900">
 					<div
@@ -259,16 +290,21 @@
 			<!-- Disk Storage -->
 			<Card>
 				<div class="mb-3 flex items-center justify-between">
-					<span class="text-zinc-500 dark:text-zinc-500 light:text-zinc-400 text-xs font-bold tracking-wider uppercase">Cluster Storage</span>
-					<div class="flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10">
+					<span
+						class="light:text-zinc-400 text-xs font-bold tracking-wider text-zinc-500 uppercase dark:text-zinc-500"
+						>Cluster Storage</span
+					>
+					<div
+						class="flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10"
+					>
 						<HardDrive class="h-4 w-4 text-emerald-400" />
 					</div>
 				</div>
 				<div class="flex items-baseline gap-2">
-					<span class="font-display text-2xl font-bold tracking-tight text-zinc-150">
+					<span class="text-zinc-150 font-display text-2xl font-bold tracking-tight">
 						{Math.round((stats.total_disk_used / stats.total_disk_capacity) * 100)}%
 					</span>
-					<span class="text-zinc-400 text-[10px]">
+					<span class="text-[10px] text-zinc-400">
 						{Math.round(stats.total_disk_capacity - stats.total_disk_used)} GB free
 					</span>
 				</div>
@@ -283,14 +319,21 @@
 			<!-- Network Bandwidth -->
 			<Card>
 				<div class="mb-3 flex items-center justify-between">
-					<span class="text-zinc-500 dark:text-zinc-500 light:text-zinc-400 text-xs font-bold tracking-wider uppercase">Active Nodes</span>
-					<div class="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-500/20 bg-amber-500/10">
+					<span
+						class="light:text-zinc-400 text-xs font-bold tracking-wider text-zinc-500 uppercase dark:text-zinc-500"
+						>Active Nodes</span
+					>
+					<div
+						class="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-500/20 bg-amber-500/10"
+					>
 						<Network class="h-4 w-4 text-amber-400" />
 					</div>
 				</div>
 				<div class="flex items-baseline gap-2">
-					<span class="font-display text-2xl font-bold tracking-tight text-zinc-150">{stats.online_servers} / {stats.total_servers}</span>
-					<span class="text-zinc-400 text-[10px]">Nodes online</span>
+					<span class="text-zinc-150 font-display text-2xl font-bold tracking-tight"
+						>{stats.online_servers} / {stats.total_servers}</span
+					>
+					<span class="text-[10px] text-zinc-400">Nodes online</span>
 				</div>
 				<div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-900">
 					<div
@@ -302,31 +345,35 @@
 		</div>
 
 		<!-- Diagnostics Layout: Chart & Activity logs -->
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 			<!-- Telemetry Chart -->
 			<div class="lg:col-span-2">
-				<Card title="Cluster Resource Trends" description="Aggregated resource consumption logs over the past 7 hours.">
-					<div class="h-[300px] w-full mt-2 relative">
+				<Card
+					title="Cluster Resource Trends"
+					description="Aggregated resource consumption logs over the past 7 hours."
+				>
+					<div class="relative mt-2 h-[300px] w-full">
 						<canvas bind:this={chartCanvas}></canvas>
 					</div>
 				</Card>
 			</div>
 
 			<!-- Recent Activity logs -->
-			<div class="flex flex-col h-full">
-				<Card title="Audit Event Logs" description="Recent cluster deployments, alerts, and management tasks.">
-					<div class="overflow-y-auto max-h-[300px] divide-y divide-zinc-900 pr-1 mt-2">
+			<div class="flex h-full flex-col">
+				<Card
+					title="Audit Event Logs"
+					description="Recent cluster deployments, alerts, and management tasks."
+				>
+					<div class="mt-2 max-h-[300px] divide-y divide-zinc-900 overflow-y-auto pr-1">
 						{#if activityQuery.isPending}
-							<div class="flex justify-center items-center py-10 text-xs text-zinc-500">
+							<div class="flex items-center justify-center py-10 text-xs text-zinc-500">
 								Loading activity logs...
 							</div>
 						{:else if !activityQuery.data || activityQuery.data.length === 0}
-							<div class="text-center py-10 text-xs text-zinc-500">
-								No activity records found
-							</div>
+							<div class="py-10 text-center text-xs text-zinc-500">No activity records found</div>
 						{:else}
-							{#each activityQuery.data.slice(0, 8) as act}
-								<div class="py-3 flex items-start gap-3">
+							{#each activityQuery.data.slice(0, 8) as act (act.id)}
+								<div class="flex items-start gap-3 py-3">
 									<div class="mt-0.5">
 										{#if act.type === 'success'}
 											<CheckCircle2 class="h-4 w-4 text-emerald-400" />
@@ -338,14 +385,20 @@
 											<Info class="h-4 w-4 text-indigo-400" />
 										{/if}
 									</div>
-									<div class="flex-1 min-w-0">
-										<p class="text-xs text-zinc-300 font-medium leading-relaxed">
+									<div class="min-w-0 flex-1">
+										<p class="text-xs leading-relaxed font-medium text-zinc-300">
 											{act.message}
 										</p>
 										<div class="mt-1 flex items-center gap-2 text-[10px] text-zinc-500">
 											<span class="font-semibold text-zinc-400">{act.user}</span>
 											<span>•</span>
-											<span class="flex items-center gap-0.5"><Clock class="h-3 w-3" /> {new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+											<span class="flex items-center gap-0.5"
+												><Clock class="h-3 w-3" />
+												{new Date(act.created_at).toLocaleTimeString([], {
+													hour: '2-digit',
+													minute: '2-digit'
+												})}</span
+											>
 										</div>
 									</div>
 								</div>
@@ -357,61 +410,74 @@
 		</div>
 
 		<!-- Quick Server Node Status -->
-		<Card title="Active Cluster Nodes" description="Virtual cluster hardware states. Click nodes to run actions.">
-			<div class="w-full overflow-x-auto mt-2">
+		<Card
+			title="Active Cluster Nodes"
+			description="Virtual cluster hardware states. Click nodes to run actions."
+		>
+			<div class="mt-2 w-full overflow-x-auto">
 				{#if serversQuery.isPending}
-					<div class="flex justify-center items-center py-12">
-						<div class="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600/10 border-t-indigo-500"></div>
+					<div class="flex items-center justify-center py-12">
+						<div
+							class="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600/10 border-t-indigo-500"
+						></div>
 					</div>
 				{:else if !serversQuery.data || serversQuery.data.length === 0}
-					<div class="text-center py-12 text-zinc-500">
+					<div class="py-12 text-center text-zinc-500">
 						<p class="text-sm">No servers found.</p>
 						<Button size="sm" class="mt-3" href="/servers?add=true">Add Server</Button>
 					</div>
 				{:else}
-					<table class="w-full border-collapse text-left text-sm min-w-[700px]">
+					<table class="w-full min-w-[700px] border-collapse text-left text-sm">
 						<thead>
-							<tr class="border-b border-zinc-900 text-xs font-bold tracking-wider text-zinc-500 uppercase">
-								<th class="pb-3 pr-4">Node Name</th>
-								<th class="pb-3 px-4">Status</th>
-								<th class="pb-3 px-4">OS & Provider</th>
-								<th class="pb-3 px-4">IP Address</th>
-								<th class="pb-3 px-4">CPU Core Load</th>
-								<th class="pb-3 px-4">Uptime</th>
+							<tr
+								class="border-b border-zinc-900 text-xs font-bold tracking-wider text-zinc-500 uppercase"
+							>
+								<th class="pr-4 pb-3">Node Name</th>
+								<th class="px-4 pb-3">Status</th>
+								<th class="px-4 pb-3">OS & Provider</th>
+								<th class="px-4 pb-3">IP Address</th>
+								<th class="px-4 pb-3">CPU Core Load</th>
+								<th class="px-4 pb-3">Uptime</th>
 								<th class="pb-3 text-right">Settings</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-zinc-900">
-							{#each serversQuery.data.slice(0, 5) as server}
-								<tr class="group hover:bg-zinc-900/30 transition-colors">
+							{#each serversQuery.data.slice(0, 5) as server (server.id)}
+								<tr class="group transition-colors hover:bg-zinc-900/30">
 									<td class="py-3.5 pr-4 font-semibold text-zinc-200 group-hover:text-white">
 										{server.name}
 									</td>
-									<td class="py-3.5 px-4">
+									<td class="px-4 py-3.5">
 										{#if server.status === 'online'}
-											<span class="inline-flex items-center gap-1.5 rounded-full border border-green-500/10 bg-green-500/5 px-2 py-0.5 text-[11px] font-bold text-green-400">
-												<span class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
+											<span
+												class="inline-flex items-center gap-1.5 rounded-full border border-green-500/10 bg-green-500/5 px-2 py-0.5 text-[11px] font-bold text-green-400"
+											>
+												<span class="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500"></span>
 												Online
 											</span>
 										{:else if server.status === 'offline'}
-											<span class="inline-flex items-center gap-1.5 rounded-full border border-red-500/10 bg-red-500/5 px-2 py-0.5 text-[11px] font-bold text-red-400">
+											<span
+												class="inline-flex items-center gap-1.5 rounded-full border border-red-500/10 bg-red-500/5 px-2 py-0.5 text-[11px] font-bold text-red-400"
+											>
 												<span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>
 												Offline
 											</span>
 										{:else}
-											<span class="inline-flex items-center gap-1.5 rounded-full border border-amber-500/10 bg-amber-500/5 px-2 py-0.5 text-[11px] font-bold text-amber-400">
+											<span
+												class="inline-flex items-center gap-1.5 rounded-full border border-amber-500/10 bg-amber-500/5 px-2 py-0.5 text-[11px] font-bold text-amber-400"
+											>
 												<span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
 												Maintenance
 											</span>
 										{/if}
 									</td>
-									<td class="py-3.5 px-4 text-zinc-400 text-xs">
-										{server.os} • <span class="text-zinc-500 font-semibold">{server.provider}</span>
+									<td class="px-4 py-3.5 text-xs text-zinc-400">
+										{server.os} • <span class="font-semibold text-zinc-500">{server.provider}</span>
 									</td>
-									<td class="py-3.5 px-4 font-mono text-xs text-zinc-400">
+									<td class="px-4 py-3.5 font-mono text-xs text-zinc-400">
 										{server.ip}
 									</td>
-									<td class="py-3.5 px-4">
+									<td class="px-4 py-3.5">
 										<div class="flex items-center gap-2">
 											<div class="h-1.5 w-16 overflow-hidden rounded-full bg-zinc-900">
 												<div
@@ -419,18 +485,25 @@
 													style="width: {server.cpu_usage}%"
 												></div>
 											</div>
-											<span class="w-8 text-xs font-semibold text-zinc-300">{Math.round(server.cpu_usage)}%</span>
+											<span class="w-8 text-xs font-semibold text-zinc-300"
+												>{Math.round(server.cpu_usage)}%</span
+											>
 										</div>
 									</td>
-									<td class="py-3.5 px-4 text-zinc-450 text-xs">
+									<td class="text-zinc-450 px-4 py-3.5 text-xs">
 										{#if server.status === 'online'}
-											{Math.floor(server.uptime / 86400)}d {Math.floor((server.uptime % 86400) / 3600)}h
+											{Math.floor(server.uptime / 86400)}d {Math.floor(
+												(server.uptime % 86400) / 3600
+											)}h
 										{:else}
 											—
 										{/if}
 									</td>
 									<td class="py-3.5 text-right">
-										<a href="/servers?search={server.name}" class="text-zinc-400 hover:text-indigo-400 text-xs font-bold inline-flex items-center gap-1 transition-colors">
+										<a
+											href="/servers?search={server.name}"
+											class="inline-flex items-center gap-1 text-xs font-bold text-zinc-400 transition-colors hover:text-indigo-400"
+										>
 											Configure <ArrowRight class="h-3 w-3" />
 										</a>
 									</td>
@@ -439,8 +512,11 @@
 						</tbody>
 					</table>
 					{#if serversQuery.data.length > 5}
-						<div class="border-t border-zinc-900 pt-4 flex justify-end">
-							<a href="/servers" class="text-xs font-bold text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1">
+						<div class="flex justify-end border-t border-zinc-900 pt-4">
+							<a
+								href="/servers"
+								class="inline-flex items-center gap-1 text-xs font-bold text-indigo-400 hover:text-indigo-300"
+							>
 								View all {serversQuery.data.length} servers <ArrowRight class="h-3.5 w-3.5" />
 							</a>
 						</div>
