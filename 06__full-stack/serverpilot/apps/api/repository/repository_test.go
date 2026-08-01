@@ -9,29 +9,37 @@ import (
 
 	"github.com/ShaharyarShakir/serverpilot/apps/api/database"
 	"github.com/ShaharyarShakir/serverpilot/apps/api/models"
-	_ "github.com/tursodatabase/libsql-client-go/libsql"
+	_ "github.com/lib/pq"
 )
 
 func setupTestDB(t *testing.T) (*sql.DB, func()) {
-	dbPath := "test_repository.db"
-	// Ensure clean start
-	_ = os.Remove(dbPath)
+	testDBURL := os.Getenv("TEST_DB_URL")
+	if testDBURL == "" {
+		testDBURL = "postgres://postgres:postgres@localhost:5433/serverpilot?sslmode=disable"
+	}
 
-	db, err := sql.Open("libsql", "file:"+dbPath)
+	db, err := sql.Open("postgres", testDBURL)
 	if err != nil {
 		t.Fatalf("failed to open database: %v", err)
 	}
 
+	// Run migrations
 	err = database.RunMigrations(db)
 	if err != nil {
 		db.Close()
-		os.Remove(dbPath)
 		t.Fatalf("failed to run migrations: %v", err)
 	}
 
-	cleanup := func() {
+	// Truncate tables cascade to ensure a clean start
+	_, err = db.Exec("TRUNCATE TABLE users, refresh_tokens, servers, monitoring_snapshots, activities, notifications CASCADE")
+	if err != nil {
 		db.Close()
-		_ = os.Remove(dbPath)
+		t.Fatalf("failed to truncate tables: %v", err)
+	}
+
+	cleanup := func() {
+		_, _ = db.Exec("TRUNCATE TABLE users, refresh_tokens, servers, monitoring_snapshots, activities, notifications CASCADE")
+		db.Close()
 	}
 
 	return db, cleanup
