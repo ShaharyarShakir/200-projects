@@ -3,29 +3,13 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
-	_ "github.com/tursodatabase/libsql-client-go/libsql"
-	_ "modernc.org/sqlite"
+	_ "github.com/lib/pq"
 )
 
-// Connect opens a connection to SQLite/Turso database.
+// Connect opens a connection to PostgreSQL database.
 func Connect(dbURL, authToken string) (*sql.DB, error) {
-	connStr := dbURL
-	if authToken != "" {
-		// Append token if remote connection and token is not already present.
-		if strings.HasPrefix(dbURL, "libsql://") || strings.HasPrefix(dbURL, "http://") || strings.HasPrefix(dbURL, "https://") {
-			if !strings.Contains(dbURL, "authToken=") {
-				if strings.Contains(dbURL, "?") {
-					connStr = fmt.Sprintf("%s&authToken=%s", dbURL, authToken)
-				} else {
-					connStr = fmt.Sprintf("%s?authToken=%s", dbURL, authToken)
-				}
-			}
-		}
-	}
-
-	db, err := sql.Open("libsql", connStr)
+	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
