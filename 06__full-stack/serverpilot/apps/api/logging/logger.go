@@ -40,7 +40,7 @@ type Entry struct {
 	Path      string         `json:"path,omitempty"`
 	Status    int            `json:"status,omitempty"`
 	Latency   string         `json:"latency,omitempty"`
-	Bytes     int64            `json:"bytes,omitempty"`
+	Bytes     int64          `json:"bytes,omitempty"`
 	Remote    string         `json:"remote,omitempty"`
 	Error     string         `json:"error,omitempty"`
 	Fields    map[string]any `json:"fields,omitempty"`
