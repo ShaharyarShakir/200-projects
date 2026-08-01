@@ -9,14 +9,16 @@ import (
 	"github.com/ShaharyarShakir/serverpilot/apps/api/database"
 	"github.com/ShaharyarShakir/serverpilot/apps/api/repository"
 	"github.com/ShaharyarShakir/serverpilot/apps/api/ssh"
-	_ "github.com/tursodatabase/libsql-client-go/libsql"
+	_ "github.com/lib/pq"
 )
 
 func setupServiceTestDB(t *testing.T) (*sql.DB, func()) {
-	dbPath := "test_services.db"
-	_ = os.Remove(dbPath)
+	testDBURL := os.Getenv("TEST_DB_URL")
+	if testDBURL == "" {
+		testDBURL = "postgres://postgres:postgres@localhost:5433/serverpilot?sslmode=disable"
+	}
 
-	db, err := sql.Open("libsql", "file:"+dbPath)
+	db, err := sql.Open("postgres", testDBURL)
 	if err != nil {
 		t.Fatalf("failed to open database: %v", err)
 	}
@@ -24,13 +26,18 @@ func setupServiceTestDB(t *testing.T) (*sql.DB, func()) {
 	err = database.RunMigrations(db)
 	if err != nil {
 		db.Close()
-		os.Remove(dbPath)
 		t.Fatalf("failed to run migrations: %v", err)
 	}
 
-	cleanup := func() {
+	_, err = db.Exec("TRUNCATE TABLE users, refresh_tokens, servers, monitoring_snapshots, activities, notifications CASCADE")
+	if err != nil {
 		db.Close()
-		_ = os.Remove(dbPath)
+		t.Fatalf("failed to truncate tables: %v", err)
+	}
+
+	cleanup := func() {
+		_, _ = db.Exec("TRUNCATE TABLE users, refresh_tokens, servers, monitoring_snapshots, activities, notifications CASCADE")
+		db.Close()
 	}
 
 	return db, cleanup
@@ -168,14 +175,26 @@ func TestDashboardService(t *testing.T) {
 }
 
 func setupBenchmarkDashboardService(b *testing.B) (*DashboardService, func()) {
-	db, err := sql.Open("libsql", "file::memory:")
-	if err != nil {
-		b.Fatalf("failed to open in-memory DB: %v", err)
+	testDBURL := os.Getenv("TEST_DB_URL")
+	if testDBURL == "" {
+		testDBURL = "postgres://postgres:postgres@localhost:5433/serverpilot?sslmode=disable"
 	}
+
+	db, err := sql.Open("postgres", testDBURL)
+	if err != nil {
+		b.Fatalf("failed to open database: %v", err)
+	}
+
 	err = database.RunMigrations(db)
 	if err != nil {
 		db.Close()
 		b.Fatalf("failed to run migrations: %v", err)
+	}
+
+	_, err = db.Exec("TRUNCATE TABLE users, refresh_tokens, servers, monitoring_snapshots, activities, notifications CASCADE")
+	if err != nil {
+		db.Close()
+		b.Fatalf("failed to truncate: %v", err)
 	}
 
 	serverRepo := repository.NewServerRepository(db)
@@ -185,6 +204,7 @@ func setupBenchmarkDashboardService(b *testing.B) (*DashboardService, func()) {
 
 	svc := NewDashboardService(serverRepo, metricsRepo, activityRepo, sshPool)
 	cleanup := func() {
+		_, _ = db.Exec("TRUNCATE TABLE users, refresh_tokens, servers, monitoring_snapshots, activities, notifications CASCADE")
 		sshPool.Close()
 		db.Close()
 	}
