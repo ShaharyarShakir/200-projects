@@ -99,7 +99,7 @@ func ParseCPUUsage(stdout string) (*CPUUsage, error) {
 		return &CPUUsage{Total: 0.0}, nil
 	}
 
-	usagePercent := (float64(totalDiff - idleDiff) / float64(totalDiff)) * 100.0
+	usagePercent := (float64(totalDiff-idleDiff) / float64(totalDiff)) * 100.0
 
 	return &CPUUsage{
 		Total:  usagePercent,
@@ -142,7 +142,7 @@ func ParseMemory(stdout string) (*MemoryMetrics, error) {
 		if len(fields) < 2 {
 			continue
 		}
-		
+
 		key := strings.TrimSuffix(fields[0], ":")
 		val, err := strconv.ParseFloat(fields[1], 64)
 		if err != nil {
@@ -254,12 +254,12 @@ func ParseNetworkDev(stdout string) (*CumulativeNetwork, error) {
 		if !strings.Contains(line, ":") {
 			continue
 		}
-		
+
 		parts := strings.SplitN(line, ":", 2)
 		if len(parts) < 2 {
 			continue
 		}
-		
+
 		ifName := strings.TrimSpace(parts[0])
 		if ifName == "lo" || strings.HasPrefix(ifName, "docker") || strings.HasPrefix(ifName, "veth") {
 			continue
@@ -416,7 +416,7 @@ func ParseSystemdServices(stdout string) ([]*SystemdService, error) {
 		loaded := fields[1]
 		active := fields[2]
 		sub := fields[3]
-		
+
 		desc := ""
 		if len(fields) > 4 {
 			// Find where description starts by matching fields
