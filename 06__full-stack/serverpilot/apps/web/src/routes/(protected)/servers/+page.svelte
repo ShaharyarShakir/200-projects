@@ -17,8 +17,7 @@
 		Play,
 		Square,
 		Trash2,
-		SlidersHorizontal,
-		Check,
+	Check,
 		X,
 		MapPin,
 		Terminal,
@@ -57,6 +56,15 @@
 	let newServerLocation = $state('Virginia, USA');
 	let newServerTagsInput = $state('');
 
+	// SSH credentials state
+	let newServerSSHPort = $state(22);
+	let newServerSSHUser = $state('root');
+	let newServerSSHAuthMethod = $state<'password' | 'private_key'>('password');
+	let newServerSSHPassword = $state('');
+	let newServerSSHPrivateKey = $state('');
+	let newServerSSHPassphrase = $state('');
+	let isTestingConnection = $state(false);
+
 	// Sync filter parameters with URL search query
 	onMount(() => {
 		const searchParam = $page.url.searchParams.get('search');
@@ -80,6 +88,43 @@
 		newServerProvider = 'AWS';
 		newServerLocation = 'Virginia, USA';
 		newServerTagsInput = '';
+		newServerSSHPort = 22;
+		newServerSSHUser = 'root';
+		newServerSSHAuthMethod = 'password';
+		newServerSSHPassword = '';
+		newServerSSHPrivateKey = '';
+		newServerSSHPassphrase = '';
+	}
+
+	async function handleTestConnection() {
+		if (!newServerIP) {
+			toast.error('Please input IP address before testing connection');
+			return;
+		}
+		isTestingConnection = true;
+		try {
+			const res = await apiFetch<{ success: boolean; message: string; system_info?: any }>('/api/servers/test-connection', {
+				method: 'POST',
+				body: JSON.stringify({
+					ip: newServerIP,
+					ssh_port: newServerSSHPort,
+					ssh_user: newServerSSHUser,
+					ssh_auth_method: newServerSSHAuthMethod,
+					ssh_password: newServerSSHPassword,
+					ssh_private_key: newServerSSHPrivateKey,
+					ssh_passphrase: newServerSSHPassphrase
+				})
+			});
+			if (res.success) {
+				toast.success(`SSH Connection successful! OS: ${res.system_info?.os_name || 'Linux'}`);
+			} else {
+				toast.error(`SSH Connection failed: ${res.message}`);
+			}
+		} catch (err: any) {
+			toast.error(`SSH Connection error: ${err.message}`);
+		} finally {
+			isTestingConnection = false;
+		}
 	}
 
 	interface ServerNode {
@@ -122,6 +167,12 @@
 			provider: string;
 			location: string;
 			tags: string[];
+			ssh_port: number;
+			ssh_user: string;
+			ssh_auth_method: string;
+			ssh_password?: string;
+			ssh_private_key?: string;
+			ssh_passphrase?: string;
 		}) =>
 			apiFetch<ServerNode>('/api/servers/create', {
 				method: 'POST',
@@ -744,13 +795,105 @@
 				/>
 			</div>
 
-			<div class="border-t border-zinc-900 pt-4 mt-6 flex justify-end gap-2">
-				<Button variant="ghost" size="sm" onclick={closeModal}>
-					Cancel
+			<!-- SSH Connection Credentials -->
+			<div class="border-t border-zinc-900 pt-4 mt-4 space-y-4">
+				<h3 class="text-xs font-extrabold text-indigo-400 uppercase tracking-widest">SSH Connection Info</h3>
+
+				<div class="grid grid-cols-2 gap-4">
+					<div>
+						<label for="sshUser" class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">SSH Username</label>
+						<input
+							id="sshUser"
+							type="text"
+							bind:value={newServerSSHUser}
+							placeholder="root"
+							class="w-full bg-zinc-900 border border-zinc-850 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs outline-none text-zinc-150 transition-colors"
+							required
+						/>
+					</div>
+					<div>
+						<label for="sshPort" class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">SSH Port</label>
+						<input
+							id="sshPort"
+							type="number"
+							bind:value={newServerSSHPort}
+							placeholder="22"
+							class="w-full bg-zinc-900 border border-zinc-850 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs outline-none text-zinc-150 transition-colors"
+							required
+						/>
+					</div>
+				</div>
+
+				<div>
+					<label for="sshAuthMethod" class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Authentication Method</label>
+					<select
+						id="sshAuthMethod"
+						bind:value={newServerSSHAuthMethod}
+						class="w-full bg-zinc-900 border border-zinc-850 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs outline-none text-zinc-150 transition-colors"
+					>
+						<option value="password">Password</option>
+						<option value="private_key">SSH Private Key</option>
+					</select>
+				</div>
+
+				{#if newServerSSHAuthMethod === 'password'}
+					<div>
+						<label for="sshPassword" class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">SSH Password</label>
+						<input
+							id="sshPassword"
+							type="password"
+							bind:value={newServerSSHPassword}
+							placeholder="••••••••"
+							class="w-full bg-zinc-900 border border-zinc-850 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs outline-none text-zinc-150 transition-colors"
+							required
+						/>
+					</div>
+				{:else}
+					<div class="space-y-4">
+						<div>
+							<label for="sshPrivateKey" class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Private Key PEM</label>
+							<textarea
+								id="sshPrivateKey"
+								bind:value={newServerSSHPrivateKey}
+								placeholder="-----BEGIN OPENSSH PRIVATE KEY-----..."
+								rows="3"
+								class="w-full bg-zinc-900 border border-zinc-850 focus:border-indigo-500 rounded-lg px-3 py-2 text-[10px] font-mono outline-none text-zinc-150 transition-colors"
+								required
+							></textarea>
+						</div>
+						<div>
+							<label for="sshPassphrase" class="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">Key Passphrase (optional)</label>
+							<input
+								id="sshPassphrase"
+								type="password"
+								bind:value={newServerSSHPassphrase}
+								placeholder="Decryption passphrase"
+								class="w-full bg-zinc-900 border border-zinc-850 focus:border-indigo-500 rounded-lg px-3 py-2 text-xs outline-none text-zinc-150 transition-colors"
+							/>
+						</div>
+					</div>
+				{/if}
+			</div>
+
+			<div class="border-t border-zinc-900 pt-4 mt-6 flex justify-between items-center gap-2">
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					class="px-3"
+					onclick={handleTestConnection}
+					loading={isTestingConnection}
+				>
+					<Terminal class="h-3.5 w-3.5 mr-1.5" /> Test Connection
 				</Button>
-				<Button type="submit" size="sm" loading={addServerMutation.isPending}>
-					Connect Node
-				</Button>
+				<div class="flex gap-2">
+					<Button variant="ghost" size="sm" onclick={closeModal}>
+						Cancel
+					</Button>
+					<Button type="submit" size="sm" loading={addServerMutation.isPending}>
+						Connect Node
+					</Button>
+				</div>
 			</div>
 		</form>
 	</div>
