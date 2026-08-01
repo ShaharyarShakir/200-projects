@@ -128,7 +128,7 @@ func (m *MonitoringService) pollServer(srv *models.Server) {
 	defer cancel()
 
 	cmd := `echo "===CPU===" && cat /proc/stat && sleep 0.1 && cat /proc/stat && echo "===MEM===" && cat /proc/meminfo && echo "===DISK===" && df -B1 / && echo "===NET===" && cat /proc/net/dev && echo "===UPTIME===" && cat /proc/uptime`
-	
+
 	var stdout string
 	var err error
 	var localExec bool
@@ -160,7 +160,7 @@ func (m *MonitoringService) pollServer(srv *models.Server) {
 	cpu, mem, disk, cumulativeNet, uptime, err := m.parseCombinedOutput(stdout)
 	if err != nil {
 		m.logger.Error(fmt.Sprintf("Failed to parse metrics output for server %s: %v", srv.Name, err), nil)
-		m.handleServerOffline(srv, "Parsing error: " + err.Error())
+		m.handleServerOffline(srv, "Parsing error: "+err.Error())
 		return
 	}
 
@@ -204,7 +204,7 @@ func (m *MonitoringService) pollServer(srv *models.Server) {
 	srv.NetworkIn = rxSpeed
 	srv.NetworkOut = txSpeed
 	srv.Uptime = uptime
-	
+
 	if localExec {
 		srv.OS = "Local Host Machine"
 	}
