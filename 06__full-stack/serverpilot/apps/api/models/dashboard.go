@@ -4,33 +4,33 @@ import "time"
 
 // Server represents a monitored/managed server.
 type Server struct {
-	ID             string    `json:"id"`
-	Name           string    `json:"name"`
-	IP             string    `json:"ip"`
-	Status         string    `json:"status"` // "online", "offline", "maintenance"
-	OS             string    `json:"os"`
-	CPUUsage       float64   `json:"cpu_usage"`    // percentage
-	MemoryUsage    float64   `json:"memory_usage"` // percentage
-	MemoryTotal    float64   `json:"memory_total"` // GB
-	DiskUsage      float64   `json:"disk_usage"`   // percentage
-	DiskTotal      float64   `json:"disk_total"`   // GB
-	NetworkIn      float64   `json:"network_in"`   // Mbps
-	NetworkOut     float64   `json:"network_out"`  // Mbps
-	Uptime         int64     `json:"uptime"`       // seconds
-	Location       string    `json:"location"`
-	Provider       string    `json:"provider"` // "AWS", "GCP", "Hetzner", "DigitalOcean", etc.
-	Tags           []string  `json:"tags"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	IP          string    `json:"ip"`
+	Status      string    `json:"status"` // "online", "offline", "maintenance"
+	OS          string    `json:"os"`
+	CPUUsage    float64   `json:"cpu_usage"`    // percentage
+	MemoryUsage float64   `json:"memory_usage"` // percentage
+	MemoryTotal float64   `json:"memory_total"` // GB
+	DiskUsage   float64   `json:"disk_usage"`   // percentage
+	DiskTotal   float64   `json:"disk_total"`   // GB
+	NetworkIn   float64   `json:"network_in"`   // Mbps
+	NetworkOut  float64   `json:"network_out"`  // Mbps
+	Uptime      int64     `json:"uptime"`       // seconds
+	Location    string    `json:"location"`
+	Provider    string    `json:"provider"` // "AWS", "GCP", "Hetzner", "DigitalOcean", etc.
+	Tags        []string  `json:"tags"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 
 	// SSH Credentials (excluded from JSON outputs)
-	SSHPort        int       `json:"-"`
-	SSHUser        string    `json:"-"`
-	SSHAuthMethod  string    `json:"-"` // "password" or "private_key"
-	SSHPassword    string    `json:"-"`
-	SSHPrivateKey  string    `json:"-"`
-	SSHPassphrase  string    `json:"-"`
-	HostKey        string    `json:"-"`
+	SSHPort       int    `json:"-"`
+	SSHUser       string `json:"-"`
+	SSHAuthMethod string `json:"-"` // "password" or "private_key"
+	SSHPassword   string `json:"-"`
+	SSHPrivateKey string `json:"-"`
+	SSHPassphrase string `json:"-"`
+	HostKey       string `json:"-"`
 }
 
 // MetricPoint defines a single data point in a time-series telemetry chart.
