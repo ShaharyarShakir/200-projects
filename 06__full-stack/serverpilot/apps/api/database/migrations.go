@@ -25,6 +25,68 @@ var migrations = []string{
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);`,
+
+	// 3. Create servers table
+	`CREATE TABLE IF NOT EXISTS servers (
+		id TEXT PRIMARY KEY,
+		name TEXT NOT NULL,
+		ip TEXT NOT NULL,
+		os TEXT,
+		status TEXT NOT NULL DEFAULT 'offline',
+		cpu_usage REAL DEFAULT 0,
+		memory_usage REAL DEFAULT 0,
+		memory_total REAL DEFAULT 0,
+		disk_usage REAL DEFAULT 0,
+		disk_total REAL DEFAULT 0,
+		network_in REAL DEFAULT 0,
+		network_out REAL DEFAULT 0,
+		uptime INTEGER DEFAULT 0,
+		location TEXT,
+		provider TEXT,
+		tags TEXT,
+		ssh_port INTEGER NOT NULL DEFAULT 22,
+		ssh_user TEXT NOT NULL DEFAULT 'root',
+		ssh_auth_method TEXT NOT NULL DEFAULT 'password',
+		ssh_password TEXT,
+		ssh_private_key TEXT,
+		ssh_passphrase TEXT,
+		host_key TEXT,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);`,
+
+	// 4. Create monitoring_snapshots table
+	`CREATE TABLE IF NOT EXISTS monitoring_snapshots (
+		id TEXT PRIMARY KEY,
+		server_id TEXT NOT NULL,
+		cpu_usage REAL NOT NULL,
+		memory_usage REAL NOT NULL,
+		disk_usage REAL NOT NULL,
+		network_in REAL NOT NULL,
+		network_out REAL NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (server_id) REFERENCES servers(id) ON DELETE CASCADE
+	);`,
+
+	// 5. Create activities table
+	`CREATE TABLE IF NOT EXISTS activities (
+		id TEXT PRIMARY KEY,
+		message TEXT NOT NULL,
+		type TEXT NOT NULL,
+		user TEXT NOT NULL,
+		server_id TEXT,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);`,
+
+	// 6. Create notifications table
+	`CREATE TABLE IF NOT EXISTS notifications (
+		id TEXT PRIMARY KEY,
+		title TEXT NOT NULL,
+		message TEXT NOT NULL,
+		type TEXT NOT NULL,
+		read INTEGER DEFAULT 0,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);`,
 }
 
 // RunMigrations runs all database schema migrations.
