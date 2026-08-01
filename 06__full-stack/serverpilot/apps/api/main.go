@@ -58,16 +58,16 @@ func main() {
 	// Global Middlewares (Executed in order)
 	router.Use(middleware.Recovery(logger)) // Recover first to handle panics
 	router.Use(middleware.RequestID)
-	
+
 	// Create rate limiter: 20 requests/sec limit, 50 request burst capacity, clean every 10 min
 	limiter := middleware.NewRateLimiter(20.0, 50.0, 10*time.Minute)
 	router.Use(limiter.Limit)
 
-	router.Use(middleware.CORS(cfg.AllowedOrigin)) // Set CORS headers (preflight OPTIONS returns OK)
-	router.Use(middleware.Security)                // Set safety security headers
-	router.Use(middleware.BodyLimit(1024 * 1024))   // Max 1MB body payloads
+	router.Use(middleware.CORS(cfg.AllowedOrigin))   // Set CORS headers (preflight OPTIONS returns OK)
+	router.Use(middleware.Security)                  // Set safety security headers
+	router.Use(middleware.BodyLimit(1024 * 1024))    // Max 1MB body payloads
 	router.Use(middleware.Timeout(30 * time.Second)) // Request deadline propagation
-	router.Use(middleware.Logger(logger))           // Log completed requests
+	router.Use(middleware.Logger(logger))            // Log completed requests
 	router.Use(middleware.Auth(cfg.JWTAccessSecret)) // Parse claims from Authorization Bearer token
 
 	// API Router
@@ -104,7 +104,7 @@ func main() {
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		dbErr := appContainer.DB.Ping()
-		
+
 		status := "healthy"
 		dbStatus := "connected"
 		statusCode := http.StatusOK
@@ -126,7 +126,7 @@ func main() {
 
 	router.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		
+
 		var ms runtime.MemStats
 		runtime.ReadMemStats(&ms)
 
