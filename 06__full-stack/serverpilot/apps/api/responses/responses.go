@@ -17,7 +17,7 @@ type JSONResponse struct {
 
 // ErrorBody holds structured error details in API responses.
 type ErrorBody struct {
-	Message string             `json:"message"`
+	Message string              `json:"message"`
 	Code    apperrors.ErrorCode `json:"code,omitempty"`
 }
 
