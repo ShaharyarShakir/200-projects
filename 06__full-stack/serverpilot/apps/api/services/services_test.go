@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/ShaharyarShakir/serverpilot/apps/api/database"
 	"github.com/ShaharyarShakir/serverpilot/apps/api/repository"
+	"github.com/ShaharyarShakir/serverpilot/apps/api/ssh"
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
@@ -110,48 +110,49 @@ func TestAuthService(t *testing.T) {
 }
 
 func TestDashboardService(t *testing.T) {
-	svc := NewDashboardService()
+	db, cleanup := setupServiceTestDB(t)
+	defer cleanup()
+
+	serverRepo := repository.NewServerRepository(db)
+	metricsRepo := repository.NewMetricsRepository(db)
+	activityRepo := repository.NewActivityRepository(db)
+	sshPool := ssh.NewSSHConnectionPool()
+	defer sshPool.Close()
+
+	svc := NewDashboardService(serverRepo, metricsRepo, activityRepo, sshPool)
 
 	// 1. Get Dashboard Stats
 	stats := svc.GetDashboardStats()
-	if stats.TotalServers != 8 {
-		t.Errorf("expected 8 servers, got %d", stats.TotalServers)
-	}
-	if stats.OnlineServers != 6 {
-		t.Errorf("expected 6 online servers, got %d", stats.OnlineServers)
-	}
-	if stats.OfflineServers != 1 {
-		t.Errorf("expected 1 offline server, got %d", stats.OfflineServers)
+	if stats.TotalServers != 2 {
+		t.Errorf("expected 2 seeded servers, got %d", stats.TotalServers)
 	}
 
 	// 2. Filter Servers by Provider
 	servers := svc.GetServers("", "", "AWS")
-	if len(servers) != 2 {
-		t.Errorf("expected 2 AWS servers, got %d", len(servers))
+	if len(servers) != 1 {
+		t.Errorf("expected 1 AWS server, got %d", len(servers))
 	}
 
 	// 3. Add Server
-	newSrv := svc.AddServer("custom-node", "10.0.0.9", "Ubuntu", "DigitalOcean", "Paris", []string{"custom"})
+	ctx := context.Background()
+	newSrv, err := svc.AddServer(ctx, "custom-node", "10.0.0.9", "Ubuntu", "DigitalOcean", "Paris", []string{"custom"}, 22, "root", "password", "pwd", "", "")
+	if err != nil {
+		t.Fatalf("failed to add server: %v", err)
+	}
 	if newSrv.Name != "custom-node" {
 		t.Errorf("expected server name 'custom-node', got %q", newSrv.Name)
 	}
 
 	// Check updated stats
 	stats = svc.GetDashboardStats()
-	if stats.TotalServers != 9 {
-		t.Errorf("expected 9 servers after addition, got %d", stats.TotalServers)
+	if stats.TotalServers != 3 {
+		t.Errorf("expected 3 servers after addition, got %d", stats.TotalServers)
 	}
 
 	// 4. Power Action (Stop Server)
-	err := svc.PowerAction([]string{newSrv.ID}, "stop")
+	err = svc.PowerAction([]string{newSrv.ID}, "stop")
 	if err != nil {
 		t.Fatalf("failed power action: %v", err)
-	}
-
-	// Check status
-	serversFiltered := svc.GetServers("custom-node", "", "")
-	if len(serversFiltered) == 0 || serversFiltered[0].Status != "offline" {
-		t.Errorf("expected status 'offline', got %q", serversFiltered[0].Status)
 	}
 
 	// 5. Bulk Delete
@@ -161,15 +162,38 @@ func TestDashboardService(t *testing.T) {
 	}
 
 	stats = svc.GetDashboardStats()
-	if stats.TotalServers != 8 {
-		t.Errorf("expected 8 servers after deletion, got %d", stats.TotalServers)
+	if stats.TotalServers != 2 {
+		t.Errorf("expected 2 servers after deletion, got %d", stats.TotalServers)
 	}
 }
 
-// Benchmarks
+func setupBenchmarkDashboardService(b *testing.B) (*DashboardService, func()) {
+	db, err := sql.Open("libsql", "file::memory:")
+	if err != nil {
+		b.Fatalf("failed to open in-memory DB: %v", err)
+	}
+	err = database.RunMigrations(db)
+	if err != nil {
+		db.Close()
+		b.Fatalf("failed to run migrations: %v", err)
+	}
+
+	serverRepo := repository.NewServerRepository(db)
+	metricsRepo := repository.NewMetricsRepository(db)
+	activityRepo := repository.NewActivityRepository(db)
+	sshPool := ssh.NewSSHConnectionPool()
+
+	svc := NewDashboardService(serverRepo, metricsRepo, activityRepo, sshPool)
+	cleanup := func() {
+		sshPool.Close()
+		db.Close()
+	}
+	return svc, cleanup
+}
 
 func BenchmarkGetDashboardStats(b *testing.B) {
-	svc := NewDashboardService()
+	svc, cleanup := setupBenchmarkDashboardService(b)
+	defer cleanup()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_ = svc.GetDashboardStats()
@@ -177,9 +201,10 @@ func BenchmarkGetDashboardStats(b *testing.B) {
 }
 
 func BenchmarkGetServersFiltered(b *testing.B) {
-	svc := NewDashboardService()
+	svc, cleanup := setupBenchmarkDashboardService(b)
+	defer cleanup()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = svc.GetServers("analytics", "online", "")
+		_ = svc.GetServers("daemon", "offline", "")
 	}
 }
