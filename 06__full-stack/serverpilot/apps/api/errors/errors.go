@@ -12,19 +12,19 @@ import (
 type ErrorCode string
 
 const (
-	CodeValidation       ErrorCode = "VALIDATION_ERROR"
-	CodeUnauthorized     ErrorCode = "UNAUTHORIZED"
-	CodeForbidden        ErrorCode = "FORBIDDEN"
-	CodeNotFound         ErrorCode = "NOT_FOUND"
-	CodeConflict         ErrorCode = "CONFLICT"
-	CodeRateLimited      ErrorCode = "RATE_LIMITED"
-	CodeInternal         ErrorCode = "INTERNAL_ERROR"
-	CodeBadRequest       ErrorCode = "BAD_REQUEST"
-	CodeTimeout          ErrorCode = "REQUEST_TIMEOUT"
-	CodeUserExists       ErrorCode = "USER_ALREADY_EXISTS"
-	CodeInvalidCreds     ErrorCode = "INVALID_CREDENTIALS"
-	CodeInvalidToken     ErrorCode = "INVALID_TOKEN"
-	CodeDatabase         ErrorCode = "DATABASE_ERROR"
+	CodeValidation   ErrorCode = "VALIDATION_ERROR"
+	CodeUnauthorized ErrorCode = "UNAUTHORIZED"
+	CodeForbidden    ErrorCode = "FORBIDDEN"
+	CodeNotFound     ErrorCode = "NOT_FOUND"
+	CodeConflict     ErrorCode = "CONFLICT"
+	CodeRateLimited  ErrorCode = "RATE_LIMITED"
+	CodeInternal     ErrorCode = "INTERNAL_ERROR"
+	CodeBadRequest   ErrorCode = "BAD_REQUEST"
+	CodeTimeout      ErrorCode = "REQUEST_TIMEOUT"
+	CodeUserExists   ErrorCode = "USER_ALREADY_EXISTS"
+	CodeInvalidCreds ErrorCode = "INVALID_CREDENTIALS"
+	CodeInvalidToken ErrorCode = "INVALID_TOKEN"
+	CodeDatabase     ErrorCode = "DATABASE_ERROR"
 )
 
 // AppError represents a structured application error with HTTP mapping.
