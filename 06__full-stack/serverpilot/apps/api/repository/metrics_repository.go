@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ShaharyarShakir/serverpilot/apps/api/models"
+	"github.com/ShaharyarShakir/serverpilot/apps/api/repository/db"
 )
 
 // MetricsRepository handles persisting and querying server performance metrics history.
@@ -17,27 +18,32 @@ type MetricsRepository interface {
 }
 
 type sqlMetricsRepository struct {
-	db *sql.DB
+	queries *db.Queries
+	db      *sql.DB
 }
 
 // NewMetricsRepository constructs a new MetricsRepository.
-func NewMetricsRepository(db *sql.DB) MetricsRepository {
-	return &sqlMetricsRepository{db: db}
+func NewMetricsRepository(dbConn *sql.DB) MetricsRepository {
+	return &sqlMetricsRepository{
+		queries: db.New(dbConn),
+		db:      dbConn,
+	}
 }
 
 func (r *sqlMetricsRepository) InsertSnapshot(ctx context.Context, snapshot *models.MonitoringSnapshot) error {
-	query := `
-		INSERT INTO monitoring_snapshots (
-			id, server_id, cpu_usage, memory_usage, disk_usage, network_in, network_out, created_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-	`
 	if snapshot.CreatedAt.IsZero() {
 		snapshot.CreatedAt = time.Now()
 	}
-	_, err := r.db.ExecContext(ctx, query,
-		snapshot.ID, snapshot.ServerID, snapshot.CPUUsage, snapshot.MemoryUsage,
-		snapshot.DiskUsage, snapshot.NetworkIn, snapshot.NetworkOut, snapshot.CreatedAt,
-	)
+	err := r.queries.InsertSnapshot(ctx, db.InsertSnapshotParams{
+		ID:         snapshot.ID,
+		ServerID:   snapshot.ServerID,
+		CpuUsage:   snapshot.CPUUsage,
+		MemoryUsage: snapshot.MemoryUsage,
+		DiskUsage:   snapshot.DiskUsage,
+		NetworkIn:   snapshot.NetworkIn,
+		NetworkOut:  snapshot.NetworkOut,
+		CreatedAt:   snapshot.CreatedAt,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to insert monitoring snapshot: %w", err)
 	}
@@ -45,58 +51,36 @@ func (r *sqlMetricsRepository) InsertSnapshot(ctx context.Context, snapshot *mod
 }
 
 func (r *sqlMetricsRepository) GetHistory(ctx context.Context, serverID string, limit int) ([]*models.MonitoringSnapshot, error) {
-	query := `
-		SELECT id, server_id, cpu_usage, memory_usage, disk_usage, network_in, network_out, created_at
-		FROM monitoring_snapshots
-		WHERE server_id = ?
-		ORDER BY created_at DESC
-		LIMIT ?
-	`
-	rows, err := r.db.QueryContext(ctx, query, serverID, limit)
+	rows, err := r.queries.GetSnapshotsByServer(ctx, db.GetSnapshotsByServerParams{
+		ServerID: serverID,
+		Limit:    int32(limit),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to query metrics history: %w", err)
 	}
-	defer rows.Close()
 
-	var history []*models.MonitoringSnapshot
-	for rows.Next() {
-		var s models.MonitoringSnapshot
-		err := rows.Scan(
-			&s.ID, &s.ServerID, &s.CPUUsage, &s.MemoryUsage,
-			&s.DiskUsage, &s.NetworkIn, &s.NetworkOut, &s.CreatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan metrics row: %w", err)
+	history := make([]*models.MonitoringSnapshot, len(rows))
+	for i, row := range rows {
+		history[i] = &models.MonitoringSnapshot{
+			ID:          row.ID,
+			ServerID:    row.ServerID,
+			CPUUsage:    row.CpuUsage,
+			MemoryUsage: row.MemoryUsage,
+			DiskUsage:   row.DiskUsage,
+			NetworkIn:   row.NetworkIn,
+			NetworkOut:  row.NetworkOut,
+			CreatedAt:   row.CreatedAt,
 		}
-		history = append(history, &s)
 	}
 	return history, nil
 }
 
 func (r *sqlMetricsRepository) GetAggregatedHistory(ctx context.Context, hours int) ([]models.MetricPoint, []models.MetricPoint, []models.MetricPoint, error) {
 	startTime := time.Now().Add(time.Duration(-hours) * time.Hour)
-	
-	// Query all snapshots in the time window
-	query := `
-		SELECT cpu_usage, memory_usage, network_in, network_out, created_at
-		FROM monitoring_snapshots
-		WHERE created_at >= ?
-		ORDER BY created_at ASC
-	`
-	rows, err := r.db.QueryContext(ctx, query, startTime)
+
+	rows, err := r.queries.GetSnapshotsSince(ctx, startTime)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to query time-series aggregates: %w", err)
-	}
-	defer rows.Close()
-
-	var snapshots []models.MonitoringSnapshot
-	for rows.Next() {
-		var s models.MonitoringSnapshot
-		err := rows.Scan(&s.CPUUsage, &s.MemoryUsage, &s.NetworkIn, &s.NetworkOut, &s.CreatedAt)
-		if err != nil {
-			return nil, nil, nil, fmt.Errorf("failed to scan row: %w", err)
-		}
-		snapshots = append(snapshots, s)
 	}
 
 	cpuHistory := make([]models.MetricPoint, hours)
@@ -112,9 +96,9 @@ func (r *sqlMetricsRepository) GetAggregatedHistory(ctx context.Context, hours i
 		var cpuSum, memSum, netSum float64
 		var count int
 
-		for _, s := range snapshots {
+		for _, s := range rows {
 			if (s.CreatedAt.After(slotStart) || s.CreatedAt.Equal(slotStart)) && s.CreatedAt.Before(slotEnd) {
-				cpuSum += s.CPUUsage
+				cpuSum += s.CpuUsage
 				memSum += s.MemoryUsage
 				netSum += (s.NetworkIn + s.NetworkOut)
 				count++
