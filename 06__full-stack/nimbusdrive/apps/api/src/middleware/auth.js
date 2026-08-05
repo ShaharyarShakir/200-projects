@@ -3,14 +3,19 @@ import User from "../models/User.js";
 
 export const auth = async (req, res, next) => {
   try {
+    let token;
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.split(" ")[1];
+    } else if (req.query.token) {
+      token = req.query.token;
+    }
+
+    if (!token) {
       const error = new Error("Authentication required");
       error.statusCode = 401;
       return next(error);
     }
-
-    const token = authHeader.split(" ")[1];
     let decoded;
     try {
       decoded = verifyToken(token);
