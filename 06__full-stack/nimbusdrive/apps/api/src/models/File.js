@@ -41,6 +41,10 @@ const fileSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isStarred: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: { createdAt: true, updatedAt: false },
