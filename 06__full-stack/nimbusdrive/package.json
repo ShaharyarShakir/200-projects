@@ -1,0 +1,17 @@
+{
+  "name": "nimbus-drive",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:web": "bun --cwd apps/web dev",
+    "dev:api": "bun --cwd apps/api dev",
+    "dev": "concurrently \"bun run dev:web\" \"bun run dev:api\"",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
