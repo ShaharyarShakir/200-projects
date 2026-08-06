@@ -1,7 +1,5 @@
 import React, { useState, useRef } from "react";
-import { 
-  UploadCloud, Loader2, ChevronRight, Cloud
-} from "lucide-react";
+import { UploadCloud, Loader2, ChevronRight, Cloud } from "lucide-react";
 import { Button } from "../../../lib/component/ui/Button";
 
 // Circular Progress Dial component
@@ -11,7 +9,10 @@ const CircularProgress = ({ percentage, size = 110, strokeWidth = 8 }) => {
   const offset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="relative flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
+    <div
+      className="relative flex items-center justify-center shrink-0"
+      style={{ width: size, height: size }}
+    >
       <svg className="w-full h-full transform -rotate-90">
         <circle
           className="text-slate-100 dark:text-slate-800/40"
@@ -62,7 +63,7 @@ export default function StorageHero({
   uploadProgress,
   uploadPending,
   successMsg,
-  errorMsg
+  errorMsg,
 }) {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
@@ -111,14 +112,14 @@ export default function StorageHero({
   };
 
   return (
-    <div 
+    <div
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`relative bg-gradient-to-br from-teal-500/10 via-teal-950/5 to-transparent shadow-md p-6 md:p-8 border rounded-3xl overflow-hidden backdrop-blur-xs transition-all duration-300 ${
-        isDragging 
-          ? "border-teal-500 ring-2 ring-teal-500/20 bg-teal-500/15" 
+        isDragging
+          ? "border-teal-500 ring-2 ring-teal-500/20 bg-teal-500/15"
           : "border-teal-500/10 dark:border-teal-500/5 bg-white/5 dark:bg-[#0b0f0e]/30"
       }`}
     >
@@ -128,18 +129,23 @@ export default function StorageHero({
         <div className="flex flex-col items-center justify-center py-8 text-teal-500 gap-2 select-none animate-pulse">
           <UploadCloud className="w-12 h-12" />
           <h3 className="text-lg font-bold">Drop files here to upload instantly</h3>
-          <p className="text-xs text-slate-400">Directly targets your active Garage S3 bucket prefix</p>
+          <p className="text-xs text-slate-400">
+            Directly targets your active Garage S3 bucket prefix
+          </p>
         </div>
       ) : (
         <div className="z-10 relative flex flex-col lg:flex-row justify-between items-stretch gap-8">
-          
           <div className="flex-1 flex flex-col justify-between space-y-6">
             <div>
               <h1 className="font-bold text-slate-900 dark:text-white text-3xl tracking-tight">
-                Welcome, <span className="bg-clip-text bg-gradient-to-r from-teal-600 dark:from-teal-400 to-emerald-400 dark:to-emerald-300 text-transparent font-extrabold">{user.name}</span>
+                Welcome,{" "}
+                <span className="bg-clip-text bg-gradient-to-r from-teal-600 dark:from-teal-400 to-emerald-400 dark:to-emerald-300 text-transparent font-extrabold">
+                  {user.name}
+                </span>
               </h1>
               <p className="mt-2 text-slate-500 dark:text-slate-400 text-xs md:text-sm leading-relaxed max-w-lg">
-                Nimbus distributed S3 dashboard. Drag & drop files anywhere in this banner to stream them directly to your cluster.
+                Nimbus distributed S3 dashboard. Drag & drop files anywhere in this banner to stream
+                them directly to your cluster.
               </p>
             </div>
 
@@ -153,7 +159,7 @@ export default function StorageHero({
                     </span>
                   </div>
                   <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                    <div 
+                    <div
                       className="bg-gradient-to-r from-teal-600 to-emerald-500 h-full transition-all duration-300 ease-out"
                       style={{ width: `${uploadProgress}%` }}
                     />
@@ -161,11 +167,11 @@ export default function StorageHero({
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleFileChange} 
-                    className="hidden" 
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
                   />
                   <Button onClick={() => fileInputRef.current?.click()} className="font-bold gap-2">
                     <UploadCloud className="w-4 h-4" /> Upload file
@@ -195,45 +201,52 @@ export default function StorageHero({
             <CircularProgress percentage={usedPercentage} />
 
             <div className="flex flex-col gap-2.5 w-full sm:w-auto flex-1 sm:max-w-[200px]">
-              <button 
+              <button
                 onClick={() => handleShortcutClick("all")}
                 className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#0b0f0e]/50 border border-slate-150 dark:border-slate-850 hover:border-teal-500/30 transition-all text-left cursor-pointer"
               >
                 <div>
-                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Objects</span>
-                  <span className="block text-sm font-bold text-slate-800 dark:text-white">{files?.length || 0}</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
-              </button>
-
-              <button 
-                onClick={() => handleShortcutClick("starred")}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#0b0f0e]/50 border border-slate-150 dark:border-slate-850 hover:border-teal-500/30 transition-all text-left cursor-pointer"
-              >
-                <div>
-                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Starred</span>
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Total Objects
+                  </span>
                   <span className="block text-sm font-bold text-slate-800 dark:text-white">
-                    {files ? files.filter(f => f.isStarred).length : 0}
+                    {files?.length || 0}
                   </span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
               </button>
 
-              <button 
+              <button
+                onClick={() => handleShortcutClick("starred")}
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#0b0f0e]/50 border border-slate-150 dark:border-slate-850 hover:border-teal-500/30 transition-all text-left cursor-pointer"
+              >
+                <div>
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Starred
+                  </span>
+                  <span className="block text-sm font-bold text-slate-800 dark:text-white">
+                    {files ? files.filter((f) => f.isStarred).length : 0}
+                  </span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </button>
+
+              <button
                 onClick={() => handleShortcutClick("trash")}
                 className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#0b0f0e]/50 border border-slate-150 dark:border-slate-850 hover:border-teal-500/30 transition-all text-left cursor-pointer"
               >
                 <div>
-                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">In Trash</span>
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    In Trash
+                  </span>
                   <span className="block text-sm font-bold text-slate-800 dark:text-white">
-                    {files ? files.filter(f => f.isDeleted).length : 0}
+                    {files ? files.filter((f) => f.isDeleted).length : 0}
                   </span>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-400" />
               </button>
             </div>
           </div>
-
         </div>
       )}
     </div>
