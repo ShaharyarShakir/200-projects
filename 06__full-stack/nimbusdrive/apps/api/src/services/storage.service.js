@@ -1,4 +1,4 @@
-import { S3Client, ListBucketsCommand, CreateBucketCommand, HeadBucketCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, ListBucketsCommand, CreateBucketCommand, HeadBucketCommand, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 const s3Client = new S3Client({
   endpoint: process.env.AWS_ENDPOINT || "http://localhost:3900",
@@ -57,6 +57,23 @@ export const uploadFile = async (objectKey, buffer, mimeType) => {
     bucket: BUCKET_NAME,
     objectKey,
   };
+};
+
+export const getFileStream = async (objectKey) => {
+  const command = new GetObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: objectKey,
+  });
+  const response = await s3Client.send(command);
+  return response.Body;
+};
+
+export const deleteFile = async (objectKey) => {
+  const command = new DeleteObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: objectKey,
+  });
+  await s3Client.send(command);
 };
 
 export default s3Client;
