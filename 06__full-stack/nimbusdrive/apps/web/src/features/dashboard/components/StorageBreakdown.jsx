@@ -16,14 +16,14 @@ export default function StorageBreakdown({ user, files }) {
   const storageQuota = user?.storageQuota || 5368709120;
 
   // Categorize files
-  const activeFiles = files ? files.filter(f => !f.isDeleted) : [];
-  
+  const activeFiles = files ? files.filter((f) => !f.isDeleted) : [];
+
   let images = { count: 0, size: 0 };
   let docs = { count: 0, size: 0 };
   let media = { count: 0, size: 0 };
   let others = { count: 0, size: 0 };
 
-  activeFiles.forEach(f => {
+  activeFiles.forEach((f) => {
     const mime = f.mimeType?.toLowerCase() || "";
     const size = f.size || 0;
 
@@ -31,11 +31,11 @@ export default function StorageBreakdown({ user, files }) {
       images.count++;
       images.size += size;
     } else if (
-      mime.startsWith("text/") || 
-      mime.includes("pdf") || 
-      mime.includes("document") || 
-      mime.includes("sheet") || 
-      mime.includes("presentation") || 
+      mime.startsWith("text/") ||
+      mime.includes("pdf") ||
+      mime.includes("document") ||
+      mime.includes("sheet") ||
+      mime.includes("presentation") ||
       mime.includes("msword") ||
       mime.includes("json") ||
       mime.includes("xml")
@@ -93,9 +93,11 @@ export default function StorageBreakdown({ user, files }) {
   return (
     <Card className="bg-white dark:bg-[#0b0f0e]/40 shadow-sm p-6 border-slate-200 dark:border-slate-850">
       <CardHeader className="p-0 mb-6">
-        <CardTitle className="font-bold text-slate-800 dark:text-white text-lg">Storage Allocation</CardTitle>
+        <CardTitle className="font-bold text-slate-800 dark:text-white text-lg">
+          Storage Allocation
+        </CardTitle>
       </CardHeader>
-      
+
       <CardContent className="p-0 space-y-6">
         {/* Main Linear progress bar */}
         <div className="space-y-2">
@@ -108,7 +110,7 @@ export default function StorageBreakdown({ user, files }) {
               const catPercent = storageUsed > 0 ? (cat.size / storageQuota) * 100 : 0;
               if (catPercent === 0) return null;
               return (
-                <div 
+                <div
                   key={idx}
                   className={`${cat.barBg} h-full first:rounded-l-full last:rounded-r-full transition-all duration-305`}
                   style={{ width: `${catPercent}%` }}
@@ -116,17 +118,20 @@ export default function StorageBreakdown({ user, files }) {
                 />
               );
             })}
-            {storageUsed === 0 && (
-              <div className="bg-slate-200 dark:bg-slate-800 h-full w-full" />
-            )}
+            {storageUsed === 0 && <div className="bg-slate-200 dark:bg-slate-800 h-full w-full" />}
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1">
             {categories.map((cat, idx) => {
               const catPercent = storageUsed > 0 ? (cat.size / storageUsed) * 100 : 0;
               return (
-                <div key={idx} className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400">
+                <div
+                  key={idx}
+                  className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400"
+                >
                   <span className={`w-2 h-2 rounded-full ${cat.barBg}`} />
-                  <span>{cat.name} ({catPercent.toFixed(1)}%)</span>
+                  <span>
+                    {cat.name} ({catPercent.toFixed(1)}%)
+                  </span>
                 </div>
               );
             })}
@@ -138,16 +143,20 @@ export default function StorageBreakdown({ user, files }) {
           {categories.map((cat, idx) => {
             const Icon = cat.icon;
             return (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-slate-850/60 bg-slate-50/50 dark:bg-[#0b0f0e]/20"
               >
                 <div className={`p-3 rounded-xl ${cat.bg} ${cat.color} shrink-0`}>
                   <Icon className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">{cat.name}</span>
-                  <span className="block font-bold text-sm text-slate-800 dark:text-white mt-0.5">{formatBytes(cat.size)}</span>
+                  <span className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                    {cat.name}
+                  </span>
+                  <span className="block font-bold text-sm text-slate-800 dark:text-white mt-0.5">
+                    {formatBytes(cat.size)}
+                  </span>
                   <span className="block text-[10px] text-slate-400 mt-0.5">{cat.count} files</span>
                 </div>
               </div>
