@@ -26,6 +26,7 @@ import { Route as DashboardEmployeesIndexRouteImport } from './routes/dashboard.
 import { Route as DashboardEmployeesEmployeeIdRouteImport } from './routes/dashboard.employees.$employeeId'
 import { Route as DashboardEmployeesNewRouteImport } from './routes/dashboard.employees.new'
 import { Route as DashboardEmployeesEmployeeIdIndexRouteImport } from './routes/dashboard.employees.$employeeId.index'
+import { Route as DashboardEmployeesEmployeeIdActivityRouteImport } from './routes/dashboard.employees.$employeeId.activity'
 import { Route as DashboardEmployeesEmployeeIdAttendanceRouteImport } from './routes/dashboard.employees.$employeeId.attendance'
 import { Route as DashboardEmployeesEmployeeIdEditRouteImport } from './routes/dashboard.employees.$employeeId.edit'
 
@@ -116,6 +117,12 @@ const DashboardEmployeesEmployeeIdIndexRoute =
     path: '/',
     getParentRoute: () => DashboardEmployeesEmployeeIdRoute,
   } as any)
+const DashboardEmployeesEmployeeIdActivityRoute =
+  DashboardEmployeesEmployeeIdActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => DashboardEmployeesEmployeeIdRoute,
+  } as any)
 const DashboardEmployeesEmployeeIdAttendanceRoute =
   DashboardEmployeesEmployeeIdAttendanceRouteImport.update({
     id: '/attendance',
@@ -146,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/employees/$employeeId': typeof DashboardEmployeesEmployeeIdRouteWithChildren
   '/dashboard/employees/new': typeof DashboardEmployeesNewRoute
   '/dashboard/employees/': typeof DashboardEmployeesIndexRoute
+  '/dashboard/employees/$employeeId/activity': typeof DashboardEmployeesEmployeeIdActivityRoute
   '/dashboard/employees/$employeeId/attendance': typeof DashboardEmployeesEmployeeIdAttendanceRoute
   '/dashboard/employees/$employeeId/edit': typeof DashboardEmployeesEmployeeIdEditRoute
   '/dashboard/employees/$employeeId/': typeof DashboardEmployeesEmployeeIdIndexRoute
@@ -166,6 +174,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/dashboard/employees/new': typeof DashboardEmployeesNewRoute
   '/dashboard/employees': typeof DashboardEmployeesIndexRoute
+  '/dashboard/employees/$employeeId/activity': typeof DashboardEmployeesEmployeeIdActivityRoute
   '/dashboard/employees/$employeeId/attendance': typeof DashboardEmployeesEmployeeIdAttendanceRoute
   '/dashboard/employees/$employeeId/edit': typeof DashboardEmployeesEmployeeIdEditRoute
   '/dashboard/employees/$employeeId': typeof DashboardEmployeesEmployeeIdIndexRoute
@@ -188,6 +197,7 @@ export interface FileRoutesById {
   '/dashboard/employees/$employeeId': typeof DashboardEmployeesEmployeeIdRouteWithChildren
   '/dashboard/employees/new': typeof DashboardEmployeesNewRoute
   '/dashboard/employees/': typeof DashboardEmployeesIndexRoute
+  '/dashboard/employees/$employeeId/activity': typeof DashboardEmployeesEmployeeIdActivityRoute
   '/dashboard/employees/$employeeId/attendance': typeof DashboardEmployeesEmployeeIdAttendanceRoute
   '/dashboard/employees/$employeeId/edit': typeof DashboardEmployeesEmployeeIdEditRoute
   '/dashboard/employees/$employeeId/': typeof DashboardEmployeesEmployeeIdIndexRoute
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
     | '/dashboard/employees/$employeeId'
     | '/dashboard/employees/new'
     | '/dashboard/employees/'
+    | '/dashboard/employees/$employeeId/activity'
     | '/dashboard/employees/$employeeId/attendance'
     | '/dashboard/employees/$employeeId/edit'
     | '/dashboard/employees/$employeeId/'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/dashboard/employees/new'
     | '/dashboard/employees'
+    | '/dashboard/employees/$employeeId/activity'
     | '/dashboard/employees/$employeeId/attendance'
     | '/dashboard/employees/$employeeId/edit'
     | '/dashboard/employees/$employeeId'
@@ -252,6 +264,7 @@ export interface FileRouteTypes {
     | '/dashboard/employees/$employeeId'
     | '/dashboard/employees/new'
     | '/dashboard/employees/'
+    | '/dashboard/employees/$employeeId/activity'
     | '/dashboard/employees/$employeeId/attendance'
     | '/dashboard/employees/$employeeId/edit'
     | '/dashboard/employees/$employeeId/'
@@ -394,6 +407,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardEmployeesEmployeeIdIndexRouteImport
       parentRoute: typeof DashboardEmployeesEmployeeIdRoute
     }
+    '/dashboard/employees/$employeeId/activity': {
+      id: '/dashboard/employees/$employeeId/activity'
+      path: '/activity'
+      fullPath: '/dashboard/employees/$employeeId/activity'
+      preLoaderRoute: typeof DashboardEmployeesEmployeeIdActivityRouteImport
+      parentRoute: typeof DashboardEmployeesEmployeeIdRoute
+    }
     '/dashboard/employees/$employeeId/attendance': {
       id: '/dashboard/employees/$employeeId/attendance'
       path: '/attendance'
@@ -412,6 +432,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardEmployeesEmployeeIdRouteChildren {
+  DashboardEmployeesEmployeeIdActivityRoute: typeof DashboardEmployeesEmployeeIdActivityRoute
   DashboardEmployeesEmployeeIdAttendanceRoute: typeof DashboardEmployeesEmployeeIdAttendanceRoute
   DashboardEmployeesEmployeeIdEditRoute: typeof DashboardEmployeesEmployeeIdEditRoute
   DashboardEmployeesEmployeeIdIndexRoute: typeof DashboardEmployeesEmployeeIdIndexRoute
@@ -419,6 +440,8 @@ interface DashboardEmployeesEmployeeIdRouteChildren {
 
 const DashboardEmployeesEmployeeIdRouteChildren: DashboardEmployeesEmployeeIdRouteChildren =
   {
+    DashboardEmployeesEmployeeIdActivityRoute:
+      DashboardEmployeesEmployeeIdActivityRoute,
     DashboardEmployeesEmployeeIdAttendanceRoute:
       DashboardEmployeesEmployeeIdAttendanceRoute,
     DashboardEmployeesEmployeeIdEditRoute:
