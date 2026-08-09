@@ -1,0 +1,54 @@
+{
+  "name": "backend",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "build": "tsc",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "npm run test:workforce",
+    "test:auth": "tsx src/scripts/auth.integration.ts",
+    "test:shop": "tsx src/scripts/shop-branch.integration.ts",
+    "test:workforce": "tsx src/scripts/workforce.integration.ts",
+    "test:all": "tsx src/scripts/auth.integration.ts && tsx src/scripts/shop-branch.integration.ts && tsx src/scripts/workforce.integration.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/bcrypt": "^6.0.0",
+    "@types/bun": "latest",
+    "@types/compression": "^1.8.1",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mongoose": "^5.11.97",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^26.1.2",
+    "eslint": "^10.8.0",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.9.6",
+    "tsx": "^4.23.9",
+    "typescript": "5.6.2",
+    "typescript-eslint": "^8.66.0"
+  },
+  "peerDependencies": {
+    "typescript": "5.6.2"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.9.1",
+    "morgan": "^1.11.0",
+    "zod": "^4.4.3"
+  }
+}
