@@ -1,5 +1,5 @@
 serve:
-	go run ./cmd/server
+	go tool air
 
 ps:
 	docker compose ps

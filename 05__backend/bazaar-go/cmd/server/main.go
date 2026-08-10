@@ -11,11 +11,17 @@ import (
 	"time"
 
 	"github.com/ShaharyarShakir/bazaar-go/internal/config"
+	"github.com/ShaharyarShakir/bazaar-go/internal/platform/database"
 )
 
 func main()  {
 	cfg := config.Load()
 
+	db, err := database.New(cfg.Database)
+if err != nil {
+	log.Fatalf("failed to connect to database: %v", err)
+}
+defer db.Close()
 	server := &http.Server{
 		Addr: ":" + cfg.Port,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
