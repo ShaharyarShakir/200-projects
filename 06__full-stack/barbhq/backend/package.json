@@ -13,7 +13,10 @@
     "test:auth": "tsx src/scripts/auth.integration.ts",
     "test:shop": "tsx src/scripts/shop-branch.integration.ts",
     "test:workforce": "tsx src/scripts/workforce.integration.ts",
-    "test:all": "tsx src/scripts/auth.integration.ts && tsx src/scripts/shop-branch.integration.ts && tsx src/scripts/workforce.integration.ts"
+    "test:payroll": "tsx src/scripts/payroll.integration.ts",
+    "test:inventory": "tsx src/scripts/inventory.integration.ts",
+    "test:notification": "tsx src/scripts/notification.integration.ts",
+    "test:all": "tsx src/scripts/auth.integration.ts && tsx src/scripts/shop-branch.integration.ts && tsx src/scripts/workforce.integration.ts && tsx src/scripts/payroll.integration.ts && tsx src/scripts/inventory.integration.ts && tsx src/scripts/notification.integration.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
