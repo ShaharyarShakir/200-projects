@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: bazaar-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: bazaar
+      POSTGRES_PASSWORD: bazaar
+      POSTGRES_DB: bazaar
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+volumes:
+  postgres_data:
