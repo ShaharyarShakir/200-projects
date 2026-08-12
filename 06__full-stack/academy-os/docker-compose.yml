@@ -39,7 +39,21 @@ services:
     volumes:
       - garage_meta:/var/lib/garage/meta
       - garage_data:/var/lib/garage/data
-      - ./infra/garage/garage.toml:/etc/garage.toml
+      - ./infra/garage/garage.toml:/etc/garage.toml:ro,z
+
+  garage-webui:
+    image: khairul169/garage-webui:latest
+    container_name: academy-garage-webui
+    restart: unless-stopped
+    ports:
+      - "3909:3909"
+    environment:
+      API_BASE_URL: "http://garage:3903"
+      S3_ENDPOINT_URL: "http://garage:3900"
+    volumes:
+      - ./infra/garage/garage.toml:/etc/garage.toml:ro,z
+    depends_on:
+      - garage
 
 volumes:
   postgres_data:

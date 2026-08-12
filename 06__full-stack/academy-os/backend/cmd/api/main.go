@@ -20,6 +20,11 @@ type HealthResponse struct {
 	Status string `json:"status"`
 }
 
+type ReadinessResponse struct {
+	Status       string            `json:"status"`
+	Dependencies map[string]string `json:"dependencies"`
+}
+
 func main() {
 	_ = godotenv.Load("../.env", ".env")
 
@@ -56,11 +61,52 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	// Process Liveness Check
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-
+		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(HealthResponse{
 			Status: "ok",
+		})
+	})
+
+	// Service Readiness Check
+	mux.HandleFunc("GET /health/ready", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		deps := map[string]string{
+			"postgres": "ok",
+			"redis":    "ok",
+			"storage":  "ok",
+		}
+		allOk := true
+
+		if err := db.Ping(r.Context()); err != nil {
+			deps["postgres"] = "error: " + err.Error()
+			allOk = false
+		}
+
+		if err := redis.Ping(r.Context()).Err(); err != nil {
+			deps["redis"] = "error: " + err.Error()
+			allOk = false
+		}
+
+		if err := storage.TestConnection(r.Context(), s3Service); err != nil {
+			deps["storage"] = "error: " + err.Error()
+			allOk = false
+		}
+
+		status := "ok"
+		statusCode := http.StatusOK
+		if !allOk {
+			status = "degraded"
+			statusCode = http.StatusServiceUnavailable
+		}
+
+		w.WriteHeader(statusCode)
+		_ = json.NewEncoder(w).Encode(ReadinessResponse{
+			Status:       status,
+			Dependencies: deps,
 		})
 	})
 
