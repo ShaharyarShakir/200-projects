@@ -194,3 +194,24 @@ func (r *LessonRepository) Find(
 	return lesson, nil
 }
 
+func (r *LessonRepository) AttachVideoAsset(
+	ctx context.Context,
+	lessonID uuid.UUID,
+	assetID uuid.UUID,
+) error {
+	_, err := r.db.Exec(
+		ctx,
+		`
+		UPDATE lessons
+		SET video_asset_id = $1
+		WHERE id = $2
+		`,
+		assetID,
+		lessonID,
+	)
+	if err != nil {
+		return fmt.Errorf("attach video asset to lesson: %w", err)
+	}
+	return nil
+}
+
