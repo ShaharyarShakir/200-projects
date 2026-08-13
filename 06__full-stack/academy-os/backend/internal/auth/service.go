@@ -94,6 +94,7 @@ func (s *Service) Signup(
 		email,
 		passwordHash,
 		name,
+		RoleInstructor,
 	)
 	if err != nil {
 		if strings.Contains(err.Error(), "unique") || strings.Contains(err.Error(), "duplicate") {
