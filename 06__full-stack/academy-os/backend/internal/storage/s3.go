@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -101,6 +102,31 @@ func (s *Service) PresignUpload(
 	return request.URL, nil
 }
 
+func (s *Service) Get(
+	ctx context.Context,
+	objectKey string,
+	writer io.Writer,
+) error {
+	result, err := s.client.GetObject(
+		ctx,
+		&s3.GetObjectInput{
+			Bucket: aws.String(s.bucket),
+			Key:    aws.String(objectKey),
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("get object: %w", err)
+	}
+	defer result.Body.Close()
+
+	if _, err := io.Copy(writer, result.Body); err != nil {
+		return fmt.Errorf("read object body: %w", err)
+	}
+
+	return nil
+}
+
+
 func (s *Service) Download(
 	ctx context.Context,
 	objectKey string,
@@ -164,6 +190,76 @@ func TestConnection(ctx context.Context, s *Service) error {
 	_, err := s.client.ListBuckets(ctx, &s3.ListBucketsInput{})
 	if err != nil {
 		return fmt.Errorf("list S3 buckets: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) PresignDownload(
+	ctx context.Context,
+	key string,
+) (string, error) {
+	request, err := s.presign.PresignGetObject(
+		ctx,
+		&s3.GetObjectInput{
+			Bucket: aws.String(s.bucket),
+			Key:    aws.String(key),
+		},
+		func(options *s3.PresignOptions) {
+			options.Expires = 1 * time.Hour
+		},
+	)
+
+	if err != nil {
+		return "", fmt.Errorf("presign download: %w", err)
+	}
+
+	return request.URL, nil
+}
+
+func (s *Service) Put(
+	ctx context.Context,
+	key string,
+	reader io.Reader,
+	contentType string,
+) error {
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		return fmt.Errorf("read payload stream: %w", err)
+	}
+
+	input := &s3.PutObjectInput{
+		Bucket:        aws.String(s.bucket),
+		Key:           aws.String(key),
+		Body:          bytes.NewReader(data),
+		ContentLength: aws.Int64(int64(len(data))),
+	}
+	if contentType != "" {
+		input.ContentType = aws.String(contentType)
+	}
+
+	_, err = s.client.PutObject(ctx, input)
+	if err != nil {
+		return fmt.Errorf("put object: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) Delete(
+	ctx context.Context,
+	key string,
+) error {
+	_, err := s.client.DeleteObject(
+		ctx,
+		&s3.DeleteObjectInput{
+			Bucket: aws.String(s.bucket),
+			Key:    aws.String(key),
+		},
+	)
+
+	if err != nil {
+		return fmt.Errorf("delete object: %w", err)
 	}
 
 	return nil
