@@ -55,6 +55,29 @@ services:
     depends_on:
       - garage
 
+  video-worker:
+    build:
+      context: .
+      dockerfile: backend/cmd/video-worker/Dockerfile
+    container_name: academy-video-worker
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+      - garage
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: academy
+      POSTGRES_PASSWORD: academy_dev
+      POSTGRES_DB: academy_os
+      REDIS_URL: redis://redis:6379
+      S3_ENDPOINT: http://garage:3900
+      S3_REGION: garage
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-GK9d6fd0c70061eb8da2b879d5}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-e7890f4f7573b61d4145ef22d1b3f9810e3dd24937b7e1261cdb28cd5543269b}
+      S3_BUCKET: academy
+
 volumes:
   postgres_data:
   redis_data:
