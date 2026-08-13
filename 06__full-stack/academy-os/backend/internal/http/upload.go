@@ -1,4 +1,4 @@
-package http
+package httpapi
 
 import (
 	"encoding/json"
@@ -13,13 +13,13 @@ import (
 type UploadHandler struct {
 	storage *storage.Service
 	assets  *database.AssetRepository
-	queue   *jobs.Queue
+	queue   *jobs.RedisQueue
 }
 
 func NewUploadHandler(
 	storage *storage.Service,
 	assets *database.AssetRepository,
-	queue *jobs.Queue,
+	queue *jobs.RedisQueue,
 ) *UploadHandler {
 	return &UploadHandler{
 		storage: storage,
