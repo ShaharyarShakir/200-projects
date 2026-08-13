@@ -20,7 +20,10 @@ const { fetch: apiFetch } = useApi()
 
 const { data: result, pending, error } = await useAsyncData<{ course: CourseDetail; sections?: any[]; enrolled?: boolean }>(
   `tenant-course-detail-${courseId}`,
-  () => apiFetch(`/api/public/courses/${courseId}`)
+  () => {
+    if (!courseId || courseId === 'undefined') return Promise.resolve(null)
+    return apiFetch(`/api/public/courses/${courseId}`)
+  }
 )
 
 const course = computed(() => result.value?.course)
