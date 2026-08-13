@@ -5,6 +5,7 @@ import "fmt"
 const (
 	AssetStatusPending    = "pending"
 	AssetStatusQueued     = "queued"
+	AssetStatusUploaded   = "uploaded"
 	AssetStatusProcessing = "processing"
 	AssetStatusReady      = "ready"
 	AssetStatusFailed     = "failed"
@@ -12,13 +13,8 @@ const (
 
 func ValidateStatusTransition(from, to string) error {
 	switch from {
-	case AssetStatusPending:
-		if to == AssetStatusQueued {
-			return nil
-		}
-
-	case AssetStatusQueued:
-		if to == AssetStatusProcessing {
+	case AssetStatusUploaded, "pending", "queued":
+		if to == AssetStatusProcessing || to == "queued" {
 			return nil
 		}
 
@@ -28,7 +24,7 @@ func ValidateStatusTransition(from, to string) error {
 		}
 
 	case AssetStatusFailed:
-		if to == AssetStatusQueued {
+		if to == AssetStatusProcessing || to == "queued" {
 			return nil
 		}
 	}
