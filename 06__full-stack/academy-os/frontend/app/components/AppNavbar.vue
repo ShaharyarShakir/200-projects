@@ -1,54 +1,51 @@
 <script setup lang="ts">
 import { useTheme } from '~/composables/useTheme'
-import { Sun, Moon, Sparkles, BookOpen, GraduationCap, Video } from 'lucide-vue-next'
+import { Sun, Moon, Sparkles, BookOpen, GraduationCap, Video, Building2 } from 'lucide-vue-next'
+import TenantSwitcher from './TenantSwitcher.vue'
 
 const { theme, toggleTheme } = useTheme()
+const { user } = useAuth()
 </script>
 
 <template>
-  <div class="navbar bg-base-100/80 backdrop-blur-md sticky top-0 z-50 border-b border-base-300 px-4 lg:px-8 transition-colors duration-300">
+  <div class="navbar bg-[#0c0919]/90 backdrop-blur-md sticky top-0 z-50 border-b border-purple-900/40 px-4 lg:px-8 py-3 transition-colors duration-300">
     <div class="navbar-start">
       <div class="dropdown">
-        <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
+        <div tabindex="0" role="button" class="btn btn-ghost lg:hidden text-white">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
           </svg>
         </div>
-        <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-200 rounded-box z-1 mt-3 w-52 p-2 shadow-lg border border-base-300">
-          <li><NuxtLink to="/courses" class="font-medium"><BookOpen class="w-4 h-4 text-primary" /> Courses</NuxtLink></li>
-          <li><NuxtLink to="/instructor/courses" class="font-medium"><Video class="w-4 h-4 text-secondary" /> Instructor Studio</NuxtLink></li>
+        <ul tabindex="0" class="menu menu-sm dropdown-content bg-[#0c0919] rounded-2xl z-50 mt-3 w-52 p-3 shadow-2xl border border-purple-900/40 text-slate-200">
+          <li><NuxtLink to="/onboarding" class="font-medium hover:text-yellow-400"><Building2 class="w-4 h-4 text-yellow-400" /> Create Academy</NuxtLink></li>
+          <li><NuxtLink to="/courses" class="font-medium hover:text-yellow-400"><BookOpen class="w-4 h-4 text-purple-400" /> Courses</NuxtLink></li>
+          <li><NuxtLink to="/instructor/courses" class="font-medium hover:text-yellow-400"><Video class="w-4 h-4 text-amber-400" /> Instructor Studio</NuxtLink></li>
         </ul>
       </div>
       
-      <NuxtLink to="/" class="btn btn-ghost text-xl font-bold gap-2 normal-case text-base-content hover:bg-transparent">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-primary-content font-black shadow-md shadow-primary/20">
+      <NuxtLink to="/" class="flex items-center space-x-3 group">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-yellow-400 to-amber-500 flex items-center justify-center font-black text-[#0c0919] shadow-lg shadow-yellow-500/20 group-hover:scale-105 transition-transform">
           A
         </div>
-        <span class="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent font-extrabold tracking-tight">
+        <span class="text-xl font-black tracking-tight text-white uppercase group-hover:text-yellow-400 transition-colors">
           AcademyOS
         </span>
       </NuxtLink>
     </div>
 
     <div class="navbar-center hidden lg:flex">
-      <ul class="menu menu-horizontal px-1 gap-1">
-        <li><NuxtLink to="/courses" class="font-medium hover:text-primary transition-colors"><BookOpen class="w-4 h-4" /> Course Catalog</NuxtLink></li>
-        <li><NuxtLink to="/instructor/courses" class="font-medium hover:text-secondary transition-colors"><Video class="w-4 h-4" /> Instructor Studio</NuxtLink></li>
+      <ul class="menu menu-horizontal px-1 gap-2 text-sm font-semibold text-slate-300">
+        <li><NuxtLink to="/onboarding" class="hover:text-yellow-400 transition-colors gap-2"><Building2 class="w-4 h-4 text-yellow-400" /> Create Academy</NuxtLink></li>
+        <li><NuxtLink to="/courses" class="hover:text-yellow-400 transition-colors gap-2"><BookOpen class="w-4 h-4 text-purple-400" /> Course Catalog</NuxtLink></li>
+        <li><NuxtLink to="/instructor/courses" class="hover:text-yellow-400 transition-colors gap-2"><Video class="w-4 h-4 text-amber-400" /> Instructor Studio</NuxtLink></li>
       </ul>
     </div>
 
     <div class="navbar-end gap-3">
-      <!-- Dark / Light Theme Toggle -->
-      <button
-        @click="toggleTheme"
-        class="btn btn-circle btn-ghost btn-sm text-base-content hover:bg-base-200 transition-all duration-300"
-        :title="theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
-      >
-        <Sun v-if="theme === 'dark'" class="w-5 h-5 text-warning transition-transform duration-300 rotate-0 hover:rotate-45" />
-        <Moon v-else class="w-5 h-5 text-primary transition-transform duration-300 rotate-0 hover:-rotate-12" />
-      </button>
+      <!-- Tenant Switcher Dropdown -->
+      <TenantSwitcher />
 
-      <NuxtLink to="/courses" class="btn btn-primary btn-sm md:btn-md gap-2 font-semibold shadow-lg shadow-primary/25 rounded-xl hover:scale-105 transition-all">
+      <NuxtLink to="/courses" class="px-5 py-2.5 rounded-full text-xs font-black text-[#0c0919] bg-[#facc15] hover:bg-[#fde047] shadow-lg shadow-yellow-500/20 hover:scale-105 transition-all uppercase flex items-center gap-2">
         <GraduationCap class="w-4 h-4" />
         Explore Courses
       </NuxtLink>
