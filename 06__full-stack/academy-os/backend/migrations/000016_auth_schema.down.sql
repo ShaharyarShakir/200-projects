@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS memberships;
+ALTER TABLE sessions DROP COLUMN IF EXISTS token_hash;
+ALTER TABLE users ALTER COLUMN email TYPE TEXT;
