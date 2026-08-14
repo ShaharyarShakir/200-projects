@@ -14,13 +14,17 @@ onMounted(async () => {
   }
 })
 
-function handleSelect(tenant: TenantMembership) {
-  selectTenant(tenant)
+function handleSelect(item: TenantMembership | any) {
+  selectTenant(item)
   isDropdownOpen.value = false
-  navigateTo(`/t/${tenant.slug}/dashboard`)
+  const targetSlug = item.tenant?.slug || item.slug
+  if (targetSlug) {
+    navigateTo(`/t/${targetSlug}/dashboard`)
+  }
 }
 
-function roleBadgeClass(role: string) {
+function roleBadgeClass(role?: string) {
+  if (!role) return 'badge-ghost'
   switch (role.toLowerCase()) {
     case 'owner':
       return 'badge-primary'
@@ -78,22 +82,22 @@ function roleBadgeClass(role: string) {
           </div>
 
           <button
-            v-for="t in tenants"
-            :key="t.id"
+            v-for="(t, idx) in tenants"
+            :key="t.tenant?.id || t.id || idx"
             @click="handleSelect(t)"
             class="w-full text-left p-2.5 rounded-xl hover:bg-base-200 transition-colors flex items-center justify-between group"
-            :class="{ 'bg-primary/5 border border-primary/20': currentTenant?.id === t.id }"
+            :class="{ 'bg-primary/5 border border-primary/20': currentTenant?.id === (t.tenant?.id || t.id) }"
           >
             <div class="flex items-center gap-2.5 min-w-0">
               <div
                 class="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 transition-colors"
-                :class="currentTenant?.id === t.id ? 'bg-primary text-primary-content' : 'bg-base-200 text-base-content/70 group-hover:bg-base-300'"
+                :class="currentTenant?.id === (t.tenant?.id || t.id) ? 'bg-primary text-primary-content' : 'bg-base-200 text-base-content/70 group-hover:bg-base-300'"
               >
-                {{ t.name.charAt(0).toUpperCase() }}
+                {{ (t.tenant?.name || t.name || 'T').charAt(0).toUpperCase() }}
               </div>
               <div class="min-w-0">
-                <div class="text-xs font-bold text-base-content truncate">{{ t.name }}</div>
-                <div class="text-[10px] font-mono text-base-content/50 truncate">@{{ t.slug }}</div>
+                <div class="text-xs font-bold text-base-content truncate">{{ t.tenant?.name || t.name }}</div>
+                <div class="text-[10px] font-mono text-base-content/50 truncate">@{{ t.tenant?.slug || t.slug }}</div>
               </div>
             </div>
 
@@ -101,7 +105,7 @@ function roleBadgeClass(role: string) {
               <span class="badge badge-xs font-mono text-[9px]" :class="roleBadgeClass(t.role)">
                 {{ t.role }}
               </span>
-              <Check v-if="currentTenant?.id === t.id" class="w-3.5 h-3.5 text-primary ml-1 shrink-0" />
+              <Check v-if="currentTenant?.id === (t.tenant?.id || t.id)" class="w-3.5 h-3.5 text-primary ml-1 shrink-0" />
             </div>
           </button>
         </div>
