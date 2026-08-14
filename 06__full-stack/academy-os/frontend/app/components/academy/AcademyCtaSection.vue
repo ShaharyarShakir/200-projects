@@ -44,7 +44,7 @@ onMounted(() => {
           </p>
 
           <div class="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-4">
-            <NuxtLink to="/tenants" class="px-8 py-4 rounded-2xl text-xs sm:text-sm font-black text-[#0c0919] bg-[#facc15] hover:bg-[#fde047] shadow-xl shadow-yellow-500/25 hover:scale-105 transition-all uppercase flex items-center gap-2">
+            <NuxtLink to="/onboarding" class="px-8 py-4 rounded-2xl text-xs sm:text-sm font-black text-[#0c0919] bg-[#facc15] hover:bg-[#fde047] shadow-xl shadow-yellow-500/25 hover:scale-105 transition-all uppercase flex items-center gap-2">
               <span>Create Your Academy</span>
               <ArrowRight class="w-4 h-4" />
             </NuxtLink>
