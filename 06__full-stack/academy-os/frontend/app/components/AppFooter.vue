@@ -1,18 +1,20 @@
 <template>
-  <footer class="footer footer-center p-10 bg-base-200 text-base-content border-t border-base-300 transition-colors duration-300 mt-auto">
-    <aside class="gap-2">
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-primary-content font-black shadow-md">
+  <footer class="p-10 bg-[#0c0919]/90 text-slate-300 border-t border-purple-900/40 mt-auto select-none">
+    <div class="max-w-7xl mx-auto flex flex-col items-center justify-center space-y-3 text-center">
+      <div class="flex items-center space-x-3 group">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-yellow-400 to-amber-500 flex items-center justify-center font-black text-[#0c0919] shadow-md shadow-yellow-500/20">
           A
         </div>
-        <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        <span class="text-xl font-black tracking-tight text-white uppercase group-hover:text-yellow-400 transition-colors">
           AcademyOS
         </span>
       </div>
-      <p class="font-medium text-sm text-base-content/70">
+      <p class="font-medium text-xs text-slate-400">
         Multi-Tenant Distributed Cloud Video Learning Platform
       </p>
-      <p class="text-xs text-base-content/50">Copyright © 2026 AcademyOS. Built with Go, Nuxt 4 & HLS Video Processing.</p>
-    </aside>
+      <p class="text-[11px] text-slate-500 font-mono">
+        Copyright © 2026 AcademyOS. Built with Go Monolith, Nuxt 4 & FFmpeg HLS Processing.
+      </p>
+    </div>
   </footer>
 </template>
