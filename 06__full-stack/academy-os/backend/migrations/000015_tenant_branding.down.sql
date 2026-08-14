@@ -1,0 +1,7 @@
+ALTER TABLE tenants
+DROP COLUMN IF EXISTS description,
+DROP COLUMN IF EXISTS logo_url,
+DROP COLUMN IF EXISTS favicon_url,
+DROP COLUMN IF EXISTS primary_color,
+DROP COLUMN IF EXISTS secondary_color,
+DROP COLUMN IF EXISTS custom_domain;
