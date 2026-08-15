@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { gsap } from 'gsap'
 
 const { academy } = useAcademy()
@@ -18,36 +18,34 @@ function onMouseMove(e: MouseEvent) {
   }
 }
 
-onMounted(() => {
-  if (heroSection.value && import.meta.client) {
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+onMounted(async () => {
+  if (!import.meta.client || !heroSection.value) return
+  await nextTick()
 
-    // Staggered Title & Callout reveal
-    tl.from(heroSection.value.querySelector('.gsap-hero-title'), {
-      opacity: 0,
-      y: 40,
-      duration: 1
-    })
-    .from(heroSection.value.querySelector('.gsap-hero-sub'), {
-      opacity: 0,
-      y: 20,
-      duration: 0.7
-    }, '-=0.6')
-    .from(heroSection.value.querySelectorAll('.gsap-hero-btn'), {
-      opacity: 0,
-      y: 20,
-      stagger: 0.15,
-      duration: 0.6
-    }, '-=0.4')
-    .from(heroSection.value.querySelector('.gsap-hero-stage'), {
-      opacity: 0,
-      scale: 0.9,
-      duration: 1,
-      ease: 'back.out(1.2)'
-    }, '-=0.5')
+  const title = heroSection.value.querySelector('.gsap-hero-title')
+  const sub = heroSection.value.querySelector('.gsap-hero-sub')
+  const btns = Array.from(heroSection.value.querySelectorAll('.gsap-hero-btn'))
+  const stage = heroSection.value.querySelector('.gsap-hero-stage')
 
-    // Continuous floating astronaut loop
-    gsap.to(heroSection.value.querySelectorAll('.gsap-astronaut-float'), {
+  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+
+  if (title) {
+    tl.fromTo(title, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 1 })
+  }
+  if (sub) {
+    tl.fromTo(sub, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7 }, '-=0.6')
+  }
+  if (btns.length > 0) {
+    tl.fromTo(btns, { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.15, duration: 0.6 }, '-=0.4')
+  }
+  if (stage) {
+    tl.fromTo(stage, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 1, ease: 'back.out(1.2)' }, '-=0.5')
+  }
+
+  // Continuous floating astronaut loop
+  const floaters = Array.from(heroSection.value.querySelectorAll('.gsap-astronaut-float'))
+  if (floaters.length > 0) {
+    gsap.to(floaters, {
       y: -16,
       rotate: -4,
       duration: 3.5,
@@ -55,9 +53,12 @@ onMounted(() => {
       yoyo: true,
       ease: 'sine.inOut'
     })
+  }
 
-    // Continuous planet pulse loop
-    gsap.to(heroSection.value.querySelectorAll('.gsap-planet-pulse'), {
+  // Continuous planet pulse loop
+  const pulsers = Array.from(heroSection.value.querySelectorAll('.gsap-planet-pulse'))
+  if (pulsers.length > 0) {
+    gsap.to(pulsers, {
       scale: 1.06,
       duration: 2.8,
       repeat: -1,
@@ -98,7 +99,7 @@ onMounted(() => {
         <NuxtLink to="/courses" class="gsap-hero-btn px-7 py-3 rounded-full text-xs sm:text-sm font-black text-[#0c0919] bg-[#facc15] hover:bg-[#fde047] shadow-xl shadow-yellow-500/25 hover:scale-105 transition-all duration-300 uppercase">
           Explore Courses
         </NuxtLink>
-        <NuxtLink to="/tenants" class="gsap-hero-btn px-7 py-3 rounded-full text-xs sm:text-sm font-bold text-slate-200 bg-white/5 hover:bg-white/10 border border-slate-700/80 transition-all duration-300 uppercase">
+        <NuxtLink to="/onboarding" class="gsap-hero-btn px-7 py-3 rounded-full text-xs sm:text-sm font-bold text-slate-200 bg-white/5 hover:bg-white/10 border border-slate-700/80 transition-all duration-300 uppercase">
           Create Your Academy
         </NuxtLink>
       </div>
