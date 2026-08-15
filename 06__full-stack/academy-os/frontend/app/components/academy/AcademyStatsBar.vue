@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Users, GraduationCap, Video, Globe, Zap, ShieldCheck } from 'lucide-vue-next'
@@ -17,22 +17,27 @@ const stats = [
   { label: 'Global Academies', value: 120, suffix: '+', icon: Globe, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30' }
 ]
 
-onMounted(() => {
-  if (statsContainer.value && import.meta.client) {
-    const cards = statsContainer.value.querySelectorAll('.gsap-stat-card')
-    
-    gsap.from(cards, {
-      opacity: 0,
-      y: 40,
-      scale: 0.9,
-      duration: 0.8,
-      stagger: 0.12,
-      ease: 'back.out(1.5)',
-      scrollTrigger: {
-        trigger: statsContainer.value,
-        start: 'top 85%'
+onMounted(async () => {
+  if (!import.meta.client || !statsContainer.value) return
+  await nextTick()
+
+  const cards = Array.from(statsContainer.value.querySelectorAll('.gsap-stat-card'))
+  if (cards.length > 0) {
+    gsap.fromTo(cards, 
+      { opacity: 0, y: 40, scale: 0.9 },
+      {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.8,
+        stagger: 0.12,
+        ease: 'back.out(1.5)',
+        scrollTrigger: {
+          trigger: statsContainer.value,
+          start: 'top 85%'
+        }
       }
-    })
+    )
 
     // Continuous floating animation
     gsap.to(cards, {
