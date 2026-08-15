@@ -2,3 +2,5 @@ node_modules
 .devbox
 .env
 tmp/
+
+.fake
