@@ -95,21 +95,26 @@ function handleMouseLeave(card: HTMLElement) {
   })
 }
 
-onMounted(() => {
-  if (featuresContainer.value && import.meta.client) {
-    const cards = featuresContainer.value.querySelectorAll('.gsap-feature-card')
+onMounted(async () => {
+  if (!import.meta.client || !featuresContainer.value) return
+  await nextTick()
 
-    gsap.from(cards, {
-      opacity: 0,
-      y: 50,
-      duration: 0.8,
-      stagger: 0.1,
-      ease: 'power3.out',
-      scrollTrigger: {
-        trigger: featuresContainer.value,
-        start: 'top 80%'
+  const cards = Array.from(featuresContainer.value.querySelectorAll('.gsap-feature-card'))
+  if (cards.length > 0) {
+    gsap.fromTo(cards, 
+      { opacity: 0, y: 50 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        stagger: 0.1,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: featuresContainer.value,
+          start: 'top 80%'
+        }
       }
-    })
+    )
   }
 })
 </script>
