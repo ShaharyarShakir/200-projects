@@ -1,6 +1,11 @@
 <script setup lang="ts">
 const { academy } = useAcademy()
-const { user } = useAuth()
+const { user, logout } = useAuth()
+
+const handleLogout = async () => {
+  await logout()
+  await navigateTo('/')
+}
 </script>
 
 <template>
@@ -41,6 +46,18 @@ const { user } = useAuth()
           >
             Dashboard
           </NuxtLink>
+
+          <div class="flex items-center space-x-3 pl-2 border-l border-purple-900/50">
+            <span class="text-xs text-slate-300 font-medium hidden sm:inline">
+              {{ user.name || user.email }}
+            </span>
+            <button
+              @click="handleLogout"
+              class="px-3 py-1 rounded-lg text-xs text-slate-400 hover:text-red-400 hover:bg-purple-950/50 transition-all uppercase font-semibold"
+            >
+              Logout
+            </button>
+          </div>
         </template>
 
         <template v-else>
