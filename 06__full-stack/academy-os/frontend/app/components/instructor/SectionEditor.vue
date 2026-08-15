@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useApi } from '~/composables/useApi'
+import { Plus, Loader2 } from 'lucide-vue-next'
 
 const props = defineProps<{
   courseId: string
@@ -22,8 +23,8 @@ async function createSection() {
   loading.value = true
 
   try {
-    await $fetch(
-      `${api.baseURL}/api/courses/${props.courseId}/sections`,
+    await api.request(
+      `/api/courses/${props.courseId}/sections`,
       {
         method: 'POST',
         body: {
@@ -31,6 +32,7 @@ async function createSection() {
         }
       }
     )
+
 
     title.value = ''
     emit('created')
@@ -43,40 +45,21 @@ async function createSection() {
 </script>
 
 <template>
-  <form @submit.prevent="createSection" class="section-editor">
+  <form @submit.prevent="createSection" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
     <input
       v-model="title"
-      placeholder="Section title"
-      class="editor-input"
+      placeholder="New section title (e.g. Introduction to Architecture)"
+      class="flex-1 bg-[#0c0919] border border-purple-900/60 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 text-white placeholder-slate-500 rounded-2xl px-4 py-3 text-xs sm:text-sm font-medium outline-none transition-all"
     />
-    <button type="submit" :disabled="loading" class="btn-primary">
-      Add Section
+    <button
+      type="submit"
+      :disabled="loading || !title.trim()"
+      class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs font-black text-[#0c0919] bg-[#facc15] hover:bg-[#fde047] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-yellow-500/20 hover:scale-105 transition-all uppercase tracking-wider shrink-0 cursor-pointer"
+    >
+      <Loader2 v-if="loading" class="w-4 h-4 animate-spin" />
+      <Plus v-else class="w-4 h-4 stroke-[3]" />
+      <span>Add Section</span>
     </button>
   </form>
 </template>
 
-<style scoped>
-.section-editor {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-.editor-input {
-  flex: 1;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-.btn-primary {
-  padding: 0.5rem 1rem;
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-</style>
