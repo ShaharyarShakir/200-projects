@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useApi } from '~/composables/useApi'
+import { Plus, Loader2 } from 'lucide-vue-next'
 
 const props = defineProps<{
   courseId: string
@@ -23,8 +24,8 @@ async function createLesson() {
   loading.value = true
 
   try {
-    await $fetch(
-      `${api.baseURL}/api/courses/${props.courseId}/sections/${props.sectionId}/lessons`,
+    await api.request(
+      `/api/courses/${props.courseId}/sections/${props.sectionId}/lessons`,
       {
         method: 'POST',
         body: {
@@ -32,6 +33,7 @@ async function createLesson() {
         }
       }
     )
+
 
     title.value = ''
     emit('created')
@@ -44,40 +46,21 @@ async function createLesson() {
 </script>
 
 <template>
-  <form @submit.prevent="createLesson" class="lesson-editor">
+  <form @submit.prevent="createLesson" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
     <input
       v-model="title"
-      placeholder="Lesson title"
-      class="editor-input"
+      placeholder="Add new lesson title..."
+      class="flex-1 bg-[#0c0919] border border-purple-900/40 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/20 text-white placeholder-slate-500 rounded-xl px-3.5 py-2.5 text-xs font-medium outline-none transition-all"
     />
-    <button type="submit" :disabled="loading" class="btn-secondary">
-      Add Lesson
+    <button
+      type="submit"
+      :disabled="loading || !title.trim()"
+      class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-200 bg-purple-900/40 hover:bg-purple-800/50 border border-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-all uppercase tracking-wider shrink-0 cursor-pointer"
+    >
+      <Loader2 v-if="loading" class="w-3.5 h-3.5 animate-spin" />
+      <Plus v-else class="w-3.5 h-3.5" />
+      <span>Add Lesson</span>
     </button>
   </form>
 </template>
 
-<style scoped>
-.lesson-editor {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-.editor-input {
-  flex: 1;
-  padding: 0.4rem 0.6rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-.btn-secondary {
-  padding: 0.4rem 0.8rem;
-  background-color: #4b5563;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.btn-secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-</style>
