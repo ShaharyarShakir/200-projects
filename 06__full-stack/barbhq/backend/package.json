@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "nodemon -L --watch src -e ts --exec tsx src/server.ts",
     "start": "tsx src/server.ts",
     "build": "tsc",
     "lint": "eslint src/**/*.ts",

@@ -28,6 +28,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AppMyAttendanceRouteImport } from './routes/app.my-attendance'
 import { Route as AppAttendanceIndexRouteImport } from './routes/app.attendance.index'
 import { Route as AppAttendanceAttendanceIdRouteImport } from './routes/app.attendance.$attendanceId'
@@ -139,6 +140,11 @@ const ServicesRoute = ServicesRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppMyAttendanceRoute = AppMyAttendanceRouteImport.update({
@@ -255,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof ReportsRoute
   '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
+  '/signup': typeof SignupRoute
   '/app/my-attendance': typeof AppMyAttendanceRoute
   '/app/attendance/$attendanceId': typeof AppAttendanceAttendanceIdRoute
   '/app/inventory/adjustments': typeof AppInventoryAdjustmentsRoute
@@ -293,6 +300,7 @@ export interface FileRoutesByTo {
   '/reports': typeof ReportsRoute
   '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
+  '/signup': typeof SignupRoute
   '/app/my-attendance': typeof AppMyAttendanceRoute
   '/app/attendance/$attendanceId': typeof AppAttendanceAttendanceIdRoute
   '/app/inventory/adjustments': typeof AppInventoryAdjustmentsRoute
@@ -331,6 +339,7 @@ export interface FileRoutesById {
   '/reports': typeof ReportsRoute
   '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
+  '/signup': typeof SignupRoute
   '/app/my-attendance': typeof AppMyAttendanceRoute
   '/app/attendance/$attendanceId': typeof AppAttendanceAttendanceIdRoute
   '/app/inventory/adjustments': typeof AppInventoryAdjustmentsRoute
@@ -371,6 +380,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/services'
     | '/settings'
+    | '/signup'
     | '/app/my-attendance'
     | '/app/attendance/$attendanceId'
     | '/app/inventory/adjustments'
@@ -409,6 +419,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/services'
     | '/settings'
+    | '/signup'
     | '/app/my-attendance'
     | '/app/attendance/$attendanceId'
     | '/app/inventory/adjustments'
@@ -446,6 +457,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/services'
     | '/settings'
+    | '/signup'
     | '/app/my-attendance'
     | '/app/attendance/$attendanceId'
     | '/app/inventory/adjustments'
@@ -485,6 +497,7 @@ export interface RootRouteChildren {
   ReportsRoute: typeof ReportsRoute
   ServicesRoute: typeof ServicesRoute
   SettingsRoute: typeof SettingsRoute
+  SignupRoute: typeof SignupRoute
   AppMyAttendanceRoute: typeof AppMyAttendanceRoute
   AppAttendanceAttendanceIdRoute: typeof AppAttendanceAttendanceIdRoute
   AppInventoryAdjustmentsRoute: typeof AppInventoryAdjustmentsRoute
@@ -630,6 +643,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/my-attendance': {
@@ -815,6 +835,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReportsRoute: ReportsRoute,
   ServicesRoute: ServicesRoute,
   SettingsRoute: SettingsRoute,
+  SignupRoute: SignupRoute,
   AppMyAttendanceRoute: AppMyAttendanceRoute,
   AppAttendanceAttendanceIdRoute: AppAttendanceAttendanceIdRoute,
   AppInventoryAdjustmentsRoute: AppInventoryAdjustmentsRoute,
