@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazingInvoices", "BlazingInvoices.csproj", "{27E81D02-292C-444F-880D-16369FE5EFF4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{27E81D02-292C-444F-880D-16369FE5EFF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27E81D02-292C-444F-880D-16369FE5EFF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27E81D02-292C-444F-880D-16369FE5EFF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27E81D02-292C-444F-880D-16369FE5EFF4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
