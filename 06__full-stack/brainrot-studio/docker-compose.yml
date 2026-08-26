@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: brainrot-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: brainrot
+      POSTGRES_PASSWORD: brainrot
+      POSTGRES_DB: brainrot
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brainrot -d brainrot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  storage:
+    build:
+      context: .
+      dockerfile: Dockerfile.garage
+    container_name: brainrot-storage
+    restart: unless-stopped
+    ports:
+      - "9000:3900"
+      - "3903:3903"
+    volumes:
+      - garage_meta:/tmp/garage/meta
+      - garage_data:/tmp/garage/data
+
+  redis:
+    image: redis:8-alpine
+    container_name: brainrot-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
+  garage_meta:
+  garage_data:
