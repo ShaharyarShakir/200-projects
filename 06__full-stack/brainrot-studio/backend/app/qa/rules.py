@@ -1,0 +1,31 @@
+import os
+
+TARGET_WIDTH = int(os.getenv("VIDEO_WIDTH", "1080"))
+TARGET_HEIGHT = int(os.getenv("VIDEO_HEIGHT", "1920"))
+DEV_ALLOWED_WIDTH = 720
+DEV_ALLOWED_HEIGHT = 1280
+
+EXPECTED_VIDEO_CODEC = os.getenv("VIDEO_CODEC", "h264")
+EXPECTED_AUDIO_CODEC = os.getenv("AUDIO_CODEC", "aac")
+
+MAX_SHORT_DURATION_SEC = float(os.getenv("MAX_SHORT_DURATION", "60.0"))
+MAX_SILENCE_PER_SCENE_SEC = 2.5
+MIN_SCENE_DURATION_MS = 1500
+MAX_SCENE_DURATION_MS = 15000
+MAX_SLOW_SCENE_MS = 10000
+MIN_DIALOGUE_DENSITY_RATIO = 0.20
+
+QA_CATEGORY_WEIGHTS = {
+    "media": 0.10,
+    "timeline": 0.15,
+    "audio": 0.15,
+    "captions": 0.10,
+    "assets": 0.10,
+    "story": 0.20,
+    "visual": 0.20,
+}
+
+PASS_SCORE_THRESHOLD = 75.0
+MAX_QA_RETRIES = int(os.getenv("MAX_QA_RETRIES", "2"))
+MAX_AI_REPAIRS = int(os.getenv("MAX_AI_REPAIRS", "2"))
+
