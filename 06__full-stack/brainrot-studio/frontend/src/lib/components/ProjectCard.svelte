@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Project } from '$lib/types/project';
-	import { Folder, Video, Plus, MoreVertical, Trash2 } from 'lucide-svelte';
+	import { Folder, Video, Plus, MoreVertical, Trash2, Sparkles } from 'lucide-svelte';
+
 
 	let {
 		project,
@@ -73,25 +74,28 @@
 
 	<!-- Card Footer Section -->
 	<div class="mt-6 border-t border-white/10 pt-4 flex items-center justify-between">
-		<span class="text-[11px] text-gray-500">
+		<span class="text-[11px] font-mono text-gray-500">
 			Created {formatDate(project.created_at)}
 		</span>
 
 		<div class="flex items-center gap-2">
 			<button
 				onclick={() => onViewVideos(project)}
-				class="btn btn-ghost btn-xs text-gray-300 hover:text-white rounded-lg px-2 text-[11px]"
+				class="btn btn-ghost btn-xs text-gray-300 hover:text-white rounded-xl px-2 text-[11px] flex items-center gap-1"
 			>
-				Videos
+				<Video class="h-3 w-3 text-cyan-400" />
+				<span>Videos</span>
 			</button>
 			<button
 				onclick={() => onCreateVideo(project)}
-				class="btn-emerald btn-xs px-3 rounded-lg text-[11px] font-semibold flex items-center gap-1"
+				class="btn-emerald btn-xs px-3 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 shadow-md shadow-emerald-500/20 active:scale-95 transition-all"
+				title="Create new video and trigger AI generation"
 			>
-				<Plus class="h-3 w-3" />
-				New
+				<Sparkles class="h-3 w-3" />
+				<span>+ Video</span>
 			</button>
 		</div>
 	</div>
+
 </div>
 ```...
