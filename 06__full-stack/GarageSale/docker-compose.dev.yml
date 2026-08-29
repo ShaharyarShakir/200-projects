@@ -1,0 +1,57 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    container_name: garagesale-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "${SA_PASSWORD}"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${SA_PASSWORD}' -Q 'SELECT 1' -b -o /dev/null -No || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  garagesale:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: garagesale-app
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://+:8080"
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
+      DOTNET_WATCH_SUPPRESS_BROWSER_REFRESH: "false"
+      # dotnet watch's refresh WS binds loopback-only (127.0.0.1) so it can
+      # advertise a browser-connectable "localhost" URL. Loopback isn't
+      # reachable through Docker's port mapping, so entrypoint.dev.sh relays
+      # WS_RELAY_LISTEN_PORT (published below) to it from all interfaces.
+      DOTNET_WATCH_AUTO_RELOAD_WS_PORT: "7011"
+      DOTNET_WATCH_AUTO_RELOAD_WS_HOSTNAME: "127.0.0.1"
+      WS_RELAY_LISTEN_PORT: "17011"
+
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=${DB_NAME};User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      OpenAIKey: "${OPENAI_KEY}"
+      AdminReviewOpenAIPrompt: "${ADMIN_REVIEW_OPENAI_PROMPT}"
+
+    ports:
+      - "8080:8080"
+      - "7011:17011"
+
+    volumes:
+      - .:/src:Z
+      - /src/bin
+      - /src/obj
+
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+volumes:
+  sqlserver_data:
