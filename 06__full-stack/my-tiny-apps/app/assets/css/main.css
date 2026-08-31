@@ -1,0 +1,204 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+
+  --color-base-100: oklch(99.5% 0.002 165);
+  --color-base-200: oklch(96.8% 0.006 165);
+  --color-base-300: oklch(91.5% 0.012 165);
+  --color-base-content: oklch(18% 0.022 165);
+
+  --color-primary: oklch(52% 0.19 160);
+  --color-primary-content: oklch(99.5% 0.002 160);
+
+  --color-secondary: oklch(60% 0.16 200);
+  --color-secondary-content: oklch(99% 0.005 200);
+
+  --color-accent: oklch(72% 0.17 140);
+  --color-accent-content: oklch(16% 0.04 140);
+
+  --color-neutral: oklch(20% 0.025 165);
+  --color-neutral-content: oklch(98% 0.005 165);
+
+  --color-info: oklch(62% 0.16 230);
+  --color-info-content: oklch(99% 0.005 230);
+
+  --color-success: oklch(62% 0.18 145);
+  --color-success-content: oklch(99% 0.005 145);
+
+  --color-warning: oklch(74% 0.15 75);
+  --color-warning-content: oklch(18% 0.04 75);
+
+  --color-error: oklch(58% 0.22 25);
+  --color-error-content: oklch(99% 0.005 25);
+
+  --radius-box: 1rem;
+  --radius-field: 0.625rem;
+  --radius-selector: 0.625rem;
+}
+
+@plugin "daisyui/theme" {
+  name: "dark";
+  prefersdark: true;
+
+  --color-base-100: oklch(14% 0.014 165);
+  --color-base-200: oklch(18% 0.018 165);
+  --color-base-300: oklch(25% 0.024 165);
+  --color-base-content: oklch(96% 0.006 165);
+
+  --color-primary: oklch(72% 0.18 160);
+  --color-primary-content: oklch(14% 0.035 160);
+
+  --color-secondary: oklch(72% 0.15 200);
+  --color-secondary-content: oklch(13% 0.03 200);
+
+  --color-accent: oklch(78% 0.18 140);
+  --color-accent-content: oklch(14% 0.04 140);
+
+  --color-neutral: oklch(10% 0.01 165);
+  --color-neutral-content: oklch(92% 0.008 165);
+
+  --color-info: oklch(72% 0.15 230);
+  --color-info-content: oklch(14% 0.03 230);
+
+  --color-success: oklch(74% 0.16 145);
+  --color-success-content: oklch(14% 0.04 145);
+
+  --color-warning: oklch(78% 0.15 75);
+  --color-warning-content: oklch(18% 0.04 75);
+
+  --color-error: oklch(68% 0.20 25);
+  --color-error-content: oklch(15% 0.04 25);
+
+  --radius-box: 1rem;
+  --radius-field: 0.625rem;
+  --radius-selector: 0.625rem;
+}
+
+/* Subtle typography smoothing & base defaults */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+}
+
+/* Accessible focus ring defaults */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Base button refinements for a cohesive microinteraction feel */
+.btn {
+  font-family: inherit;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  box-shadow: 0 1px 2px 0 oklch(0 0 0 / 0.05), inset 0 1px 0 0 oklch(1 0 0 / 0.15);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px oklch(52% 0.19 160 / 0.3);
+}
+
+.dark .btn-primary:hover {
+  box-shadow: 0 4px 14px -2px oklch(72% 0.18 160 / 0.25);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Microinteraction Arrow transitions */
+.arrow-nudge {
+  display: inline-block;
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.group:hover .arrow-nudge,
+.btn:hover .arrow-nudge {
+  transform: translateX(3px);
+}
+
+/* Ambient dotted background micro-texture */
+.bg-grid-pattern {
+  background-image: radial-gradient(circle, var(--color-base-content) 0.75px, transparent 0.75px);
+  background-size: 24px 24px;
+}
+
+/* Entrance animation utilities */
+@keyframes heroFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-hero-fade {
+  animation: heroFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animation-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+/* Prose refinements */
+.prose {
+  color: var(--color-base-content);
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  color: var(--color-base-content);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.prose p {
+  color: color-mix(in oklch, var(--color-base-content) 75%, transparent);
+  line-height: 1.75;
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+    transform: none !important;
+  }
+}
