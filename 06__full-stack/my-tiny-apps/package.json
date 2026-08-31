@@ -1,0 +1,28 @@
+{
+  "name": "my-tiny-apps",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxt/eslint": "1.17.0",
+    "@nuxt/icon": "2.5.1",
+    "@nuxt/image": "2.1.0",
+    "@nuxtjs/color-mode": "^4.0.1",
+    "eslint": "^9.0.0 || ^10.0.0",
+    "nuxt": "^4.5.2",
+    "vue": "^3.5.41",
+    "vue-router": "^5.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.2.0",
+    "daisyui": "^5.7.22",
+    "tailwindcss": "^4.3.3"
+  }
+}
