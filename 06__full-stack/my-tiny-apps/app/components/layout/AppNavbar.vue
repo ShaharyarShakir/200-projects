@@ -37,14 +37,14 @@ const isRouteActive = (path: string) => {
 
 <template>
   <header
-    class="sticky top-0 z-40 w-full border-b border-base-300/80 bg-base-100/80 backdrop-blur-md transition-colors duration-200"
+    class="top-0 z-40 sticky bg-base-100/80 backdrop-blur-md border-base-300/80 border-b w-full transition-colors duration-200"
   >
-    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl h-16">
       <!-- Brand -->
       <div class="flex items-center">
         <NuxtLink
           to="/"
-          class="group inline-flex items-center gap-2 transition-opacity duration-200 hover:opacity-95 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+          class="group inline-flex items-center gap-2 hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 transition-opacity duration-200"
           aria-label="My Tiny Apps Homepage"
           @click="closeMobileMenu"
         >
@@ -53,10 +53,10 @@ const isRouteActive = (path: string) => {
       </div>
 
       <!-- Desktop Navigation -->
-      <nav class="hidden items-center gap-1 sm:flex" aria-label="Main Navigation">
+      <nav class="hidden sm:flex items-center gap-1" aria-label="Main Navigation">
         <NuxtLink
           to="/apps"
-          class="relative rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-150"
+          class="relative px-3.5 py-1.5 rounded-lg font-medium text-sm transition-all duration-150"
           :class="
             isRouteActive('/apps')
               ? 'bg-base-200/90 text-primary font-semibold'
@@ -66,14 +66,14 @@ const isRouteActive = (path: string) => {
           <span>Apps</span>
           <span
             v-if="isRouteActive('/apps')"
-            class="absolute -bottom-2.5 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-primary"
+            class="-bottom-2.5 left-1/2 absolute bg-primary rounded-full w-4 h-0.5 -translate-x-1/2"
             aria-hidden="true"
           />
         </NuxtLink>
 
         <NuxtLink
           to="/support"
-          class="relative rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all duration-150"
+          class="relative px-3.5 py-1.5 rounded-lg font-medium text-sm transition-all duration-150"
           :class="
             isRouteActive('/support')
               ? 'bg-base-200/90 text-primary font-semibold'
@@ -83,7 +83,7 @@ const isRouteActive = (path: string) => {
           <span>Support</span>
           <span
             v-if="isRouteActive('/support')"
-            class="absolute -bottom-2.5 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-primary"
+            class="-bottom-2.5 left-1/2 absolute bg-primary rounded-full w-4 h-0.5 -translate-x-1/2"
             aria-hidden="true"
           />
         </NuxtLink>
@@ -96,7 +96,7 @@ const isRouteActive = (path: string) => {
         <!-- Mobile Menu Toggle Button -->
         <button
           type="button"
-          class="flex h-9 w-9 items-center justify-center rounded-xl border border-base-300/80 bg-base-100/80 text-base-content/80 shadow-2xs backdrop-blur-xs transition-all duration-200 hover:border-primary/40 hover:bg-base-200/80 sm:hidden"
+          class="sm:hidden flex justify-center items-center bg-base-100/80 hover:bg-base-200/80 shadow-2xs backdrop-blur-xs border border-base-300/80 hover:border-primary/40 rounded-xl w-9 h-9 text-base-content/80 transition-all duration-200"
           aria-label="Toggle mobile menu"
           :aria-expanded="mobileMenuOpen"
           @click="mobileMenuOpen = !mobileMenuOpen"
@@ -104,7 +104,7 @@ const isRouteActive = (path: string) => {
           <svg
             v-if="!mobileMenuOpen"
             xmlns="http://www.w3.org/2000/svg"
-            class="h-4.5 w-4.5"
+            class="w-4.5 h-4.5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -121,7 +121,7 @@ const isRouteActive = (path: string) => {
           <svg
             v-else
             xmlns="http://www.w3.org/2000/svg"
-            class="h-4.5 w-4.5"
+            class="w-4.5 h-4.5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -149,12 +149,12 @@ const isRouteActive = (path: string) => {
     >
       <div
         v-if="mobileMenuOpen"
-        class="border-t border-base-300/80 bg-base-100/95 px-4 py-3 shadow-lg backdrop-blur-md sm:hidden"
+        class="sm:hidden bg-base-100/95 shadow-lg backdrop-blur-md px-4 py-3 border-base-300/80 border-t"
       >
         <nav class="flex flex-col gap-1" aria-label="Mobile Navigation">
           <NuxtLink
             to="/apps"
-            class="flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
+            class="flex justify-between items-center px-4 py-2.5 rounded-xl font-medium text-sm transition-colors"
             :class="
               isRouteActive('/apps')
                 ? 'bg-primary/10 text-primary font-semibold'
@@ -168,7 +168,7 @@ const isRouteActive = (path: string) => {
 
           <NuxtLink
             to="/support"
-            class="flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
+            class="flex justify-between items-center px-4 py-2.5 rounded-xl font-medium text-sm transition-colors"
             :class="
               isRouteActive('/support')
                 ? 'bg-primary/10 text-primary font-semibold'
