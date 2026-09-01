@@ -8,32 +8,32 @@ defineProps<{
 
 <template>
   <article
-    class="group relative flex flex-col justify-between rounded-2xl border border-base-300/90 bg-base-100/90 p-6 sm:p-7 shadow-xs backdrop-blur-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/45 hover:shadow-lg hover:shadow-primary/5 focus-within:ring-2 focus-within:ring-primary/60"
+    class="group relative flex flex-col justify-between bg-base-100/90 shadow-xs hover:shadow-lg hover:shadow-primary/5 backdrop-blur-xs p-6 sm:p-7 border border-base-300/90 hover:border-primary/45 rounded-2xl focus-within:ring-2 focus-within:ring-primary/60 transition-all hover:-translate-y-0.5 duration-200"
   >
     <div>
       <!-- Top row: Icon & Status / Platform Badges -->
-      <div class="flex items-start justify-between gap-4">
+      <div class="flex justify-between items-start gap-4">
         <!-- App Icon with subtle depth -->
         <div
-          class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-base-300/70 bg-base-200/70 text-3xl shadow-2xs transition-transform duration-300 group-hover:scale-105 select-none"
+          class="flex justify-center items-center bg-base-200/70 shadow-2xs border border-base-300/70 rounded-2xl w-14 h-14 text-3xl group-hover:scale-105 transition-transform duration-300 select-none shrink-0"
         >
           {{ product.icon }}
         </div>
 
-        <div class="flex flex-wrap items-center justify-end gap-1.5">
+        <div class="flex flex-wrap justify-end items-center gap-1.5">
           <!-- Status Badge -->
           <span
             v-if="product.status === 'coming-soon'"
-            class="inline-flex items-center gap-1.5 rounded-full border border-base-300 bg-base-200/80 px-2.5 py-0.5 text-xs font-medium text-base-content/75 shadow-2xs"
+            class="inline-flex items-center gap-1.5 bg-base-200/80 shadow-2xs px-2.5 py-0.5 border border-base-300 rounded-full font-medium text-xs text-base-content/75"
           >
-            <span class="h-1.5 w-1.5 rounded-full bg-amber-400" />
+            <span class="bg-amber-400 rounded-full w-1.5 h-1.5" />
             <span>Coming soon</span>
           </span>
           <span
             v-else
-            class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 shadow-2xs"
+            class="inline-flex items-center gap-1.5 bg-emerald-500/10 shadow-2xs px-2.5 py-0.5 border border-emerald-500/20 rounded-full font-medium text-emerald-600 dark:text-emerald-400 text-xs"
           >
-            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span class="bg-emerald-500 rounded-full w-1.5 h-1.5 animate-pulse" />
             <span>Available</span>
           </span>
 
@@ -41,7 +41,7 @@ defineProps<{
           <span
             v-for="platform in product.platforms"
             :key="platform"
-            class="rounded-md border border-base-300/70 bg-base-200/40 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-base-content/55"
+            class="bg-base-200/40 px-2 py-0.5 border border-base-300/70 rounded-md font-semibold text-[11px] text-base-content/55 uppercase tracking-wider"
           >
             {{ platform }}
           </span>
@@ -50,33 +50,33 @@ defineProps<{
 
       <!-- App details -->
       <div class="mt-6">
-        <h3 class="text-xl font-bold tracking-tight text-base-content transition-colors duration-150 group-hover:text-primary">
+        <h3 class="font-bold group-hover:text-primary text-base-content text-xl tracking-tight transition-colors duration-150">
           <NuxtLink :to="`/apps/${product.slug}`" class="focus-visible:outline-none">
             {{ product.name }}
           </NuxtLink>
         </h3>
 
-        <p class="mt-2.5 text-sm leading-relaxed text-base-content/70">
+        <p class="mt-2.5 text-sm text-base-content/70 leading-relaxed">
           {{ product.shortDescription }}
         </p>
       </div>
     </div>
 
     <!-- Bottom row: Pricing & Action -->
-    <div class="mt-8 flex items-center justify-between border-t border-base-300/80 pt-5">
+    <div class="flex justify-between items-center mt-8 pt-5 border-base-300/80 border-t">
       <div>
-        <span class="block text-[11px] font-semibold uppercase tracking-wider text-base-content/45">
+        <span class="block font-semibold text-[11px] text-base-content/45 uppercase tracking-wider">
           One-time purchase
         </span>
-        <div class="mt-0.5 flex items-baseline gap-1 text-2xl font-extrabold tracking-tight text-base-content">
+        <div class="flex items-baseline gap-1 mt-0.5 font-extrabold text-base-content text-2xl tracking-tight">
           <span>${{ product.price }}</span>
-          <span class="text-xs font-medium text-base-content/45 uppercase">{{ product.currency }}</span>
+          <span class="font-medium text-xs text-base-content/45 uppercase">{{ product.currency }}</span>
         </div>
       </div>
 
       <NuxtLink
         :to="`/apps/${product.slug}`"
-        class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-content shadow-xs transition-all duration-180 hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 focus-visible:outline-none"
+        class="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 shadow-xs hover:shadow-md hover:shadow-primary/20 px-4 py-2 rounded-xl focus-visible:outline-none font-semibold text-primary-content text-sm active:scale-95 transition-all duration-180"
       >
         <span>View app</span>
         <span class="arrow-nudge" aria-hidden="true">→</span>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="logo-bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="50%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <linearGradient id="facet-top" x1="50" y1="5" x2="50" y2="95" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.05" />
+    </linearGradient>
+
+    <linearGradient id="facet-bot" x1="50" y1="5" x2="50" y2="95" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.3" />
+    </linearGradient>
+
+    <filter id="soft-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Hexagon Outer Shape -->
+  <path d="M50 7.5L87.5 29.15V70.85L50 92.5L12.5 70.85V29.15L50 7.5Z" fill="url(#logo-bg)" />
+
+  <!-- Shading Facets -->
+  <path d="M50 7.5L87.5 29.15L70 38.75L50 27.5L30 38.75L12.5 29.15L50 7.5Z" fill="url(#facet-top)" />
+  <path d="M12.5 70.85L50 92.5L50 72.5L30 61.25L12.5 70.85Z" fill="url(#facet-bot)" />
+  <path d="M87.5 70.85L50 92.5L50 72.5L70 61.25L87.5 70.85Z" fill="url(#facet-bot)" />
+
+  <!-- Inner Geometric Jewel -->
+  <path d="M50 27.5L70 38.75V61.25L50 72.5L30 61.25V38.75L50 27.5Z" fill="#ffffff" fill-opacity="0.2" stroke="#ffffff" stroke-opacity="0.5" stroke-width="2" />
+
+  <!-- Central Sparkle Star -->
+  <path d="M50 35C50 43.5 43.5 50 35 50C43.5 50 50 56.5 50 65C50 56.5 56.5 50 65 50C56.5 50 50 43.5 50 35Z" fill="#ffffff" filter="url(#soft-glow)" />
+</svg>
+
