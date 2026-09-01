@@ -7,13 +7,20 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "bun run server/db/seed.ts",
+    "test:webhook": "bun run scripts/test-webhook.ts"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.4",
     "@nuxt/eslint": "1.17.0",
     "@nuxt/icon": "2.5.1",
     "@nuxt/image": "2.1.0",
     "@nuxtjs/color-mode": "^4.0.1",
+    "drizzle-orm": "^0.45.2",
     "eslint": "^9.0.0 || ^10.0.0",
     "nuxt": "^4.5.2",
     "vue": "^3.5.41",
@@ -23,6 +30,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.2.0",
     "daisyui": "^5.7.22",
+    "drizzle-kit": "^0.31.10",
     "tailwindcss": "^4.3.3"
   }
 }
