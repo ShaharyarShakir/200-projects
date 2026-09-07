@@ -1,0 +1,13 @@
+[project]
+name = "creatorflow-api"
+version = "0.1.0"
+description = "AI-assisted video production backend"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
