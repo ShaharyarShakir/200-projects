@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: creatorflow-api
+Version: 0.1.0
+Summary: AI-assisted video production backend
+Requires-Python: >=3.12
+Requires-Dist: fastapi
+Requires-Dist: uvicorn[standard]
