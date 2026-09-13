@@ -26,7 +26,7 @@
         </div>
 
         <!-- Links -->
-        <div class="gap-x-12 gap-y-4 sm:gap-x-16 grid grid-cols-2 text-sm">
+        <div class="gap-x-6 gap-y-4 sm:gap-x-12 lg:gap-x-16 grid grid-cols-2 text-sm">
           <div class="flex flex-col gap-2.5">
             <p class="font-bold text-xs text-base-content/45 uppercase tracking-wider">
               Store

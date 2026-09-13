@@ -14,7 +14,7 @@ const handleError = () => clearError({ redirect: '/' })
 </script>
 
 <template>
-  <div class="flex flex-col justify-center items-center bg-base-100 selection:bg-primary/20 px-4 py-20 min-h-screen selection:text-primary text-base-content">
+  <div class="flex flex-col justify-center items-center bg-base-100 selection:bg-primary/20 px-4 py-12 sm:py-20 min-h-screen selection:text-primary text-base-content">
     <div
       class="relative bg-base-100/90 shadow-md backdrop-blur-xs p-8 sm:p-10 border border-base-300/90 rounded-3xl w-full max-w-md overflow-hidden text-center"
     >
