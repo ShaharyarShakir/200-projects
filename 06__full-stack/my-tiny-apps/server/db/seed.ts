@@ -19,8 +19,8 @@ export async function seed() {
       slug: 'tiny-compressor',
       name: 'Tiny Compressor',
       description:
-        'Minimal, fast, on-device image and PDF compression utility for Android and iOS.',
-      priceCents: 500,
+        'Minimal, fast, on-device image and PDF compression utility for Android.',
+      priceCents: 700,
       currency: 'USD',
       paddleProductId: process.env.PADDLE_PRODUCT_ID || null,
       paddlePriceId: process.env.PADDLE_PRICE_ID || null,
