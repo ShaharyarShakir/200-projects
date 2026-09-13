@@ -62,15 +62,16 @@ useSeoMeta({
         </NuxtLink>
 
         <!-- Main Product Grid: Details & Purchase Card -->
-        <div class="gap-10 lg:gap-14 grid lg:grid-cols-[1fr_360px] mt-8">
+        <div class="grid gap-6 lg:gap-14 grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_360px] mt-8">
           <!-- Left Column: Product Details & Showcase -->
-          <div>
+          <div class="min-w-0">
             <!-- Header Row with Icon -->
-            <div class="flex items-start gap-6">
+            <div class="flex items-start gap-4 sm:gap-6">
               <div
-                class="flex justify-center items-center bg-base-200/60 shadow-xs border border-base-300/80 rounded-3xl w-20 h-20 text-4xl select-none shrink-0"
+                class="flex justify-center items-center bg-base-200/60 shadow-xs border border-base-300/80 rounded-3xl w-16 h-16 sm:w-20 sm:h-20 overflow-hidden select-none shrink-0 text-3xl sm:text-4xl text-primary"
               >
-                {{ product.icon }}
+                <img v-if="product.icon?.startsWith('/')" :src="product.icon" :alt="product.name" class="w-full h-full object-contain" />
+                <Icon v-else :name="product.icon" />
               </div>
 
               <div class="flex-1">
@@ -129,13 +130,13 @@ useSeoMeta({
             </div>
           </div>
 
-          <!-- Right Column: Sticky Purchase Card -->
-          <div class="lg:relative">
+          <!-- Right Column: Sticky Purchase Card (first on mobile) -->
+          <div class="order-first lg:order-none lg:relative min-w-0">
             <div
-              class="lg:top-24 lg:sticky bg-base-100/90 shadow-xs backdrop-blur-xs p-7 border border-base-300/90 rounded-3xl transition-colors"
+              class="lg:top-24 lg:sticky bg-base-100/90 shadow-xs backdrop-blur-xs p-5 sm:p-7 border border-base-300/90 rounded-3xl transition-colors"
             >
               <!-- Card Header -->
-              <div class="flex justify-between items-center">
+              <div class="flex justify-between items-start gap-3">
                 <span class="font-bold text-xs text-base-content/50 uppercase tracking-wider">
                   One-time purchase
                 </span>
@@ -146,7 +147,7 @@ useSeoMeta({
 
               <!-- Price Typography -->
               <div class="flex items-baseline gap-1.5 mt-4">
-                <span class="font-extrabold text-base-content text-4xl tracking-tight">
+                <span class="font-extrabold text-base-content text-3xl sm:text-4xl tracking-tight">
                   ${{ product.price }}
                 </span>
                 <span class="font-mono font-semibold text-xs text-base-content/50 uppercase">
@@ -209,10 +210,10 @@ useSeoMeta({
     </section>
 
     <!-- Detailed About & Features Section -->
-    <section class="bg-base-200/25 py-16 sm:py-24 border-base-300/80 border-t transition-colors duration-200">
+    <section class="bg-base-200/25 py-10 sm:py-16 lg:py-24 border-base-300/80 border-t transition-colors duration-200">
       <Container>
-        <div class="gap-12 lg:gap-14 grid lg:grid-cols-[1fr_360px]">
-          <div>
+        <div class="grid gap-8 lg:gap-14 grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_360px]">
+          <div class="min-w-0">
             <div class="inline-flex items-center gap-2 bg-base-100 shadow-2xs px-3 py-0.5 border border-base-300 rounded-full font-semibold text-primary text-xs">
               Overview
             </div>
@@ -244,7 +245,7 @@ useSeoMeta({
             </div>
           </div>
 
-          <div>
+          <div class="min-w-0">
             <h2 class="font-bold text-base text-base-content/50 uppercase tracking-wider">
               All Capabilities
             </h2>
@@ -258,15 +259,15 @@ useSeoMeta({
     </section>
 
     <!-- Privacy Guarantee Section -->
-    <section class="py-16 sm:py-20 border-base-300/80 border-t">
+    <section class="py-10 sm:py-16 lg:py-20 border-base-300/80 border-t">
       <Container>
         <div
           class="bg-base-100/90 shadow-xs backdrop-blur-xs mx-auto p-8 sm:p-10 border border-base-300/90 rounded-3xl max-w-2xl text-center"
         >
           <div
-            class="flex justify-center items-center bg-base-200 shadow-2xs mx-auto border border-base-300/80 rounded-2xl w-13 h-13 text-2xl select-none"
+            class="flex justify-center items-center bg-base-200 shadow-2xs mx-auto border border-base-300/80 rounded-2xl w-13 h-13 text-2xl select-none text-base-content/80"
           >
-            🔒
+            <Icon name="ph:lock-fill" />
           </div>
 
           <h2 class="mt-5 font-bold text-base-content text-2xl sm:text-3xl tracking-tight">
