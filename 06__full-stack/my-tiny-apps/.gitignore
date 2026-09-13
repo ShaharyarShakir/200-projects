@@ -5,7 +5,7 @@
 .nitro
 .cache
 dist
-
+docs/
 # Node dependencies
 node_modules
 
@@ -28,3 +28,4 @@ logs
 *.db-journal
 *.sqlite
 
+.playwright-mcp/
