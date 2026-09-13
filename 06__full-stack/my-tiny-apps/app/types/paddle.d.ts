@@ -34,7 +34,7 @@ export interface PaddleCheckoutOptions {
 export interface PaddleInitializeOptions {
   token: string
   environment?: 'sandbox' | 'production'
-  eventCallback?: (event: { name: string; data?: any }) => void
+  eventCallback?: (event: { name: string; data?: unknown }) => void
   checkout?: {
     settings?: {
       theme?: 'light' | 'dark'
