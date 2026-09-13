@@ -11,7 +11,7 @@ useSeoMeta({
 <template>
   <div>
     <!-- Header -->
-    <section class="bg-base-200/30 py-16 sm:py-24 border-base-300/80 border-b transition-colors duration-200">
+    <section class="bg-base-200/30 py-10 sm:py-16 lg:py-24 border-base-300/80 border-b transition-colors duration-200">
       <Container>
         <div class="max-w-2xl">
           <div
@@ -34,7 +34,7 @@ useSeoMeta({
     </section>
 
     <!-- Content -->
-    <section class="py-14 sm:py-20">
+    <section class="py-10 sm:py-16 lg:py-20">
       <Container>
         <div class="space-y-8 mx-auto max-w-3xl">
           <div class="bg-base-100/90 shadow-xs backdrop-blur-xs p-7 sm:p-9 border border-base-300/90 rounded-3xl">
