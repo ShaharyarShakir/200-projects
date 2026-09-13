@@ -15,7 +15,7 @@ const featuredProduct = products[0]
 <template>
   <div>
     <!-- Hero Section -->
-    <section class="relative py-20 sm:py-32 overflow-hidden">
+    <section class="relative py-12 sm:py-20 lg:py-32 overflow-hidden">
       <!-- Subtle ambient background pattern -->
       <div class="absolute inset-0 bg-grid-pattern opacity-[0.03] dark:opacity-[0.07] pointer-events-none" aria-hidden="true" />
 
@@ -97,7 +97,7 @@ const featuredProduct = products[0]
     <!-- Featured Apps Section -->
     <section
       id="featured"
-      class="bg-base-200/30 py-20 sm:py-28 border-base-300/80 border-t transition-colors duration-200"
+      class="bg-base-200/30 py-12 sm:py-20 lg:py-28 border-base-300/80 border-t transition-colors duration-200"
     >
       <Container>
         <div class="flex sm:flex-row flex-col justify-between items-start sm:items-end gap-4 mb-10">
@@ -139,7 +139,7 @@ const featuredProduct = products[0]
     </section>
 
     <!-- Why My Tiny Apps Section -->
-    <section class="py-20 sm:py-28 border-base-300/80 border-t">
+    <section class="py-12 sm:py-20 lg:py-28 border-base-300/80 border-t">
       <Container>
         <div class="mx-auto max-w-2xl text-center">
           <p class="font-bold text-primary text-xs uppercase tracking-wider">
@@ -163,7 +163,7 @@ const featuredProduct = products[0]
             <div
               class="flex justify-center items-center bg-base-200/70 shadow-2xs border border-base-300/80 rounded-xl w-11 h-11 text-2xl group-hover:scale-105 transition-transform duration-300 select-none"
             >
-              💳
+              <Icon name="ph:credit-card-fill" />
             </div>
 
             <h3 class="mt-5 font-bold text-base-content text-lg tracking-tight">
@@ -182,7 +182,7 @@ const featuredProduct = products[0]
             <div
               class="flex justify-center items-center bg-base-200/70 shadow-2xs border border-base-300/80 rounded-xl w-11 h-11 text-2xl group-hover:scale-105 transition-transform duration-300 select-none"
             >
-              🔒
+              <Icon name="ph:lock-fill" />
             </div>
 
             <h3 class="mt-5 font-bold text-base-content text-lg tracking-tight">
@@ -201,7 +201,7 @@ const featuredProduct = products[0]
             <div
               class="flex justify-center items-center bg-base-200/70 shadow-2xs border border-base-300/80 rounded-xl w-11 h-11 text-2xl group-hover:scale-105 transition-transform duration-300 select-none"
             >
-              🎯
+              <Icon name="ph:target" />
             </div>
 
             <h3 class="mt-5 font-bold text-base-content text-lg tracking-tight">
@@ -217,7 +217,7 @@ const featuredProduct = products[0]
     </section>
 
     <!-- Bottom CTA Banner -->
-    <section class="bg-base-200/40 py-16 sm:py-20 border-base-300/80 border-t transition-colors duration-200">
+    <section class="bg-base-200/40 py-10 sm:py-16 lg:py-20 border-base-300/80 border-t transition-colors duration-200">
       <Container>
         <div class="mx-auto max-w-2xl text-center">
           <h2 class="font-bold text-base-content text-2xl sm:text-3xl tracking-tight">
