@@ -46,7 +46,7 @@ const faqs = [
 <template>
   <div>
     <!-- Header -->
-    <section class="bg-base-200/30 py-16 sm:py-24 border-base-300/80 border-b transition-colors duration-200">
+    <section class="bg-base-200/30 py-10 sm:py-16 lg:py-24 border-base-300/80 border-b transition-colors duration-200">
       <Container>
         <div class="max-w-2xl">
           <div
@@ -67,18 +67,18 @@ const faqs = [
     </section>
 
     <!-- Support Content Cards -->
-    <section class="py-14 sm:py-20">
+    <section class="py-10 sm:py-16 lg:py-20">
       <Container>
-        <div class="gap-6 grid md:grid-cols-3">
+        <div class="gap-6 grid sm:grid-cols-2 lg:grid-cols-3">
           <!-- Email Support Card -->
           <div
             class="flex flex-col justify-between bg-base-100/90 shadow-xs hover:shadow-md backdrop-blur-xs p-7 border border-base-300/90 hover:border-primary/40 rounded-3xl transition-all hover:-translate-y-0.5 duration-200"
           >
             <div>
               <div
-                class="flex justify-center items-center bg-base-200/70 shadow-2xs border border-base-300/80 rounded-2xl w-12 h-12 text-2xl select-none"
+                class="flex justify-center items-center bg-base-200/70 shadow-2xs border border-base-300/80 rounded-2xl w-12 h-12 text-2xl select-none text-base-content/80"
               >
-                ✉️
+                <Icon name="ph:envelope-simple-fill" />
               </div>
 
               <h2 class="mt-6 font-bold text-base-content text-lg sm:text-xl tracking-tight">
@@ -115,9 +115,9 @@ const faqs = [
           >
             <div>
               <div
-                class="flex justify-center items-center bg-base-200/70 shadow-2xs border border-base-300/80 rounded-2xl w-12 h-12 text-2xl select-none"
+                class="flex justify-center items-center bg-base-200/70 shadow-2xs border border-base-300/80 rounded-2xl w-12 h-12 text-2xl select-none text-base-content/80"
               >
-                💳
+                <Icon name="ph:credit-card-fill" />
               </div>
 
               <h2 class="mt-6 font-bold text-base-content text-lg sm:text-xl tracking-tight">
@@ -148,7 +148,7 @@ const faqs = [
               <div
                 class="flex justify-center items-center bg-base-200/70 shadow-2xs border border-base-300/80 rounded-2xl w-12 h-12 text-2xl select-none"
               >
-                🔒
+                <Icon name="ph:lock-fill" />
               </div>
 
               <h2 class="mt-6 font-bold text-base-content text-lg sm:text-xl tracking-tight">
@@ -173,7 +173,7 @@ const faqs = [
         </div>
 
         <!-- Frequently Asked Questions Accordion -->
-        <div class="mt-16 sm:mt-24">
+        <div class="mt-10 sm:mt-16 lg:mt-24">
           <div class="mx-auto max-w-3xl">
             <h2 class="font-bold text-base-content text-2xl sm:text-3xl tracking-tight">
               Frequently Asked Questions
