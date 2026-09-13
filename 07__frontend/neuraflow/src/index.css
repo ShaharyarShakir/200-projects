@@ -5,3 +5,8 @@ body,
   height: 100%;
   margin: 0;
 }
+
+body {
+  background: #05070d;
+  color: #eef2f7;
+}
