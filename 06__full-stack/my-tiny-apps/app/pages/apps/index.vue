@@ -13,7 +13,7 @@ useSeoMeta({
 <template>
   <div>
     <!-- Header -->
-    <section class="bg-base-200/30 py-16 sm:py-24 border-base-300/80 border-b transition-colors duration-200">
+    <section class="bg-base-200/30 py-10 sm:py-16 lg:py-24 border-base-300/80 border-b transition-colors duration-200">
       <Container>
         <div class="max-w-2xl">
           <div
@@ -37,7 +37,7 @@ useSeoMeta({
     </section>
 
     <!-- Catalog Grid -->
-    <section class="py-14 sm:py-20">
+    <section class="py-10 sm:py-16 lg:py-20">
       <Container>
         <!-- Grid Header -->
         <div class="flex justify-between items-center mb-8">
@@ -63,7 +63,7 @@ useSeoMeta({
         <!-- Intentional Empty State -->
         <div
           v-else
-          class="bg-base-200/30 p-16 border border-base-300 border-dashed rounded-3xl text-center"
+          class="bg-base-200/30 p-8 sm:p-12 lg:p-16 border border-base-300 border-dashed rounded-3xl text-center"
         >
           <div class="flex justify-center items-center bg-base-100 shadow-xs mx-auto rounded-2xl w-14 h-14 text-2xl">
             ✨
