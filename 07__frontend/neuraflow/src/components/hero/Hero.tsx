@@ -1,9 +1,27 @@
+import { useEffect, useRef } from "react";
+import { animateHero } from "../../animations/hero";
+import HeroScene from "./HeroScene";
 import "./hero.css";
 
 function Hero() {
+  const scopeRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const scope = scopeRef.current;
+    if (!scope) return;
+
+    const animation = animateHero(scope);
+    return () => {
+      animation?.cancel();
+      animation?.revert();
+    };
+  }, []);
+
   return (
-    <section className="hero">
+    <section className="hero" ref={scopeRef}>
       <div className="hero__glow" aria-hidden="true" />
+
+      <HeroScene />
 
       <div className="hero__content">
         <p className="hero__eyebrow">
