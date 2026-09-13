@@ -7,7 +7,7 @@ defineProps<{
 </script>
 
 <template>
-  <article
+  <article 
     class="group relative flex flex-col justify-between bg-base-100/90 shadow-xs hover:shadow-lg hover:shadow-primary/5 backdrop-blur-xs p-6 sm:p-7 border border-base-300/90 hover:border-primary/45 rounded-2xl focus-within:ring-2 focus-within:ring-primary/60 transition-all hover:-translate-y-0.5 duration-200"
   >
     <div>
@@ -15,9 +15,15 @@ defineProps<{
       <div class="flex justify-between items-start gap-4">
         <!-- App Icon with subtle depth -->
         <div
-          class="flex justify-center items-center bg-base-200/70 shadow-2xs border border-base-300/70 rounded-2xl w-14 h-14 text-3xl group-hover:scale-105 transition-transform duration-300 select-none shrink-0"
+          class="flex justify-center items-center bg-base-200/70 shadow-2xs border border-base-300/70 rounded-2xl w-14 h-14 overflow-hidden text-primary text-3xl group-hover:scale-105 transition-transform duration-300 select-none shrink-0"
         >
-          {{ product.icon }}
+          <img
+            v-if="product.icon.startsWith('/')"
+            :src="product.icon"
+            :alt="product.name"
+            class="w-full h-full object-contain"
+          />
+          <Icon v-else :name="product.icon" />
         </div>
 
         <div class="flex flex-wrap justify-end items-center gap-1.5">
