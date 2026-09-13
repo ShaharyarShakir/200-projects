@@ -1,13 +1,10 @@
-import { Canvas } from "@react-three/fiber";
+import Hero from "./components/hero/Hero";
 
 function App() {
   return (
-    <Canvas camera={{ position: [0, 0, 5] }}>
-      <mesh>
-        <boxGeometry />
-        <meshBasicMaterial />
-      </mesh>
-    </Canvas>
+    <main className="app">
+      <Hero />
+    </main>
   );
 }
 
