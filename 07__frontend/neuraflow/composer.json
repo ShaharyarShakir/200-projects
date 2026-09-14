@@ -1,0 +1,6 @@
+{
+    "require": {
+        "reviewscouk/reviews": "^0.076.0",
+        "flarum/flags": "^1.8"
+    }
+}
