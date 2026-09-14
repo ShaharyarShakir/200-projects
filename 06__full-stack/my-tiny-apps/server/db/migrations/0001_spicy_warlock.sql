@@ -1,0 +1,1 @@
+ALTER TABLE `products` ADD `gitlab_asset_url` text;
