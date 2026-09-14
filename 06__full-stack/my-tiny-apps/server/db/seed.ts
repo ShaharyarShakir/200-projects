@@ -26,13 +26,28 @@ export async function seed() {
       paddlePriceId: process.env.PADDLE_PRICE_ID || null,
       gitlabProjectId: 'my-tiny-apps/tiny-compressor',
       gitlabReleaseTag: 'v1.0.0',
+      gitlabAssetUrl:
+        'https://gitlab.com/ShaharyarShakir/tiny-com/-/releases/v0.0.7/downloads/tiny-compressor.apk',
       status: 'coming-soon',
       createdAt: now,
       updatedAt: now,
     })
     console.log('✅ Seeded Tiny Compressor successfully.')
   } else {
-    console.log('ℹ️ Product "tiny-compressor" already exists.')
+    // Update existing product with gitlabAssetUrl if missing
+    if (!existingProduct.gitlabAssetUrl) {
+      await db
+        .update(products)
+        .set({
+          gitlabAssetUrl:
+            'https://gitlab.com/ShaharyarShakir/tiny-com/-/releases/v0.0.7/downloads/tiny-compressor.apk',
+          updatedAt: now,
+        })
+        .where(eq(products.slug, 'tiny-compressor'))
+      console.log('✅ Updated Tiny Compressor with gitlabAssetUrl.')
+    } else {
+      console.log('ℹ️ Product "tiny-compressor" already exists with gitlabAssetUrl.')
+    }
   }
 }
 

@@ -11,6 +11,7 @@ export const products = sqliteTable('products', {
   paddlePriceId: text('paddle_price_id'),
   gitlabProjectId: text('gitlab_project_id'),
   gitlabReleaseTag: text('gitlab_release_tag'),
+  gitlabAssetUrl: text('gitlab_asset_url'),
   status: text('status').notNull().default('coming-soon'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
