@@ -1,0 +1,28 @@
+# Forkdevs — Worktrunk project configuration
+# Branch workflow:
+#   main
+#     └── develop
+#          ├── feature/hero-services
+#          ├── feature/work
+#          ├── feature/process-team
+#          └── feature/contact
+
+[pre-start]
+deps = "pnpm install"
+
+[[pre-merge]]
+lint = "pnpm lint"
+
+[[pre-merge]]
+typecheck = "pnpm typecheck"
+
+[[pre-merge]]
+build = "pnpm build"
+
+[list]
+url = "http://localhost:{{ branch | hash_port }}"
+
+[aliases]
+status = "list --full"
+dev = "switch --execute sh -- -c 'pnpm dev'"
+review = "list --branches --full"
