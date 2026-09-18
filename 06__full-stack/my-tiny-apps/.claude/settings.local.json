@@ -1,0 +1,12 @@
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://localhost:20128",
+    "ANTHROPIC_AUTH_TOKEN": "sk-6f434b84f146a5fe-4ae064-767cad55",
+    "ANTHROPIC_MODEL": "auto"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(bun run *)"
+    ]
+  }
+}
