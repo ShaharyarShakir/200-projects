@@ -1,0 +1,14 @@
+[package]
+name = "utype"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.104"
+audioadapter-buffers = "5.2.0"
+cargo-watch = "8.5.3"
+cpal = "0.18.2"
+env_logger = "0.11.8"
+log = "0.4.28"
+rubato = "5.0.0"
+whisper-rs = { version = "0.16.0", features = ["log_backend"] }
