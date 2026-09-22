@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
 from cryptography.fernet import Fernet
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -35,6 +35,17 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str = "dev-secret-key-change-in-production-must-be-long-and-secure"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 10080  # 7 days
+
+    # AI Agent (Groq)
+    GROQ_API_KEY: Optional[str] = None
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
+    # Podman Sandbox
+    PODMAN_SOCKET: str = "/run/user/1000/podman/podman.sock"
+    SANDBOX_BASE_IMAGE: str = "python:3.12-slim"
+    SANDBOX_TIMEOUT_SECONDS: int = 120
+    SANDBOX_MEMORY_LIMIT: str = "1g"
+    SANDBOX_NETWORK_DISABLED: bool = True
 
     @field_validator("ENCRYPTION_SECRET_KEY")
     @classmethod
