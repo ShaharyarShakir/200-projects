@@ -1,0 +1,42 @@
+schema: spec-driven
+
+context: |
+  Bisect is an AI coding agent that connects to a user's GitHub repository,
+  runs its tests inside an isolated Podman sandbox, analyzes failing tests,
+  generates and applies code patches using Claude, re-runs tests in a bounded
+  retry loop, and opens a GitHub pull request when tests pass.
+
+  Tech Stack:
+  - Frontend: Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui, pnpm
+  - Backend: Python 3.12+, FastAPI, uv, SQLModel, SQLAlchemy 2.0 (async), Alembic
+  - Database: PostgreSQL (asyncpg), local Podman PostgreSQL
+  - Agent: Anthropic Claude API (Messages API / Sonnet)
+  - Sandbox: Podman (network disabled, memory limits, execution timeout)
+  - Integration: GitHub OAuth, GitHub REST API
+  - Communication: REST API with polling (no WebSockets for MVP)
+
+  Constraints & Conventions:
+  - Keep MVP scope tight for a 7-day delivery timeline.
+  - Develop one OpenSpec change at a time.
+  - Prefer simple, explicit, modular architecture over premature abstractions or microservices.
+  - Type annotations and strict validation across backend (Pydantic v2 / SQLModel) and frontend (TypeScript).
+  - Use snake_case for Python identifiers and kebab-case for URLs and OpenSpec paths.
+
+  Git Ownership Rules:
+  - The human developer owns all Git operations for the Bisect repository.
+  - Claude Code must NEVER modify Git history or remote state (no `git add`, `git commit`, `git push`, `git checkout`, `git branch`, etc.).
+  - Claude Code may only use read-only inspection commands (`git status`, `git diff`, `git log`, `git show`).
+
+rules:
+  proposal:
+    - Keep proposals focused on motivation and scope boundaries
+    - Explicitly list non-goals and out-of-scope capabilities
+  specs:
+    - Focus strictly on observable behavior, contracts, and testable scenarios
+    - Scenarios must use exactly 4 hashtags (####) and WHEN/THEN format
+  design:
+    - Document technical decisions with rationale and alternatives considered
+    - Include concrete risk mitigations
+  tasks:
+    - Provide actionable, verifiable checkbox items
+    - Order tasks strictly by dependency
