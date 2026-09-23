@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.core.logging import LoggingMiddleware, logger
 
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan context manager for startup and shutdown hooks."""
