@@ -1,11 +1,9 @@
 from datetime import timedelta
-import time
 import uuid
 from cryptography.fernet import Fernet
 import jwt
 import pytest
 
-from app.core.config import settings
 from app.core.security import (
     create_access_token,
     decode_access_token,
