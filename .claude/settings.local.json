@@ -4,5 +4,8 @@
       "Bash(pnpm run *)",
       "Bash(uv python *)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "mollify"
+  ]
 }
