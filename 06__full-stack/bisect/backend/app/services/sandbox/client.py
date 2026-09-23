@@ -1,4 +1,3 @@
-import os
 import struct
 from typing import Any, Dict, List, Optional, Tuple, Union
 import httpx

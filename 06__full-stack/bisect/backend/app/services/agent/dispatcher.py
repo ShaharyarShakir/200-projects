@@ -1,6 +1,5 @@
 import posixpath
 import shlex
-from typing import Optional
 
 from app.core.errors import (
     SandboxError,
