@@ -141,6 +141,46 @@ class AgentConfigurationError(AgentProviderError):
 
 
 # ---------------------------------------------------------------------------
+# Agent Action & Loop Exceptions
+# ---------------------------------------------------------------------------
+
+class ActionError(BisectError):
+    """Base exception for action parsing, validation, and dispatch errors."""
+
+    def __init__(self, message: str = "Action error occurred"):
+        super().__init__(message)
+
+
+class ActionParseError(ActionError):
+    """Raised when parsing an agent action from raw LLM output fails."""
+
+    def __init__(self, message: str = "Failed to parse action JSON from LLM output", raw_content: Optional[str] = None):
+        super().__init__(message)
+        self.raw_content = raw_content
+
+
+class ActionValidationError(ActionError):
+    """Raised when an agent action fails schema or security validation."""
+
+    def __init__(
+        self,
+        message: str = "Action validation failed",
+        action_name: Optional[str] = None,
+        field: Optional[str] = None,
+    ):
+        super().__init__(message)
+        self.action_name = action_name
+        self.field = field
+
+
+class LoopExecutionError(BisectError):
+    """Raised when the agent execution loop encounters an unrecoverable failure."""
+
+    def __init__(self, message: str = "Agent execution loop failed"):
+        super().__init__(message)
+
+
+# ---------------------------------------------------------------------------
 # Sandbox Exceptions
 # ---------------------------------------------------------------------------
 
