@@ -2,10 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(pnpm run *)",
-      "Bash(uv python *)"
+      "Bash(uv python *)",
+      "Bash(pnpm *)"
     ]
   },
   "enabledMcpjsonServers": [
     "mollify"
-  ]
+  ],
+  "enabledPlugins": {
+    "playwright@claude-plugins-official": true
+  }
 }
