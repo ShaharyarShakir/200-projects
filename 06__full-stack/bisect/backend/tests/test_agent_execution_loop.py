@@ -240,3 +240,51 @@ async def test_loop_inspect_file_not_found_recovery():
     assert result.steps[0].result["exists"] is False
     assert result.steps[1].result["exists"] is True
     assert result.steps[2].action["action"] == "finish"
+
+
+@pytest.mark.asyncio
+async def test_loop_with_bound_agent_session():
+    from app.schemas.session import AgentSession, SessionStatus
+
+    session = AgentSession(task_prompt="Run custom bound session")
+    provider = MockAgentProvider(
+        responses=[
+            '{"action": "run_command", "command": "pytest"}',
+            '{"action": "finish", "message": "Tests verified", "success": true}',
+        ]
+    )
+    sandbox = MockSandbox()
+    loop = AgentExecutionLoop(provider=provider, sandbox=sandbox)
+
+    result = await loop.run(task_prompt="Run custom bound session", session=session)
+
+    assert result.session is session
+    assert session.status == SessionStatus.COMPLETED
+    assert session.started_at is not None
+    assert session.completed_at is not None
+    assert session.iteration_count == 2
+    assert session.executed_action_count == 2
+    assert len(session.steps) == 2
+    assert session.termination_reason == "Tests verified"
+    assert session.total_tokens == 140
+
+
+@pytest.mark.asyncio
+async def test_loop_session_tracking_on_failure():
+    from app.schemas.session import AgentSession, SessionStatus
+
+    session = AgentSession(task_prompt="Failing task")
+    provider = MockAgentProvider(
+        responses=[
+            '{"action": "finish", "message": "Could not fix bug", "success": false}',
+        ]
+    )
+    sandbox = MockSandbox()
+    loop = AgentExecutionLoop(provider=provider, sandbox=sandbox)
+
+    result = await loop.run(task_prompt="Failing task", session=session)
+
+    assert result.status == LoopStatus.FAILED
+    assert session.status == SessionStatus.FAILED
+    assert session.termination_reason == "Could not fix bug"
+    assert session.is_terminal
