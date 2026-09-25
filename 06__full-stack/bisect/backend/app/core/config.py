@@ -36,9 +36,14 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 10080  # 7 days
 
-    # AI Agent (Groq)
+    # AI Agent (Groq) & Execution Limits
     GROQ_API_KEY: Optional[str] = None
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    AGENT_MAX_ITERATIONS: int = 10
+    AGENT_MAX_COMMANDS: int = 15
+    AGENT_COMMAND_TIMEOUT_SECONDS: int = 60
+    AGENT_MAX_DURATION_SECONDS: int = 300
+    AGENT_MAX_CONSECUTIVE_ERRORS: int = 3
 
     # Podman Sandbox
     PODMAN_SOCKET: str = "/run/user/1000/podman/podman.sock"

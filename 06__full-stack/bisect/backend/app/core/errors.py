@@ -173,6 +173,20 @@ class ActionValidationError(ActionError):
         self.field = field
 
 
+class InvalidStateTransitionError(BisectError):
+    """Raised when an illegal or unsupported session state transition is attempted."""
+
+    def __init__(
+        self,
+        message: str = "Invalid session state transition",
+        current_status: Optional[str] = None,
+        target_status: Optional[str] = None,
+    ):
+        super().__init__(message)
+        self.current_status = current_status
+        self.target_status = target_status
+
+
 class LoopExecutionError(BisectError):
     """Raised when the agent execution loop encounters an unrecoverable failure."""
 
