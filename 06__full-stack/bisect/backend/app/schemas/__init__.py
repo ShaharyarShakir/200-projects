@@ -20,6 +20,8 @@ from app.schemas.actions import (
     LoopResult,
 )
 
+from app.schemas.session import AgentSession, SessionStatus, ALLOWED_TRANSITIONS
+
 __all__ = [
     "UserRead",
     "TokenResponse",
@@ -44,4 +46,7 @@ __all__ = [
     "LoopConfig",
     "LoopStep",
     "LoopResult",
+    "AgentSession",
+    "SessionStatus",
+    "ALLOWED_TRANSITIONS",
 ]
