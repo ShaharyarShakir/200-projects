@@ -4,20 +4,15 @@ import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/lib/auth/useAuth";
 import {
-  Settings,
   Shield,
   Github,
   Database,
   Key,
-  Cpu,
-  Lock,
   Eye,
   EyeOff,
   CheckCircle2,
-  Terminal,
   Save,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export default function SettingsPage() {
   const { user } = useAuth();

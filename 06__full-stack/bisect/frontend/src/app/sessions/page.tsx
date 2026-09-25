@@ -9,15 +9,11 @@ import {
   Layers,
   Search,
   Bot,
-  Clock,
-  Coins,
   ArrowUpRight,
   CheckCircle2,
   XCircle,
   PlayCircle,
-  AlertTriangle,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface ArchivedSession {
   id: string;
