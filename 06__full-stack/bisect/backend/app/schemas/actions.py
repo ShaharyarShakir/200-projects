@@ -113,6 +113,7 @@ class LoopStatus(str, Enum):
     RUNNING = "running"
     COMPLETED = "completed"
     MAX_ITERATIONS_REACHED = "max_iterations_reached"
+    MAX_COMMANDS_EXCEEDED = "max_commands_exceeded"
     CONSECUTIVE_ERRORS_EXCEEDED = "consecutive_errors_exceeded"
     TIMEOUT = "timeout"
     FAILED = "failed"
@@ -122,7 +123,9 @@ class LoopConfig(BaseModel):
     """Configuration options for the agent execution loop."""
 
     max_iterations: int = Field(default=10, ge=1, le=50, description="Max turns the loop may run")
+    max_commands: int = Field(default=15, ge=1, le=100, description="Max cumulative commands allowed")
     step_timeout_seconds: int = Field(default=60, ge=1, description="Per-action sandbox execution timeout")
+    max_duration_seconds: int = Field(default=300, ge=1, description="Total maximum execution duration in seconds")
     max_consecutive_errors: int = Field(default=3, ge=1, description="Max consecutive parse/validation errors before halting")
     system_prompt: Optional[str] = None
 
@@ -132,6 +135,7 @@ class LoopStep(BaseModel):
 
     iteration: int
     raw_response: str
+    execution_id: Optional[str] = None
     action: Optional[Dict[str, Any]] = None
     result: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
@@ -143,9 +147,11 @@ class LoopResult(BaseModel):
 
     status: LoopStatus
     total_iterations: int
+    execution_id: Optional[str] = None
     steps: List[LoopStep] = Field(default_factory=list)
     final_message: Optional[str] = None
     total_duration_seconds: float = 0.0
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
+    session: Optional[Any] = Field(default=None, description="Bound AgentSession snapshot")
