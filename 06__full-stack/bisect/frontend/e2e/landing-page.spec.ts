@@ -22,7 +22,7 @@ test.describe("Landing Page & Public Flow", () => {
     await expect(page.getByText("85%", { exact: true })).toBeVisible();
     await expect(page.getByText("Triage Time Saved")).toBeVisible();
     await expect(page.getByText("100%", { exact: true })).toBeVisible();
-    await expect(page.getByText("Container Sandboxed")).toBeVisible();
+    await expect(page.getByText("Container Sandboxed").first()).toBeVisible();
 
     // Feature Grid
     await expect(
