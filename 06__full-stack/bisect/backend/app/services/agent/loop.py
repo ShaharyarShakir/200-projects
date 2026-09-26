@@ -1,6 +1,6 @@
 import time
 import uuid
-from typing import List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 from app.core.config import settings
 from app.core.errors import ActionParseError, ActionValidationError
@@ -9,14 +9,18 @@ from app.schemas.actions import (
     ActionErrorResult,
     ActionResult,
     AgentAction,
+    BisectActionResult,
     CommandActionResult,
     FinishAction,
     FinishActionResult,
+    GeneratePatchAction,
     InspectFileActionResult,
     LoopConfig,
     LoopResult,
     LoopStatus,
     LoopStep,
+    PatchActionResult,
+    RunBisectAction,
     RunCommandAction,
 )
 from app.schemas.agent import ChatMessage, CompletionRequest
@@ -26,6 +30,18 @@ from app.services.agent.dispatcher import ActionDispatcher
 from app.services.agent.parser import ActionParser
 from app.services.agent.validator import ActionValidator
 from app.services.sandbox.base import Sandbox
+
+# Called with the live session after every recorded step and after the session
+# reaches a terminal status, so a caller can persist progress as it happens
+# rather than only at the end.
+SessionSink = Callable[[AgentSession], Awaitable[None]]
+
+# Called with every event the loop reports, alongside the log write.
+EventSink = Callable[[str, Dict[str, Any], str], Awaitable[None]]
+
+# Called with each artifact-producing result, so the patch and bisect timeline
+# a run creates are stored against the session that produced them.
+ArtifactSink = Callable[[str, ActionResult], Awaitable[None]]
 
 DEFAULT_SYSTEM_PROMPT = """You are Bisect Agent, an autonomous coding agent operating inside an isolated development sandbox.
 Your goal is to inspect code, run tests, diagnose failures, and apply fixes.
@@ -51,7 +67,25 @@ Every response MUST contain exactly one valid JSON action object in the followin
 }
 ```
 
-3. Complete the task:
+3. Generate a unified diff of the changes made so far:
+```json
+{
+  "action": "generate_patch"
+}
+```
+
+4. Bisect history to find the first commit that broke something:
+```json
+{
+  "action": "run_bisect",
+  "good": "v1.2.0",
+  "bad": "HEAD",
+  "command": "pytest -x -q",
+  "max_commits": 8
+}
+```
+
+5. Complete the task:
 ```json
 {
   "action": "finish",
@@ -61,9 +95,11 @@ Every response MUST contain exactly one valid JSON action object in the followin
 ```
 
 RULES:
-- Always output a valid JSON object matching one of the three actions above.
+- Always output a valid JSON object matching one of the five actions above.
 - Do not attempt actions outside the supported set.
 - All file paths are relative to /workspace.
+- 'run_bisect' requires both a known-good and a known-bad revision; never guess them.
+- 'generate_patch' on an unmodified tree succeeds and returns an empty diff.
 - Use 'finish' once the task is completed or cannot proceed.
 """
 
@@ -78,6 +114,9 @@ class AgentExecutionLoop:
         dispatcher: Optional[ActionDispatcher] = None,
         config: Optional[LoopConfig] = None,
         auto_cleanup: bool = True,
+        session_sink: Optional[SessionSink] = None,
+        event_sink: Optional[EventSink] = None,
+        artifact_sink: Optional[ArtifactSink] = None,
     ) -> None:
         self._provider = provider
         self._sandbox = sandbox
@@ -90,6 +129,11 @@ class AgentExecutionLoop:
             max_consecutive_errors=settings.AGENT_MAX_CONSECUTIVE_ERRORS,
         )
         self._auto_cleanup = auto_cleanup
+        # Both sinks default to doing nothing, so a loop run without persistence
+        # behaves exactly as it did before they existed.
+        self._session_sink = session_sink
+        self._event_sink = event_sink
+        self._artifact_sink = artifact_sink
 
     @property
     def provider(self) -> AgentProvider:
@@ -136,6 +180,27 @@ class AgentExecutionLoop:
             else:
                 return f"[File Inspection Failed: {result.path}]\nError: {result.error or 'Unable to inspect file'}"
 
+        elif isinstance(result, PatchActionResult):
+            if result.is_empty:
+                return "[Patch: EMPTY]\nThe working tree has no modifications, so there is nothing to review."
+            return f"[Patch: {len(result.diff)} bytes]\n{result.diff}"
+
+        elif isinstance(result, BisectActionResult):
+            lines = [f"[Bisect Result: {result.good}..{result.bad}]"]
+            if result.commits:
+                for commit in result.commits:
+                    marker = "CULPRIT" if commit.is_culprit else commit.verdict.upper()
+                    lines.append(f"{marker} {commit.short_sha or commit.sha}: {commit.message}")
+            else:
+                lines.append("No commits were evaluated; the range held nothing to test.")
+            if result.culprit:
+                lines.append(f"First bad commit: {result.culprit}")
+            elif result.truncated:
+                lines.append("Stopped at the commit budget before isolating a culprit.")
+            else:
+                lines.append("No first bad commit was isolated.")
+            return "\n".join(lines)
+
         elif isinstance(result, FinishActionResult):
             return f"[Task Finished]\nMessage: {result.message}\nSuccess: {result.success}"
 
@@ -152,8 +217,180 @@ class AgentExecutionLoop:
             "Please respond with a valid JSON action matching one of the supported schemas:\n"
             "- run_command: {\"action\": \"run_command\", \"command\": \"...\"}\n"
             "- inspect_file: {\"action\": \"inspect_file\", \"path\": \"...\"}\n"
+            "- generate_patch: {\"action\": \"generate_patch\"}\n"
+            "- run_bisect: {\"action\": \"run_bisect\", \"good\": \"...\", \"bad\": \"...\","
+            " \"command\": \"...\", \"max_commits\": 8}\n"
             "- finish: {\"action\": \"finish\", \"message\": \"...\", \"success\": true}"
         )
+
+    @staticmethod
+    def _action_result_payload(result: ActionResult) -> Dict[str, Any]:
+        """Summarise a result for the generic ``action_executed`` event.
+
+        A patch is the one result that can be arbitrarily large. The diff is
+        stored against the session and kept in the recorded step, so copying it
+        into an event row would duplicate an unbounded blob that every poll of
+        the feed then reads back. The event reports its size instead.
+        """
+        if isinstance(result, PatchActionResult):
+            return {
+                "action_type": result.action_type,
+                "is_empty": result.is_empty,
+                "diff_bytes": len(result.diff),
+            }
+        return result.model_dump()
+
+    async def _emit_artifact_events(
+        self,
+        execution_id: str,
+        iteration: int,
+        action: AgentAction,
+        result: ActionResult,
+    ) -> None:
+        """Surface patch and bisect outcomes in the durable feed.
+
+        The generic ``action_executed`` event already carries the whole result,
+        so these events exist to make the two reviewable artifacts legible in
+        the activity timeline: one entry per bisect verdict, and a distinct
+        error entry when an artifact could not be produced. A failed artifact
+        records the problem and lets the run continue, exactly as every other
+        recoverable action failure in this loop does.
+
+        The diff itself is deliberately not echoed here. It is stored against
+        the session, and duplicating an unbounded blob into the event feed on
+        every read would be the wrong place to spend response size.
+        """
+        if isinstance(result, PatchActionResult):
+            await self._emit(
+                execution_id=execution_id,
+                event_type="patch_generated",
+                details={
+                    "iteration": iteration,
+                    "is_empty": result.is_empty,
+                    "diff_bytes": len(result.diff),
+                },
+            )
+
+        elif isinstance(result, BisectActionResult):
+            for evaluation_index, commit in enumerate(result.commits):
+                await self._emit(
+                    execution_id=execution_id,
+                    event_type="bisect_verdict",
+                    details={
+                        "iteration": iteration,
+                        "evaluation_index": evaluation_index,
+                        "sha": commit.sha,
+                        "short_sha": commit.short_sha,
+                        "message": commit.message,
+                        "verdict": commit.verdict,
+                        "is_culprit": commit.is_culprit,
+                        "exit_code": commit.exit_code,
+                        "timed_out": commit.timed_out,
+                        "duration_seconds": commit.duration_seconds,
+                    },
+                )
+            await self._emit(
+                execution_id=execution_id,
+                event_type="bisect_completed",
+                details={
+                    "iteration": iteration,
+                    "commits_evaluated": len(result.commits),
+                    "culprit": result.culprit,
+                    "truncated": result.truncated,
+                    "reset_completed": result.reset_completed,
+                },
+            )
+
+        elif isinstance(result, ActionErrorResult):
+            if isinstance(action, GeneratePatchAction):
+                event_type = "patch_generation_failed"
+            elif isinstance(action, RunBisectAction):
+                event_type = "bisect_failed"
+            else:
+                return
+            await self._emit(
+                execution_id=execution_id,
+                event_type=event_type,
+                details={"iteration": iteration, "error": result.error},
+                level="error",
+            )
+
+    async def _emit(
+        self,
+        execution_id: str,
+        event_type: str,
+        details: Optional[Dict[str, Any]] = None,
+        level: str = "info",
+    ) -> None:
+        """Report one event to the log and, when wired, to the durable feed.
+
+        Every event the loop produces goes through here, so the persisted feed
+        and the log can never disagree about what happened. A failing sink is
+        logged and swallowed: losing the ability to record progress must not
+        abort an agent run that is otherwise succeeding.
+        """
+        payload = details or {}
+        log_agent_event(
+            execution_id=execution_id,
+            event_type=event_type,
+            details=payload,
+            level=level,
+        )
+        if self._event_sink is None:
+            return
+        try:
+            await self._event_sink(event_type, payload, level)
+        except Exception as sink_err:
+            logger.warning(
+                f"Event sink failed for {event_type} on {execution_id}: {sink_err}"
+            )
+
+    async def _notify_session(self, session_obj: Optional[AgentSession]) -> None:
+        """Hand the live session to the persistence sink, if one is wired.
+
+        A failing sink is logged and swallowed for the same reason as in
+        ``_emit``: the sink observes the loop, it does not drive it.
+        """
+        if self._session_sink is None or session_obj is None:
+            return
+        try:
+            await self._session_sink(session_obj)
+        except Exception as sink_err:
+            logger.warning(
+                f"Session sink failed for {session_obj.id}: {sink_err}"
+            )
+
+    async def _notify_artifact(self, session_id: str, result: ActionResult) -> None:
+        """Hand a produced artifact to the persistence sink, if one is wired.
+
+        Filtered to the two artifact results so an unrelated result cannot be
+        persisted by a future caller, and swallowed on failure for the same
+        reason as ``_emit``: failing to store a reviewable artifact must not
+        abort a run that is otherwise succeeding.
+        """
+        if self._artifact_sink is None:
+            return
+        if not isinstance(result, (PatchActionResult, BisectActionResult)):
+            return
+        try:
+            await self._artifact_sink(session_id, result)
+        except Exception as sink_err:
+            logger.warning(f"Artifact sink failed for {session_id}: {sink_err}")
+
+    async def _record_step(
+        self,
+        session_obj: AgentSession,
+        step: LoopStep,
+        steps: List[LoopStep],
+    ) -> None:
+        """Append a step to both the local list and the session, then notify.
+
+        Notifying here rather than only at the end is what lets a reader watch a
+        session accumulate steps while it is still running.
+        """
+        steps.append(step)
+        session_obj.record_step(step)
+        await self._notify_session(session_obj)
 
     async def run(
         self,
@@ -162,7 +399,30 @@ class AgentExecutionLoop:
         execution_id: Optional[str] = None,
         session: Optional[AgentSession] = None,
     ) -> LoopResult:
-        """Execute the bounded iterative agent loop until finish, limits reached, or failure."""
+        """Execute the bounded iterative agent loop until finish, limits reached, or failure.
+
+        The loop body lives in ``_run_loop`` so that the final session state is
+        persisted in one place. Every exit from the body leaves the session in a
+        terminal status, so a single notification after it covers all of them
+        without touching any of the body's return paths.
+        """
+        result = await self._run_loop(
+            task_prompt,
+            system_prompt=system_prompt,
+            execution_id=execution_id,
+            session=session,
+        )
+        await self._notify_session(getattr(result, "session", None))
+        return result
+
+    async def _run_loop(
+        self,
+        task_prompt: str,
+        system_prompt: Optional[str] = None,
+        execution_id: Optional[str] = None,
+        session: Optional[AgentSession] = None,
+    ) -> LoopResult:
+        """The loop body. See ``run``, which owns the terminal-state notification."""
         session_obj = session or AgentSession(
             id=execution_id or f"sess_{uuid.uuid4().hex[:12]}",
             task_prompt=task_prompt,
@@ -174,7 +434,7 @@ class AgentExecutionLoop:
         start_time = time.monotonic()
         sys_prompt = system_prompt or self._config.system_prompt or DEFAULT_SYSTEM_PROMPT
 
-        log_agent_event(
+        await self._emit(
             execution_id=exec_id,
             event_type="loop_started",
             details={
@@ -203,7 +463,7 @@ class AgentExecutionLoop:
                 # Check overall duration timeout before starting next iteration
                 elapsed_seconds = time.monotonic() - start_time
                 if elapsed_seconds >= self._config.max_duration_seconds:
-                    log_agent_event(
+                    await self._emit(
                         execution_id=exec_id,
                         event_type="loop_timeout",
                         details={"elapsed_seconds": elapsed_seconds, "max_duration_seconds": self._config.max_duration_seconds},
@@ -227,7 +487,7 @@ class AgentExecutionLoop:
                 iteration += 1
                 step_start = time.monotonic()
 
-                log_agent_event(
+                await self._emit(
                     execution_id=exec_id,
                     event_type="iteration_started",
                     details={"iteration": iteration, "commands_executed": commands_executed},
@@ -250,7 +510,7 @@ class AgentExecutionLoop:
                     raw_content = completion_resp.content
                     messages.append(ChatMessage(role="assistant", content=raw_content))
 
-                    log_agent_event(
+                    await self._emit(
                         execution_id=exec_id,
                         event_type="llm_completion_received",
                         details={
@@ -272,10 +532,9 @@ class AgentExecutionLoop:
                         error=error_msg,
                         duration_seconds=step_duration,
                     )
-                    steps.append(step)
-                    session_obj.record_step(step)
+                    await self._record_step(session_obj, step, steps)
 
-                    log_agent_event(
+                    await self._emit(
                         execution_id=exec_id,
                         event_type="provider_failure",
                         details={"iteration": iteration, "error": str(e)},
@@ -310,10 +569,9 @@ class AgentExecutionLoop:
                         error=str(e.message),
                         duration_seconds=step_duration,
                     )
-                    steps.append(step)
-                    session_obj.record_step(step)
+                    await self._record_step(session_obj, step, steps)
 
-                    log_agent_event(
+                    await self._emit(
                         execution_id=exec_id,
                         event_type="action_parse_error",
                         details={"iteration": iteration, "error": e.message, "consecutive_errors": consecutive_errors},
@@ -355,10 +613,9 @@ class AgentExecutionLoop:
                         error=str(e.message),
                         duration_seconds=step_duration,
                     )
-                    steps.append(step)
-                    session_obj.record_step(step)
+                    await self._record_step(session_obj, step, steps)
 
-                    log_agent_event(
+                    await self._emit(
                         execution_id=exec_id,
                         event_type="action_validation_error",
                         details={"iteration": iteration, "error": e.message, "consecutive_errors": consecutive_errors},
@@ -393,7 +650,7 @@ class AgentExecutionLoop:
                 if isinstance(action, RunCommandAction):
                     if commands_executed >= self._config.max_commands:
                         total_duration = max(0.0, time.monotonic() - start_time)
-                        log_agent_event(
+                        await self._emit(
                             execution_id=exec_id,
                             event_type="max_commands_exceeded",
                             details={"commands_executed": commands_executed, "max_commands": self._config.max_commands},
@@ -429,11 +686,10 @@ class AgentExecutionLoop:
                         result=action_result.model_dump(),
                         duration_seconds=step_duration,
                     )
-                    steps.append(step)
-                    session_obj.record_step(step)
+                    await self._record_step(session_obj, step, steps)
 
                     status = LoopStatus.COMPLETED if action.success else LoopStatus.FAILED
-                    log_agent_event(
+                    await self._emit(
                         execution_id=exec_id,
                         event_type="loop_completed",
                         details={"status": status.value, "success": action.success, "message": action.message},
@@ -459,7 +715,7 @@ class AgentExecutionLoop:
                     )
 
                 # 5. Dispatch command or inspect_file to sandbox
-                log_agent_event(
+                await self._emit(
                     execution_id=exec_id,
                     event_type="action_dispatched",
                     details={"iteration": iteration, "action": action.model_dump()},
@@ -476,14 +732,21 @@ class AgentExecutionLoop:
                     result=action_result.model_dump(),
                     duration_seconds=step_duration,
                 )
-                steps.append(step)
-                session_obj.record_step(step)
+                await self._record_step(session_obj, step, steps)
 
-                log_agent_event(
+                await self._emit(
                     execution_id=exec_id,
                     event_type="action_executed",
-                    details={"iteration": iteration, "result": action_result.model_dump(), "duration_seconds": step_duration},
+                    details={
+                        "iteration": iteration,
+                        "result": self._action_result_payload(action_result),
+                        "duration_seconds": step_duration,
+                    },
                 )
+
+                await self._emit_artifact_events(exec_id, iteration, action, action_result)
+
+                await self._notify_artifact(exec_id, action_result)
 
                 # Format result feedback and append to conversation
                 feedback = self.format_action_result_feedback(action_result)
@@ -491,7 +754,7 @@ class AgentExecutionLoop:
 
             # Reached max iterations limit
             total_duration = max(0.0, time.monotonic() - start_time)
-            log_agent_event(
+            await self._emit(
                 execution_id=exec_id,
                 event_type="max_iterations_reached",
                 details={"max_iterations": self._config.max_iterations, "total_iterations": iteration},
@@ -514,7 +777,7 @@ class AgentExecutionLoop:
 
         except Exception as e:
             total_duration = max(0.0, time.monotonic() - start_time)
-            log_agent_event(
+            await self._emit(
                 execution_id=exec_id,
                 event_type="unhandled_loop_exception",
                 details={"error": str(e), "total_duration_seconds": total_duration},
@@ -537,16 +800,26 @@ class AgentExecutionLoop:
             )
 
         finally:
+            # Undo any bisect before the sandbox is torn down. A run that stopped
+            # on a limit or an exception can leave the workspace detached at a
+            # midpoint, and teardown is the one path guaranteed to run.
+            try:
+                await self._dispatcher.reset_bisect_state()
+            except Exception as bisect_err:
+                logger.warning(
+                    f"Error resetting bisect state for execution {exec_id}: {bisect_err}"
+                )
+
             if self._auto_cleanup:
                 try:
                     await self._sandbox.cleanup()
-                    log_agent_event(
+                    await self._emit(
                         execution_id=exec_id,
                         event_type="sandbox_cleanup_success",
                     )
                 except Exception as cleanup_err:
                     logger.warning(f"Error during sandbox cleanup for execution {exec_id}: {cleanup_err}")
-                    log_agent_event(
+                    await self._emit(
                         execution_id=exec_id,
                         event_type="sandbox_cleanup_error",
                         details={"error": str(cleanup_err)},

@@ -8,7 +8,9 @@ from app.schemas.actions import (
     ActionName,
     AgentAction,
     FinishAction,
+    GeneratePatchAction,
     InspectFileAction,
+    RunBisectAction,
     RunCommandAction,
 )
 
@@ -19,17 +21,25 @@ class ActionValidator:
     SUPPORTED_ACTIONS = {action.value for action in ActionName}
 
     @classmethod
-    def sanitize_workspace_path(cls, path_str: str) -> str:
+    def sanitize_workspace_path(
+        cls,
+        path_str: str,
+        action_name: str = ActionName.INSPECT_FILE.value,
+        field: str = "path",
+    ) -> str:
         """
         Normalize and validate a file path relative to /workspace.
         Prevents directory traversal escaping the workspace root.
+
+        ``action_name`` and ``field`` are reported on failure so a rejected
+        value is attributed to the action and input that actually carried it.
         """
         cleaned = path_str.strip()
         if not cleaned:
             raise ActionValidationError(
                 "File path cannot be empty or whitespace.",
-                action_name=ActionName.INSPECT_FILE.value,
-                field="path",
+                action_name=action_name,
+                field=field,
             )
 
         # Normalize path separators
@@ -44,11 +54,34 @@ class ActionValidator:
         if norm.startswith("../") or norm == ".." or norm.startswith("/"):
             raise ActionValidationError(
                 f"Invalid file path '{path_str}'. Path must remain within /workspace and cannot use directory traversal escaping workspace.",
-                action_name=ActionName.INSPECT_FILE.value,
-                field="path",
+                action_name=action_name,
+                field=field,
             )
 
         return norm
+
+    @classmethod
+    def _sanitize_optional_workdir(cls, data: Dict[str, Any], action_name: str) -> Dict[str, Any]:
+        """Return a copy of ``data`` with any ``workdir`` normalised inside /workspace.
+
+        A workdir is joined onto the sandbox workspace root at dispatch time, so
+        an unsanitised ``..`` in one would let an action address paths outside
+        the sandbox workspace.
+        """
+        raw_workdir = data.get("workdir")
+        if raw_workdir is None:
+            return data
+        if not isinstance(raw_workdir, str) or not raw_workdir.strip():
+            raise ActionValidationError(
+                "workdir must be a non-empty string when provided.",
+                action_name=action_name,
+                field="workdir",
+            )
+        data_copy = dict(data)
+        data_copy["workdir"] = cls.sanitize_workspace_path(
+            raw_workdir, action_name=action_name, field="workdir"
+        )
+        return data_copy
 
     @classmethod
     def validate_action(cls, data: Dict[str, Any]) -> AgentAction:
@@ -91,6 +124,26 @@ class ActionValidator:
                 data_copy = dict(data)
                 data_copy["path"] = sanitized_path
                 return InspectFileAction(**data_copy)
+
+            elif action_name == ActionName.GENERATE_PATCH.value:
+                return GeneratePatchAction(**cls._sanitize_optional_workdir(data, action_name))
+
+            elif action_name == ActionName.RUN_BISECT.value:
+                for required_field in ("good", "bad", "command"):
+                    value = data.get(required_field)
+                    if not isinstance(value, str) or not value.strip():
+                        hint = ""
+                        if required_field in ("good", "bad"):
+                            hint = (
+                                " A bisect cannot start without both a"
+                                " known-good and a known-bad revision."
+                            )
+                        raise ActionValidationError(
+                            f"'{required_field}' is required and must be a non-empty string.{hint}",
+                            action_name=action_name,
+                            field=required_field,
+                        )
+                return RunBisectAction(**cls._sanitize_optional_workdir(data, action_name))
 
             elif action_name == ActionName.FINISH.value:
                 return FinishAction(**data)
