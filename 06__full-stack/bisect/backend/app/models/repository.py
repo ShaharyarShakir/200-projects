@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, TYPE_CHECKING
 import uuid
+from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.user import utc_now
@@ -13,7 +14,10 @@ if TYPE_CHECKING:
 class RepositoryBase(SQLModel):
     """Base schema attributes for Repository."""
 
-    github_repo_id: int = Field(unique=True, index=True, nullable=False)
+    # Indexed but not unique on its own: a repository can be accessible to
+    # several users, each of whom owns a distinct row. Uniqueness is enforced
+    # by the composite (github_repo_id, owner_id) constraint below.
+    github_repo_id: int = Field(index=True, nullable=False)
     full_name: str = Field(index=True, nullable=False)
     default_branch: str = Field(default="main", nullable=False)
     clone_url: str = Field(nullable=False)
@@ -24,6 +28,16 @@ class Repository(RepositoryBase, table=True):
     """Repository table storing connected GitHub repository metadata."""
 
     __tablename__ = "repositories"
+
+    # One row per (repository, user). Kept in sync with the Alembic revision
+    # b7e2c4a91d38 so create_all and the migrated schema agree.
+    __table_args__ = (
+        UniqueConstraint(
+            "github_repo_id",
+            "owner_id",
+            name="uq_repositories_github_repo_id_owner_id",
+        ),
+    )
 
     id: uuid.UUID = Field(
         default_factory=uuid.uuid4,

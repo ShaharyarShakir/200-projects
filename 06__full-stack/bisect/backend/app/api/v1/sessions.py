@@ -17,7 +17,9 @@ from app.schemas.session import (
     SessionCreateRequest,
     SessionEventListResponse,
     SessionListResponse,
+    SessionPatchRead,
     SessionRead,
+    SessionTimelineRead,
 )
 from app.services.session import SessionService
 
@@ -111,6 +113,42 @@ async def list_sessions(
 
 
 @router.get(
+    "/events",
+    summary="List events across the caller's sessions",
+    response_model=SessionEventListResponse,
+)
+async def list_events_across_sessions(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    session_id: Annotated[
+        str | None,
+        Query(description="Narrow to a single session the caller owns"),
+    ] = None,
+    after_sequence: Annotated[
+        int, Query(ge=0, description="Cursor used only when session_id is given")
+    ] = 0,
+    limit: Annotated[int, Query(ge=1, le=500, description="Page size limit")] = 100,
+) -> SessionEventListResponse:
+    """Read the caller's event feed across every session they own.
+
+    This is the same read model the single-session feed returns, with the scope
+    widened: an activity view can show everything the caller has done without a
+    second event shape to handle. Passing ``session_id`` narrows the query back
+    to that one session and behaves exactly like its own events endpoint.
+
+    Declared before ``/{session_id}`` so that the literal path ``/events`` is not
+    captured as a session id.
+    """
+    return await SessionService.load_events_for_owner_read(
+        session,
+        owner_id=current_user.id,
+        session_id=session_id,
+        after_sequence=after_sequence,
+        limit=limit,
+    )
+
+
+@router.get(
     "/{session_id}",
     summary="Get an agent session",
     response_model=SessionRead,
@@ -154,4 +192,47 @@ async def list_session_events(
         owner_id=current_user.id,
         after_sequence=after_sequence,
         limit=limit,
+    )
+
+
+@router.get(
+    "/{session_id}/patch",
+    summary="Get a session's patch",
+    response_model=SessionPatchRead,
+)
+async def get_session_patch(
+    session_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> SessionPatchRead:
+    """Read the unified diff a session produced.
+
+    Scoped exactly like the session itself: an id belonging to another user
+    raises the same 404 as one that does not exist, so this cannot be used to
+    probe for another user's session. A session that produced no patch reads as
+    an empty artifact rather than a 404, because the session does exist and
+    "nothing was produced" is not a failure.
+    """
+    return await SessionService.load_patch_read(
+        session, session_id=session_id, owner_id=current_user.id
+    )
+
+
+@router.get(
+    "/{session_id}/timeline",
+    summary="Get a session's bisect timeline",
+    response_model=SessionTimelineRead,
+)
+async def get_session_timeline(
+    session_id: str,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+) -> SessionTimelineRead:
+    """Read the bisect timeline a session produced, in evaluation order.
+
+    Owner-scoped on the same terms as the patch. A session that ran no bisect
+    reads as an empty timeline with no culprit rather than a 404.
+    """
+    return await SessionService.load_timeline_read(
+        session, session_id=session_id, owner_id=current_user.id
     )
