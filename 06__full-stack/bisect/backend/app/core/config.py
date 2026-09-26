@@ -28,7 +28,17 @@ class Settings(BaseSettings):
     # GitHub OAuth
     GITHUB_CLIENT_ID: str = "mock-github-client-id"
     GITHUB_CLIENT_SECRET: str = "mock-github-client-secret"
-    GITHUB_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/github/callback"
+    GITHUB_REDIRECT_URI: str = "http://localhost:3000/auth/callback"
+
+    # GitHub API resilience: bounded retry policy for rate limits and
+    # transient transport failures. GITHUB_RETRY_TOTAL_BUDGET is a wall-clock
+    # ceiling for one logical operation, so the sync endpoint's worst case is
+    # bounded regardless of how many retries are attempted.
+    GITHUB_REQUEST_TIMEOUT: float = 10.0
+    GITHUB_MAX_ATTEMPTS: int = 3
+    GITHUB_RETRY_BASE_DELAY: float = 0.5
+    GITHUB_RETRY_MAX_DELAY: float = 8.0
+    GITHUB_RETRY_TOTAL_BUDGET: float = 20.0
 
     # Cryptography & JWT
     ENCRYPTION_SECRET_KEY: str = "i2_x1szObisCwZwpi3tCtg8FjNh-SyANThdSUbF07QY="

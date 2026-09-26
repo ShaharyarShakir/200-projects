@@ -23,7 +23,7 @@ async def readiness_db_check(
         await session.execute(text("SELECT 1"))
         return {"status": "ok", "database": "connected"}
     except Exception as exc:
-        logger.error(f"Database health check failed: {exc}")
+        logger.exception("Database health check failed")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={
