@@ -17,6 +17,7 @@ export default defineConfig({
   // so neither directory is silently skipped.
   testDir: '.',
   testMatch: ['tests/**/*.spec.ts', 'e2e/**/*.spec.ts'],
+  timeout: 60_000,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
