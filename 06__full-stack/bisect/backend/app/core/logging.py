@@ -19,6 +19,7 @@ SENSITIVE_KEY_NAMES = {
     "token",
     "access_token",
     "refresh_token",
+    "encrypted_token",
     "password",
     "authorization",
     "groq_api_key",
@@ -91,6 +92,47 @@ def sanitize_log_data(
     return data
 
 
+class SensitiveDataFilter(logging.Filter):
+    """Scrub secrets from every record before any handler formats it.
+
+    A filter is used rather than a call-site convention because the requirement
+    is that *no* error path can leak a secret, and a per-call helper is one
+    forgotten call away from violating that. Attaching the filter to the
+    handlers covers existing code and code that does not exist yet.
+
+    The record is mutated in place, which is safe here: a filter runs before
+    the handler formats the record, so no unsanitized output is ever emitted.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        try:
+            if isinstance(record.msg, str):
+                record.msg = sanitize_log_data(record.msg)
+
+            if record.args:
+                if isinstance(record.args, dict):
+                    record.args = {
+                        key: sanitize_log_data(value) for key, value in record.args.items()
+                    }
+                elif isinstance(record.args, tuple):
+                    record.args = tuple(sanitize_log_data(arg) for arg in record.args)
+                else:
+                    record.args = (sanitize_log_data(record.args),)
+
+            # The traceback is the part most likely to carry a secret, because
+            # it prints local variables. A handler would append it after this
+            # filter ran, so it is formatted and scrubbed here instead and
+            # exc_info is cleared to stop the handler re-appending the raw text.
+            if record.exc_info:
+                record.exc_text = sanitize_log_data(
+                    logging.Formatter().formatException(record.exc_info)
+                )
+                record.exc_info = None
+        except Exception:  # pragma: no cover - sanitizing must never break logging
+            return True
+        return True
+
+
 def setup_logging() -> logging.Logger:
     """Configure structured logging for the application."""
     log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
@@ -107,8 +149,17 @@ def setup_logging() -> logging.Logger:
         force=True,
     )
 
+    # Every handler scrubs secrets, including ones added later by uvicorn or
+    # pytest, so no configuration can bypass redaction.
+    sensitive_filter = SensitiveDataFilter()
+    for handler in logging.getLogger().handlers:
+        handler.addFilter(sensitive_filter)
+
     logger = logging.getLogger("bisect")
     logger.setLevel(log_level)
+    # Logger-level too: handler filters only run for handlers already attached,
+    # so this is what guarantees redaction for any handler, present or future.
+    logger.addFilter(sensitive_filter)
     return logger
 
 
@@ -154,7 +205,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             return response
         except Exception as exc:
             duration_ms = (time.perf_counter() - start_time) * 1000
-            logger.error(
-                f"<-- {method} {path} error={exc.__class__.__name__} duration={duration_ms:.2f}ms: {exc}"
+            logger.exception(
+                f"<-- {method} {path} error={exc.__class__.__name__} duration={duration_ms:.2f}ms"
             )
             raise
