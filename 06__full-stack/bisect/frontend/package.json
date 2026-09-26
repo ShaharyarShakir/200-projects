@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -20,6 +20,8 @@
     "tailwind-merge": "^3.0.1"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.7",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.0.9",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
