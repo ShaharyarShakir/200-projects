@@ -137,7 +137,8 @@ async def test_groq_provider_authentication_error(mock_groq_client: MagicMock) -
     with pytest.raises(AgentAuthenticationError) as exc_info:
         await provider.complete(CompletionRequest(messages=[ChatMessage(content="Hi")]))
 
-    assert exc_info.value.status_code == 401
+    assert exc_info.value.status_code == 502
+    assert exc_info.value.upstream_status_code == 401
     assert exc_info.value.provider == "groq"
 
 
@@ -169,7 +170,8 @@ async def test_groq_provider_timeout_error(mock_groq_client: MagicMock) -> None:
     with pytest.raises(AgentTimeoutError) as exc_info:
         await provider.complete(CompletionRequest(messages=[ChatMessage(content="Hi")]))
 
-    assert exc_info.value.status_code == 408
+    assert exc_info.value.status_code == 504
+    assert exc_info.value.upstream_status_code == 408
     assert exc_info.value.provider == "groq"
 
 
