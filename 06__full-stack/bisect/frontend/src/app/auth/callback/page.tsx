@@ -5,6 +5,11 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { authApi } from "@/lib/api/auth";
 import { TokenResponse } from "@/lib/api/types";
 import { useAuth } from "@/lib/auth/useAuth";
+import {
+  DEFAULT_AUTHENTICATED_PATH,
+  safeNextPath,
+} from "@/lib/auth/routes";
+import { returnPathStorage } from "@/lib/api/client";
 import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -19,6 +24,12 @@ function CallbackContent() {
   useEffect(() => {
     const code = searchParams.get("code");
     const state = searchParams.get("state");
+    // `next` is attacker-controllable, so it is validated before use. A missing
+    // or rejected value falls back to the return path recorded on 401, then to
+    // the default landing page.
+    const requestedNext = safeNextPath(searchParams.get("next"));
+    const destination =
+      requestedNext ?? returnPathStorage.get() ?? DEFAULT_AUTHENTICATED_PATH;
 
     if (!code || !state) {
       setError("Missing code or state parameter from GitHub OAuth callback.");
@@ -37,7 +48,8 @@ function CallbackContent() {
         const response = await exchangePromiseRef.current!;
         if (isMounted) {
           setAuthData(response.access_token, response.user);
-          router.replace("/workspace");
+          returnPathStorage.clear();
+          router.replace(destination);
         }
       } catch (err: unknown) {
         if (isMounted) {
