@@ -42,9 +42,11 @@ test.describe("Sessions History and Management", () => {
     await page.goto(`${BASE_URL}/sessions`);
 
     // Locate the row for the target session
-    const sessionRow = page.locator("tr", {
-      hasText: "Fix the inverted add() operator and update its test",
-    });
+    const sessionRow = page
+      .locator("tr", {
+        hasText: "Fix the inverted add() operator and update its test",
+      })
+      .first();
     await expect(sessionRow).toBeVisible({ timeout: 15_000 });
 
     // Click on its Workspace link
