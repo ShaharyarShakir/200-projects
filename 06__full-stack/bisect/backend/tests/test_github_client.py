@@ -65,7 +65,8 @@ async def test_get_authenticated_user_rate_limit():
     with pytest.raises(GitHubRateLimitError) as exc_info:
         await client.get_authenticated_user()
 
-    assert exc_info.value.status_code == 403
+    assert exc_info.value.status_code == 429
+    assert exc_info.value.upstream_status_code == 403
     assert exc_info.value.retry_after == 60
     assert "rate limit exceeded" in str(exc_info.value)
 
