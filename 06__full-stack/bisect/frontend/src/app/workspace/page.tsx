@@ -1,35 +1,61 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 import { WorkspaceHeader } from "@/components/workspace/WorkspaceHeader";
 import { StatusSummary } from "@/components/workspace/StatusSummary";
 import { SessionCard } from "@/components/workspace/SessionCard";
+import { SessionInsightsPanel } from "@/components/workspace/SessionInsightsPanel";
 import { ActivityFeed } from "@/components/workspace/ActivityFeed";
 import { AgentModelSelector, AGENT_MODELS, AgentModelOption } from "@/components/workspace/AgentModelSelector";
 import { OpenSpecLifecycleTracker, OpenSpecPhaseId } from "@/components/workspace/OpenSpecLifecycleTracker";
 import { CommitTimelineScrubber } from "@/components/workspace/CommitTimelineScrubber";
 import { DiffReviewPanel } from "@/components/workspace/DiffReviewPanel";
+import type { ArtifactState } from "@/components/workspace/DiffReviewPanel";
 import { HumanApprovalGate, PendingApprovalRequest } from "@/components/workspace/HumanApprovalGate";
-import { ErrorBanner, ErrorState } from "@/components/ui/ErrorState";
-import { CardSkeleton } from "@/components/ui/LoadingSkeleton";
+import { ErrorBanner } from "@/components/ui/ErrorState";
 import { useSessionPoll } from "@/lib/hooks/useSessionPoll";
+import { useSessionEvents } from "@/lib/hooks/useSessionEvents";
+import { useSessionArtifacts } from "@/lib/hooks/useSessionArtifacts";
 import { repositoriesApi } from "@/lib/api/repositories";
-import { sessionsApi } from "@/lib/api/sessions";
+import { sessionsApi, getSession } from "@/lib/api/sessions";
 import { RepositoryRead } from "@/lib/api/types";
+import { ApiClientError } from "@/lib/api/client";
+import { isTerminalStatus } from "@/lib/session-format";
+import { deriveValidationState } from "@/lib/session-insights";
+import { toPanelCommits } from "@/lib/session-artifacts";
+import { parseUnifiedDiff } from "@/lib/diff/parse-unified-diff";
 import {
   Play,
   Sparkles,
-  AlertCircle,
   RefreshCw,
   Activity,
   GitCommit,
   FileDiff,
-  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function WorkspacePage() {
+/** Session ids are uuid4 hex, so anything else is not worth a request. */
+const SESSION_ID_PATTERN = /^[0-9a-f]{32}$/;
+
+/**
+ * Keeps a junk `?session_id=` from becoming the active session. The backend
+ * still decides ownership and answers 404 for a session that is not the
+ * caller's, so this only rejects values that cannot be a session id at all.
+ */
+function normalizeSessionIdParam(value: string | null): string | null {
+  if (!value) return null;
+  const trimmed = value.trim().toLowerCase();
+  return SESSION_ID_PATTERN.test(trimmed) ? trimmed : null;
+}
+
+function WorkspaceContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionIdParam = searchParams.get("session_id");
+
   const [repositories, setRepositories] = useState<RepositoryRead[]>([]);
   const [selectedRepo, setSelectedRepo] = useState<RepositoryRead | null>(null);
   const [isLoadingRepos, setIsLoadingRepos] = useState<boolean>(true);
@@ -37,11 +63,19 @@ export default function WorkspacePage() {
   const [repoError, setRepoError] = useState<string | null>(null);
 
   // Active Session & Creation State
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  //
+  // A session can arrive two ways: created here, or opened through
+  // `?session_id=`. Without the second path a finished run's patch and
+  // timeline were unreachable, because nothing ever set this state again
+  // after the run that created it went away.
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(() =>
+    normalizeSessionIdParam(sessionIdParam)
+  );
   const [taskPrompt, setTaskPrompt] = useState<string>("");
   const [selectedModel, setSelectedModel] = useState<AgentModelOption>(AGENT_MODELS[0]);
   const [isCreatingSession, setIsCreatingSession] = useState<boolean>(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   // Cockpit View Tabs
   const [activeTab, setActiveTab] = useState<"activity" | "timeline" | "diff">("activity");
@@ -54,10 +88,109 @@ export default function WorkspacePage() {
   const {
     session,
     isLoading: isLoadingSession,
+    isRefreshing,
     error: sessionError,
     isPolling,
     refresh: refreshSession,
   } = useSessionPoll(activeSessionId, { intervalMs: 2000 });
+
+  // The event feed is the activity tab's data source, so it follows the same
+  // session and stops polling once the run reaches a terminal status.
+  const {
+    events: sessionEvents,
+    isLoading: isLoadingEvents,
+    error: eventsError,
+    refresh: refreshEvents,
+  } = useSessionEvents(activeSessionId, {
+    enabled: !session || !isTerminalStatus(session.status),
+    intervalMs: 2000,
+  });
+
+  // The patch and timeline panels read the same session and stop polling on the
+  // same terminal condition, so a finished run does not keep re-fetching
+  // artifacts that will never change again.
+  const {
+    patch,
+    timeline,
+    isLoading: isLoadingArtifacts,
+    error: artifactsError,
+    refresh: refreshArtifacts,
+  } = useSessionArtifacts(activeSessionId, {
+    enabled: !session || !isTerminalStatus(session.status),
+    intervalMs: 2000,
+  });
+
+  // Parsed from the diff exactly as the backend returned it. `exists` and
+  // `is_empty` are kept separate so the panel can say which of the two empty
+  // cases it is instead of collapsing them into one message.
+  const changedFiles = useMemo(
+    () => parseUnifiedDiff(patch.diff),
+    [patch.diff]
+  );
+  const timelineCommits = useMemo(
+    () => toPanelCommits(timeline),
+    [timeline]
+  );
+
+  // Follows the URL so a deep link, a back/forward step, and a link from the
+  // sessions archive all land on the same session.
+  useEffect(() => {
+    setActiveSessionId(normalizeSessionIdParam(sessionIdParam));
+  }, [sessionIdParam]);
+
+  // `useSessionPoll` keeps only the error message, so the 404 that tells a
+  // missing session apart from a failed refresh cannot be recovered from it.
+  // The link is therefore checked once here, where the status code is still
+  // available. A 404 is deliberately indistinguishable between "deleted" and
+  // "not yours", so the message covers both.
+  useEffect(() => {
+    const target = normalizeSessionIdParam(sessionIdParam);
+    if (!target) {
+      setLinkError(null);
+      return;
+    }
+    let cancelled = false;
+    getSession(target)
+      .then(() => {
+        if (!cancelled) setLinkError(null);
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setLinkError(
+          err instanceof ApiClientError && err.code === "not_found"
+            ? "That session does not exist, or it belongs to another account. " +
+                "Open one from the Sessions archive, or start a new task below."
+            : err instanceof Error
+            ? err.message
+            : "Failed to open that session."
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionIdParam]);
+
+  // A session with no artifacts must read as "none", never as invented content.
+  // While the first request is still in flight neither of the two empty cases is
+  // known yet, so the panels are told they are loading rather than told there is
+  // nothing, which would assert a result the backend has not given.
+  const isFirstArtifactLoad =
+    isLoadingArtifacts && !patch.exists && !timeline.exists;
+
+  const patchState: ArtifactState = isFirstArtifactLoad
+    ? "loading"
+    : !patch.exists
+    ? "unavailable"
+    : changedFiles.length === 0
+    ? "empty"
+    : "ready";
+  const timelineState: ArtifactState = isFirstArtifactLoad
+    ? "loading"
+    : !timeline.exists
+    ? "unavailable"
+    : timelineCommits.length === 0
+    ? "empty"
+    : "ready";
 
   // Load repositories on mount
   useEffect(() => {
@@ -129,6 +262,10 @@ export default function WorkspacePage() {
       });
       setActiveSessionId(newSession.id);
       setActiveTab("activity");
+      // Puts the run in the address bar so it survives a reload and can be
+      // linked to. replace() keeps this out of the history, so Back does not
+      // walk into a run the user has already left.
+      router.replace(`/workspace?session_id=${newSession.id}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to trigger agent task";
       setActionError(msg);
@@ -140,6 +277,7 @@ export default function WorkspacePage() {
   // Approval Gate Actions
   const handleApproveAction = async (requestId: string) => {
     setIsApproving(true);
+    void requestId;
     setTimeout(() => {
       setPendingApproval(null);
       setIsApproving(false);
@@ -148,6 +286,8 @@ export default function WorkspacePage() {
 
   const handleRejectAction = async (requestId: string, reason?: string) => {
     setIsApproving(true);
+    void requestId;
+    void reason;
     setTimeout(() => {
       setPendingApproval(null);
       setIsApproving(false);
@@ -163,20 +303,10 @@ export default function WorkspacePage() {
     return "explore";
   };
 
-  // Calculate Validation Status
-  const getValidationStatus = (): "not_run" | "validating" | "passed" | "failed" => {
-    if (!session) return "not_run";
-    if (session.status === "running") return "validating";
-    if (session.status === "completed") return "passed";
-    if (
-      session.status === "failed" ||
-      session.status === "terminated" ||
-      session.status === "timed_out"
-    ) {
-      return "failed";
-    }
-    return "not_run";
-  };
+  // Derived from the recorded events, not from the status alone: a completed run
+  // whose actions were rejected must not read as cleanly validated, and a failed
+  // run needs the specific errors the backend captured.
+  const validationStatus = deriveValidationState(session, sessionEvents);
 
   const workspaceStatus = repoError
     ? "error"
@@ -198,20 +328,34 @@ export default function WorkspacePage() {
             </p>
           </div>
 
-          {activeSessionId && (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => refreshSession()}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white"
-              >
-                <RefreshCw
-                  className={cn("h-3.5 w-3.5", isPolling && "animate-spin text-blue-400")}
-                />
-                {isPolling ? "Polling live..." : "Refresh"}
-              </button>
-            </div>
-          )}
+          {/* Available before any session exists: the user should be able to
+              retry a failed load, and see that data is being fetched, rather
+              than being told nothing is happening. */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                void refreshSession();
+                refreshEvents();
+                refreshArtifacts();
+              }}
+              disabled={!activeSessionId || isRefreshing}
+              aria-label="Refresh session"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <RefreshCw
+                className={cn(
+                  "h-3.5 w-3.5",
+                  (isRefreshing || isPolling) && "animate-spin text-blue-400"
+                )}
+              />
+              {isRefreshing
+                ? "Refreshing…"
+                : isPolling
+                ? "Polling live..."
+                : "Refresh"}
+            </button>
+          </div>
         </div>
 
         {/* Global Error Banners */}
@@ -227,9 +371,13 @@ export default function WorkspacePage() {
             onDismiss={() => setActionError(null)}
           />
         )}
-        {sessionError && (
+        {linkError && (
           <ErrorBanner
-            message={`Session Error: ${sessionError}`}
+            message={linkError}
+            onDismiss={() => {
+              setLinkError(null);
+              router.replace("/workspace");
+            }}
           />
         )}
 
@@ -250,13 +398,15 @@ export default function WorkspacePage() {
           onSelectRepo={(repo) => setSelectedRepo(repo)}
           onSyncRepos={handleSyncRepos}
           isSyncing={isSyncingRepos}
+          isLoading={isLoadingRepos}
+          error={repoError}
         />
 
         {/* Workspace & Lifecycle Status Summary */}
         <StatusSummary
           workspaceStatus={workspaceStatus}
           sessionStatus={session?.status || null}
-          validationStatus={getValidationStatus()}
+          validationStatus={validationStatus}
         />
 
         {/* OpenSpec Lifecycle Progression Tracker */}
@@ -383,29 +533,74 @@ export default function WorkspacePage() {
         {/* Tab Contents */}
         {activeTab === "activity" && (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* Session Metrics & Inspector (1 col) */}
-            <div className="lg:col-span-1">
-              <SessionCard session={session} isLoading={isLoadingSession} />
+            {/* Session Metrics, status, validation & lifecycle (1 col) */}
+            <div className="space-y-6 lg:col-span-1">
+              <SessionCard
+                session={session}
+                isLoading={isLoadingSession}
+                error={sessionError}
+              />
+              {/* The card already reports a session-load failure; the panel
+                  derives from events, so its failure is the events request. */}
+              {(session || !sessionError) && (
+                <SessionInsightsPanel
+                  session={session}
+                  events={sessionEvents}
+                  isLoading={isLoadingSession || isLoadingEvents}
+                  error={eventsError}
+                />
+              )}
             </div>
 
             {/* Chronological Activity Feed (2 cols) */}
             <div className="lg:col-span-2">
               <ActivityFeed
-                steps={session?.steps || []}
-                isLoading={isLoadingSession}
+                events={sessionEvents}
+                isLoading={isLoadingSession || isLoadingEvents}
+                error={eventsError}
+                onRetry={refreshEvents}
               />
             </div>
           </div>
         )}
 
         {activeTab === "timeline" && (
-          <CommitTimelineScrubber />
+          <div className="space-y-3">
+            {artifactsError && (
+              <ErrorBanner
+                message={`Timeline Error: ${artifactsError}`}
+                onDismiss={refreshArtifacts}
+              />
+            )}
+            <CommitTimelineScrubber
+              commits={timelineCommits}
+              artifactState={timelineState}
+            />
+          </div>
         )}
 
         {activeTab === "diff" && (
-          <DiffReviewPanel />
+          <div className="space-y-3">
+            {artifactsError && (
+              <ErrorBanner
+                message={`Diff Error: ${artifactsError}`}
+                onDismiss={refreshArtifacts}
+              />
+            )}
+            <DiffReviewPanel files={changedFiles} artifactState={patchState} />
+          </div>
         )}
       </div>
     </AppShell>
   );
 }
+
+function WorkspacePage() {
+  return (
+    <RequireAuth>
+      <WorkspaceContent />
+    </RequireAuth>
+  );
+}
+
+export default WorkspacePage;
