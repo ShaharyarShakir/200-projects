@@ -23,7 +23,7 @@
     --ring: #3b82f6;
     --radius: 0.5rem;
 
-    /* Extended Bisect Workbench Semantic Tokens */
+    /* Extended Bisect Workbench & Landing Semantic Tokens */
     --color-bg-primary: #090d16;
     --color-bg-secondary: #0f172a;
     --color-bg-tertiary: #1e293b;
@@ -69,4 +69,32 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
+}
+
+/* Background Grid Pattern for Landing Hero & Cockpit */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}
+
+.bg-radial-gradient {
+  background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15), transparent 70%);
+}
+
+/* Custom Scrollbars for Terminal & Diff Panels */
+.terminal-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.terminal-scrollbar::-webkit-scrollbar-track {
+  background: #050811;
+}
+.terminal-scrollbar::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+}
+.terminal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #334155;
 }
