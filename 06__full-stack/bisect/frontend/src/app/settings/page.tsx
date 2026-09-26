@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 import { useAuth } from "@/lib/auth/useAuth";
 import {
   Shield,
@@ -14,7 +15,7 @@ import {
   Save,
 } from "lucide-react";
 
-export default function SettingsPage() {
+function SettingsContent() {
   const { user } = useAuth();
 
   // Multi-Provider state
@@ -139,6 +140,31 @@ export default function SettingsPage() {
                     className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-slate-400 hover:text-white"
                   >
                     {showKeys.openai ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Google Gemini */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-300">
+                    Google Gemini API Key (Gemini 2.5 Flash / Pro)
+                  </label>
+                  <span className="text-[10px] text-emerald-400 font-mono">Connected</span>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type={showKeys.gemini ? "text" : "password"}
+                    value={geminiKey}
+                    onChange={(e) => setGeminiKey(e.target.value)}
+                    className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 font-mono text-xs text-slate-200 focus:border-blue-500 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => toggleShowKey("gemini")}
+                    className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-slate-400 hover:text-white"
+                  >
+                    {showKeys.gemini ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   </button>
                 </div>
               </div>
@@ -324,3 +350,13 @@ export default function SettingsPage() {
     </AppShell>
   );
 }
+
+function SettingsPage() {
+  return (
+    <RequireAuth>
+      <SettingsContent />
+    </RequireAuth>
+  );
+}
+
+export default SettingsPage;
