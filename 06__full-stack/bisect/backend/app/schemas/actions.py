@@ -8,6 +8,8 @@ class ActionName(str, Enum):
 
     RUN_COMMAND = "run_command"
     INSPECT_FILE = "inspect_file"
+    GENERATE_PATCH = "generate_patch"
+    RUN_BISECT = "run_bisect"
     FINISH = "finish"
 
 
@@ -34,6 +36,32 @@ class InspectFileAction(BaseAction):
     max_bytes: Optional[int] = Field(default=None, gt=0, description="Max bytes to read from the file")
 
 
+class GeneratePatchAction(BaseAction):
+    """Action requesting a unified diff of the sandboxed repository's working tree."""
+
+    action: Literal["generate_patch"] = "generate_patch"
+    workdir: Optional[str] = Field(
+        default=None, description="Subdirectory within /workspace to diff; defaults to the workspace root"
+    )
+    timeout_seconds: Optional[int] = Field(default=None, gt=0, description="Optional command timeout in seconds")
+
+
+class RunBisectAction(BaseAction):
+    """Action requesting an automated bisect over the sandboxed repository's history."""
+
+    action: Literal["run_bisect"] = "run_bisect"
+    good: str = Field(..., min_length=1, description="Known-good revision bounding the search")
+    bad: str = Field(..., min_length=1, description="Known-bad revision the search narrows towards")
+    command: str = Field(
+        ...,
+        min_length=1,
+        description="Command run at each candidate commit; exit 0 reads as good, non-zero as bad",
+    )
+    max_commits: int = Field(default=8, ge=1, le=100, description="Commit budget; the search stops after this many evaluations")
+    workdir: Optional[str] = Field(default=None, description="Subdirectory within /workspace to bisect; defaults to the workspace root")
+    timeout_seconds: Optional[int] = Field(default=None, gt=0, description="Optional per-commit command timeout in seconds")
+
+
 class FinishAction(BaseAction):
     """Action indicating agent task completion or termination."""
 
@@ -43,7 +71,7 @@ class FinishAction(BaseAction):
 
 
 AgentAction = Annotated[
-    Union[RunCommandAction, InspectFileAction, FinishAction],
+    Union[RunCommandAction, InspectFileAction, GeneratePatchAction, RunBisectAction, FinishAction],
     Field(discriminator="action"),
 ]
 
@@ -88,6 +116,51 @@ class FinishActionResult(BaseModel):
     success: bool = True
 
 
+class PatchActionResult(BaseModel):
+    """Result of a patch generation action.
+
+    An unmodified working tree is a success with an empty diff, not a failure:
+    "nothing changed" is a legitimate answer to the agent's question.
+    """
+
+    action_type: Literal["generate_patch"] = "generate_patch"
+    diff: str = ""
+    is_empty: bool = True
+
+
+class BisectCommit(BaseModel):
+    """One commit evaluated during a bisect run."""
+
+    sha: str
+    short_sha: str = ""
+    author: str = ""
+    authored_at: str = ""
+    message: str = ""
+    verdict: Literal["good", "bad"]
+    is_culprit: bool = False
+    exit_code: int = 0
+    test_output: str = ""
+    duration_seconds: float = 0.0
+    timed_out: bool = False
+
+
+class BisectActionResult(BaseModel):
+    """Result of a bisect run over the sandboxed repository's history.
+
+    ``culprit`` is null when the run did not isolate one, which is a normal
+    outcome rather than an error; ``truncated`` distinguishes running out of
+    commit budget from the history simply having no bad commit in range.
+    """
+
+    action_type: Literal["run_bisect"] = "run_bisect"
+    commits: List[BisectCommit] = Field(default_factory=list)
+    culprit: Optional[str] = None
+    truncated: bool = False
+    good: str = ""
+    bad: str = ""
+    reset_completed: bool = False
+
+
 class ActionErrorResult(BaseModel):
     """Result representing an action validation or dispatch error."""
 
@@ -97,7 +170,14 @@ class ActionErrorResult(BaseModel):
 
 
 ActionResult = Annotated[
-    Union[CommandActionResult, InspectFileActionResult, FinishActionResult, ActionErrorResult],
+    Union[
+        CommandActionResult,
+        InspectFileActionResult,
+        PatchActionResult,
+        BisectActionResult,
+        FinishActionResult,
+        ActionErrorResult,
+    ],
     Field(discriminator="action_type"),
 ]
 
