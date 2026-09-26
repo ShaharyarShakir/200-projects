@@ -47,10 +47,13 @@ class OAuthService:
             async with httpx.AsyncClient(timeout=15.0) as client:
                 response = await client.post(cls.GITHUB_TOKEN_URL, json=payload, headers=headers)
         except httpx.RequestError as exc:
-            logger.error(f"Network error exchanging OAuth code: {exc}")
+            logger.exception("Network error exchanging OAuth code")
             raise OAuthError(f"Network error contacting GitHub token endpoint: {exc}") from exc
 
         if response.is_error:
+            # No exception is in scope here, so logger.exception cannot be
+            # used: these branches are logical failures, not caught errors. The
+            # log filter still scrubs the response body.
             logger.error(f"GitHub token endpoint returned HTTP {response.status_code}: {response.text}")
             raise OAuthError(f"GitHub OAuth token exchange failed with status {response.status_code}")
 

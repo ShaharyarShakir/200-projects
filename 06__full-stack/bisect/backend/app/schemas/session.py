@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Set
 import uuid
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.core.errors import InvalidStateTransitionError
 from app.core.logging import sanitize_log_data
@@ -159,3 +159,150 @@ class AgentSession(BaseModel):
     def to_safe_dict(self) -> Dict[str, Any]:
         """Convenience method to return sanitized dictionary representation."""
         return self.to_dict(redact_secrets=True)
+
+
+# ==============================================================================
+# HTTP Response Schemas
+# ==============================================================================
+#
+# The models above own the in-memory lifecycle and state machine. The models
+# below are the wire contract for the session API. They are intentionally
+# separate types so a change to what the API returns cannot silently alter the
+# loop's state machine, and vice versa.
+
+
+class SessionCreateRequest(BaseModel):
+    """Request body for creating an agent session."""
+
+    task_prompt: str = Field(
+        ...,
+        min_length=1,
+        max_length=8000,
+        description="The objective the agent should pursue",
+    )
+    repository_id: Optional[uuid.UUID] = Field(
+        default=None,
+        description="Repository the session targets; must be owned by the caller",
+    )
+
+    @field_validator("task_prompt")
+    @classmethod
+    def _reject_blank_prompt(cls, value: str) -> str:
+        """Reject a prompt that is only whitespace.
+
+        ``min_length=1`` admits ``"   "``, which would create a session the
+        agent cannot meaningfully act on.
+        """
+        if not value.strip():
+            raise ValueError("task_prompt must not be blank")
+        return value
+
+
+class SessionRead(BaseModel):
+    """A persisted agent session as returned by the API.
+
+    Built by :meth:`app.services.session.SessionService.to_read_model` rather
+    than by validating the row directly, so that credential redaction is applied
+    on every read path instead of relying on each caller to remember it.
+    """
+
+    id: str
+    owner_id: uuid.UUID
+    repository_id: Optional[uuid.UUID] = None
+    task_prompt: str
+    status: str
+    iteration_count: int
+    executed_action_count: int
+    created_at: datetime
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    termination_reason: Optional[str] = None
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+    steps: List[LoopStep] = Field(default_factory=list)
+
+
+class SessionListResponse(BaseModel):
+    """Paginated list of the caller's sessions."""
+
+    items: List[SessionRead]
+    total: int
+    limit: int
+    offset: int
+
+
+class SessionEventRead(BaseModel):
+    """One event in a session's chronological feed."""
+
+    id: uuid.UUID
+    session_id: str
+    sequence: int
+    category: str
+    event_type: str
+    level: str
+    summary: str
+    payload: Optional[Dict[str, Any]] = None
+    created_at: datetime
+
+
+class SessionEventListResponse(BaseModel):
+    """A page of session events, ordered by ascending sequence.
+
+    ``last_sequence`` lets an incremental client resume from where it stopped
+    without re-reading the feed.
+    """
+
+    items: List[SessionEventRead]
+    total: int
+    limit: int
+    after_sequence: int
+    last_sequence: Optional[int] = None
+
+
+# ==============================================================================
+# Session artifacts
+# ==============================================================================
+
+
+class SessionPatchRead(BaseModel):
+    """A session's unified diff, returned whole.
+
+    ``is_empty`` distinguishes "the agent produced a patch and it was empty"
+    from "the agent produced nothing here", which is a meaningful difference to a
+    reviewer and the reason this is a flag rather than a null diff.
+    """
+
+    session_id: str
+    exists: bool
+    diff: str = ""
+    is_empty: bool = True
+
+
+class BisectCommitRead(BaseModel):
+    """One commit on a session's bisect timeline, in evaluation order."""
+
+    hash: str
+    short_hash: str = ""
+    message: str = ""
+    author: str = ""
+    timestamp: str = ""
+    # ``culprit`` is distinct from ``bad``: the first bad commit is one the
+    # search proved, which is not the same claim as one that merely tested bad.
+    outcome: str
+    test_output: Optional[str] = None
+    duration_seconds: float = 0.0
+
+
+class SessionTimelineRead(BaseModel):
+    """A session's bisect timeline, in the order the search evaluated commits.
+
+    ``culprit_hash`` is null when the run did not isolate one, which is a normal
+    outcome for an inconclusive search rather than an error.
+    """
+
+    session_id: str
+    exists: bool
+    commits: List[BisectCommitRead] = Field(default_factory=list)
+    culprit_hash: Optional[str] = None
+
