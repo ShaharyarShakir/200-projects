@@ -12,7 +12,11 @@ import { defineConfig, devices } from '@playwright/test';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: './tests',
+  // `e2e/` holds the checks that run against the live dev servers; `tests/`
+  // holds the scaffolded smoke test. Both are collected from the project root
+  // so neither directory is silently skipped.
+  testDir: '.',
+  testMatch: ['tests/**/*.spec.ts', 'e2e/**/*.spec.ts'],
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

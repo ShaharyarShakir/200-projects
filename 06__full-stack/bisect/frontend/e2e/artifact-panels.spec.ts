@@ -15,6 +15,8 @@ import { test, expect, type Page } from "@playwright/test";
 const BASE = process.env.E2E_BASE_URL || "http://localhost:3000";
 const TOKEN = process.env.E2E_ACCESS_TOKEN || "";
 const SESSION_ID = process.env.E2E_SESSION_ID || "";
+/** Well-formed but absent, so the backend answers 404. */
+const UNKNOWN_SESSION_ID = "00000000000000000000000000000000";
 
 /** Seeds the token `tokenStorage` reads (src/lib/api/client.ts) before boot. */
 async function signIn(page: Page): Promise<void> {
@@ -33,6 +35,49 @@ const INVENTED = [
 ];
 
 test.describe("artifact panels and aggregate activity over real responses", () => {
+  test("a stored session opens from its link and draws both panels", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await page.goto(`${BASE}/workspace?session_id=${SESSION_ID}`);
+
+    // Both artifacts come from the API for this exact session.
+    await page.getByRole("button", { name: "Bisect Timeline" }).click();
+    await expect(page.getByTestId("timeline-unavailable")).toHaveCount(0);
+    await expect(page.getByText("Breaking Commit Isolated:")).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByText("c3d4e5f").first()).toBeVisible();
+    await expect(page.getByText("a1b2c3d").first()).toBeVisible();
+
+    await page.getByRole("button", { name: "Diff & Patch Review" }).click();
+    await expect(page.getByTestId("diff-unavailable")).toHaveCount(0);
+    await expect(page.getByText("src/calc.py")).toBeVisible();
+    await expect(page.getByText("tests/test_calc.py")).toBeVisible();
+    await expect(page.getByText("return a + b")).toBeVisible();
+
+    const text = (await page.locator("body").innerText()).toLowerCase();
+    for (const phrase of INVENTED) {
+      expect(text, `invented content rendered: ${phrase}`).not.toContain(phrase);
+    }
+
+    await page.screenshot({
+      path: "e2e/screenshots/panels-populated.png",
+      fullPage: true,
+    });
+  });
+
+  test("a session id the account does not own is reported, not ignored", async ({
+    page,
+  }) => {
+    await signIn(page);
+    await page.goto(`${BASE}/workspace?session_id=${UNKNOWN_SESSION_ID}`);
+
+    await expect(
+      page.getByText(/does not exist, or it belongs to another account/)
+    ).toBeVisible({ timeout: 15_000 });
+  });
+
   test("a session with no artifacts shows explicit unavailable states", async ({
     page,
   }) => {
@@ -45,6 +90,9 @@ test.describe("artifact panels and aggregate activity over real responses", () =
       .fill("browser check: confirm panels state honestly with no artifacts");
     await page.getByRole("button", { name: "Start Task" }).click();
 
+    // Wait for the session to be created and active before switching tabs
+    await expect(page).toHaveURL(/session_id=[0-9a-f]{32}/, { timeout: 15_000 });
+
     // The panels are tabbed, so open the timeline before asserting its state.
     await page.getByRole("button", { name: "Bisect Timeline" }).click();
     await expect(page.getByTestId("timeline-unavailable")).toBeVisible({
@@ -52,14 +100,16 @@ test.describe("artifact panels and aggregate activity over real responses", () =
     });
     await expect(
       page.getByRole("heading", { name: "No bisect timeline for this session" })
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15_000 });
 
     // Switching tabs unmounts the previous panel, so assert each in turn.
     await page.getByRole("button", { name: "Diff & Patch Review" }).click();
-    await expect(page.getByTestId("diff-unavailable")).toBeVisible();
+    await expect(page.getByTestId("diff-unavailable")).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(
       page.getByRole("heading", { name: "No patch for this session" })
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15_000 });
 
     // The fabricated content the panels used to invent must not be reachable.
     const text = (await page.locator("body").innerText()).toLowerCase();
