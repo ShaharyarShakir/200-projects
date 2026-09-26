@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.db import get_session
-from app.core.errors import BisectError
 from app.core.logging import logger
 from app.core.security import generate_oauth_state, verify_oauth_state
 from app.models.user import User
@@ -64,20 +63,10 @@ async def github_callback(
             detail="Invalid or missing OAuth state parameter",
         )
 
-    try:
-        user, jwt_token = await OAuthService.authenticate_github_user(session=session, code=code)
-    except BisectError as exc:
-        logger.error(f"GitHub authentication error: {exc.message}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=exc.message,
-        )
-    except Exception as exc:
-        logger.error(f"Unexpected error during GitHub OAuth callback: {exc}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to authenticate with GitHub",
-        )
+    # Domain errors propagate to the global BisectError handler, which maps each
+    # error's own status code and logs the traceback. The route does not
+    # re-map them.
+    user, jwt_token = await OAuthService.authenticate_github_user(session=session, code=code)
 
     user_read = UserRead.model_validate(user)
     token_response = TokenResponse(

@@ -5,8 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.core.db import get_session
-from app.core.errors import BisectError
-from app.core.logging import logger
 from app.models.user import User
 from app.schemas.repository import (
     RepositoryListResponse,
@@ -53,24 +51,16 @@ async def sync_repositories(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> RepositorySyncResponse:
-    """Fetch accessible repositories from GitHub and synchronize them with the local database."""
-    try:
-        synced_repos = await RepositoryService.sync_repositories(
-            session=session,
-            user=current_user,
-        )
-    except BisectError as exc:
-        logger.error(f"Repository sync failed for user {current_user.id}: {exc.message}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=exc.message,
-        )
-    except Exception as exc:
-        logger.error(f"Unexpected error during repository sync for user {current_user.id}: {exc}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while synchronizing repositories",
-        )
+    """Fetch accessible repositories from GitHub and synchronize them with the local database.
+
+    Domain errors propagate to the global BisectError handler, which maps each
+    error's own status code. The route deliberately does not re-map them, so a
+    rate limit surfaces as 429 rather than being flattened into 400.
+    """
+    synced_repos = await RepositoryService.sync_repositories(
+        session=session,
+        user=current_user,
+    )
 
     return RepositorySyncResponse(
         synced_count=len(synced_repos),
