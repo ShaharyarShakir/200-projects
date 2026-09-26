@@ -15,9 +15,15 @@ from app.core.config import settings
 # Alembic Config object
 config = context.config
 
-# Interpret the config file for Python logging
+# Interpret the config file for Python logging.
+# disable_existing_loggers=False is required, not cosmetic: alembic.ini names only
+# root, sqlalchemy, and alembic, and the default (True) silences every other
+# logger that already exists. Running migrations in-process -- from a test, a
+# seed script, or a management command -- would therefore leave the application's
+# own "bisect" logger disabled for the rest of that process, silently swallowing
+# every later log record.
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 target_metadata = SQLModel.metadata
 
