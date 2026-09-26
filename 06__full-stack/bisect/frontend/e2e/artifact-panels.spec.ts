@@ -10,20 +10,13 @@
  *     --project=chromium
  */
 
-import { test, expect, type Page } from "@playwright/test";
-
-const BASE = process.env.E2E_BASE_URL || "http://localhost:3000";
-const TOKEN = process.env.E2E_ACCESS_TOKEN || "";
-const SESSION_ID = process.env.E2E_SESSION_ID || "";
-/** Well-formed but absent, so the backend answers 404. */
-const UNKNOWN_SESSION_ID = "00000000000000000000000000000000";
-
-/** Seeds the token `tokenStorage` reads (src/lib/api/client.ts) before boot. */
-async function signIn(page: Page): Promise<void> {
-  await page.addInitScript((token: string) => {
-    window.localStorage.setItem("bisect_auth_token", token);
-  }, TOKEN);
-}
+import { test, expect } from "@playwright/test";
+import {
+  BASE_URL as BASE,
+  signIn,
+  SESSION_WITH_ARTIFACTS as SESSION_ID,
+  UNKNOWN_SESSION_ID,
+} from "./helpers/test-env";
 
 /** Text the panels used to fabricate before they were wired to the API. */
 const INVENTED = [
