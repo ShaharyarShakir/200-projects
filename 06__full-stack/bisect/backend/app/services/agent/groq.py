@@ -79,13 +79,13 @@ class GroqProvider(AgentProvider):
         except APIError as e:
             raise AgentProviderError(
                 message=f"Groq API error: {getattr(e, 'message', str(e))}",
-                status_code=getattr(e, "status_code", 500),
+                upstream_status_code=getattr(e, "status_code", 500),
                 provider="groq",
             ) from e
         except Exception as e:
             raise AgentProviderError(
                 message=f"Unexpected error communicating with Groq: {str(e)}",
-                status_code=500,
+                upstream_status_code=500,
                 provider="groq",
             ) from e
 
