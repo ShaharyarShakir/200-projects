@@ -1,0 +1,316 @@
+{
+  "cross_session_event_list": {
+    "after_sequence": 0,
+    "items": [
+      {
+        "category": "system",
+        "created_at": "2026-09-26T11:22:30.935259Z",
+        "event_type": "loop_started",
+        "id": "f5e85f90-be00-4992-9c73-1848862d40de",
+        "level": "info",
+        "payload": {
+          "max_commands": 20,
+          "max_iterations": 10,
+          "task_prompt": "fix the failing test"
+        },
+        "sequence": 1,
+        "session_id": "fa1f963734bf4dea9ba82fd3ceff33ab",
+        "summary": "Agent loop started for: fix the failing test"
+      },
+      {
+        "category": "agent",
+        "created_at": "2026-09-26T11:22:30.954874Z",
+        "event_type": "iteration_started",
+        "id": "477da809-82cb-4abb-924f-9ec5722f1e27",
+        "level": "info",
+        "payload": {
+          "commands_executed": 0,
+          "iteration": 1
+        },
+        "sequence": 2,
+        "session_id": "fa1f963734bf4dea9ba82fd3ceff33ab",
+        "summary": "Started iteration 1"
+      },
+      {
+        "category": "execution",
+        "created_at": "2026-09-26T11:22:30.967859Z",
+        "event_type": "action_executed",
+        "id": "08bb9833-dd1b-4103-b220-33ce94c27912",
+        "level": "info",
+        "payload": {
+          "duration_seconds": 2.51,
+          "iteration": 1,
+          "result": {
+            "action_type": "run_command",
+            "command": "pytest -q",
+            "duration_seconds": 2.5,
+            "exit_code": 1,
+            "stderr": "",
+            "stdout": "1 failed, 4 passed",
+            "timed_out": false
+          }
+        },
+        "sequence": 3,
+        "session_id": "fa1f963734bf4dea9ba82fd3ceff33ab",
+        "summary": "action"
+      },
+      {
+        "category": "validation",
+        "created_at": "2026-09-26T11:22:30.981471Z",
+        "event_type": "action_validation_error",
+        "id": "0717194e-5684-42b1-ac71-315ff9e457df",
+        "level": "warning",
+        "payload": {
+          "consecutive_errors": 1,
+          "error": "unknown action 'delete_repo'",
+          "iteration": 2
+        },
+        "sequence": 4,
+        "session_id": "fa1f963734bf4dea9ba82fd3ceff33ab",
+        "summary": "Agent action rejected: unknown action 'delete_repo'"
+      },
+      {
+        "category": "error",
+        "created_at": "2026-09-26T11:22:31.010434Z",
+        "event_type": "session_terminal",
+        "id": "c3e5b7bb-bf72-4d48-963d-6288b7552736",
+        "level": "info",
+        "payload": {
+          "executed_action_count": 0,
+          "iteration_count": 0,
+          "status": "completed",
+          "termination_reason": "all failing tests resolved",
+          "total_tokens": 0
+        },
+        "sequence": 1,
+        "session_id": "47441535be9c420e8686d75136a18459",
+        "summary": "Session completed: all failing tests resolved"
+      }
+    ],
+    "last_sequence": null,
+    "limit": 100,
+    "total": 5
+  },
+  "event_list": {
+    "after_sequence": 0,
+    "items": [
+      {
+        "category": "system",
+        "created_at": "2026-09-26T11:22:30.935259Z",
+        "event_type": "loop_started",
+        "id": "f5e85f90-be00-4992-9c73-1848862d40de",
+        "level": "info",
+        "payload": {
+          "max_commands": 20,
+          "max_iterations": 10,
+          "task_prompt": "fix the failing test"
+        },
+        "sequence": 1,
+        "session_id": "fa1f963734bf4dea9ba82fd3ceff33ab",
+        "summary": "Agent loop started for: fix the failing test"
+      },
+      {
+        "category": "agent",
+        "created_at": "2026-09-26T11:22:30.954874Z",
+        "event_type": "iteration_started",
+        "id": "477da809-82cb-4abb-924f-9ec5722f1e27",
+        "level": "info",
+        "payload": {
+          "commands_executed": 0,
+          "iteration": 1
+        },
+        "sequence": 2,
+        "session_id": "fa1f963734bf4dea9ba82fd3ceff33ab",
+        "summary": "Started iteration 1"
+      },
+      {
+        "category": "execution",
+        "created_at": "2026-09-26T11:22:30.967859Z",
+        "event_type": "action_executed",
+        "id": "08bb9833-dd1b-4103-b220-33ce94c27912",
+        "level": "info",
+        "payload": {
+          "duration_seconds": 2.51,
+          "iteration": 1,
+          "result": {
+            "action_type": "run_command",
+            "command": "pytest -q",
+            "duration_seconds": 2.5,
+            "exit_code": 1,
+            "stderr": "",
+            "stdout": "1 failed, 4 passed",
+            "timed_out": false
+          }
+        },
+        "sequence": 3,
+        "session_id": "fa1f963734bf4dea9ba82fd3ceff33ab",
+        "summary": "action"
+      },
+      {
+        "category": "validation",
+        "created_at": "2026-09-26T11:22:30.981471Z",
+        "event_type": "action_validation_error",
+        "id": "0717194e-5684-42b1-ac71-315ff9e457df",
+        "level": "warning",
+        "payload": {
+          "consecutive_errors": 1,
+          "error": "unknown action 'delete_repo'",
+          "iteration": 2
+        },
+        "sequence": 4,
+        "session_id": "fa1f963734bf4dea9ba82fd3ceff33ab",
+        "summary": "Agent action rejected: unknown action 'delete_repo'"
+      }
+    ],
+    "last_sequence": 4,
+    "limit": 100,
+    "total": 4
+  },
+  "patch": {
+    "diff": "diff --git a/tests/test_regression.py b/tests/test_regression.py\nindex 1111111..2222222 100644\n--- a/tests/test_regression.py\n+++ b/tests/test_regression.py\n@@ -1,3 +1,5 @@\n def test_sum():\n-    assert sum([1, 2]) == 4\n+    assert sum([1, 2]) == 3\n",
+    "exists": true,
+    "is_empty": false,
+    "session_id": "fa1f963734bf4dea9ba82fd3ceff33ab"
+  },
+  "session": {
+    "completed_at": null,
+    "completion_tokens": 45,
+    "created_at": "2026-09-26T11:22:30.914740Z",
+    "executed_action_count": 1,
+    "id": "fa1f963734bf4dea9ba82fd3ceff33ab",
+    "iteration_count": 1,
+    "owner_id": "0c9aa40c-5eff-4d46-adb4-46bd1e1e5a4c",
+    "prompt_tokens": 120,
+    "repository_id": "63da2a71-8dbc-4db2-89d2-dd5764e88343",
+    "started_at": "2026-09-26T11:22:30.896566Z",
+    "status": "running",
+    "steps": [
+      {
+        "action": {
+          "action": "run_command",
+          "command": "pytest -q",
+          "timeout_seconds": null,
+          "workdir": null
+        },
+        "duration_seconds": 2.51,
+        "error": null,
+        "execution_id": "fa1f963734bf4dea9ba82fd3ceff33ab",
+        "iteration": 1,
+        "raw_response": "{\"action\": \"run_command\", \"command\": \"pytest -q\"}",
+        "result": {
+          "action_type": "run_command",
+          "command": "pytest -q",
+          "duration_seconds": 2.5,
+          "exit_code": 1,
+          "stderr": "",
+          "stdout": "1 failed, 4 passed",
+          "timed_out": false
+        }
+      }
+    ],
+    "task_prompt": "fix the failing test",
+    "termination_reason": null,
+    "total_tokens": 165
+  },
+  "session_list": {
+    "items": [
+      {
+        "completed_at": "2026-09-26T11:22:30.990228Z",
+        "completion_tokens": 0,
+        "created_at": "2026-09-26T11:22:30.993526Z",
+        "executed_action_count": 0,
+        "id": "47441535be9c420e8686d75136a18459",
+        "iteration_count": 0,
+        "owner_id": "0c9aa40c-5eff-4d46-adb4-46bd1e1e5a4c",
+        "prompt_tokens": 0,
+        "repository_id": null,
+        "started_at": "2026-09-26T11:22:30.990200Z",
+        "status": "completed",
+        "steps": [],
+        "task_prompt": "add a regression test",
+        "termination_reason": "all failing tests resolved",
+        "total_tokens": 0
+      },
+      {
+        "completed_at": null,
+        "completion_tokens": 45,
+        "created_at": "2026-09-26T11:22:30.914740Z",
+        "executed_action_count": 1,
+        "id": "fa1f963734bf4dea9ba82fd3ceff33ab",
+        "iteration_count": 1,
+        "owner_id": "0c9aa40c-5eff-4d46-adb4-46bd1e1e5a4c",
+        "prompt_tokens": 120,
+        "repository_id": "63da2a71-8dbc-4db2-89d2-dd5764e88343",
+        "started_at": "2026-09-26T11:22:30.896566Z",
+        "status": "running",
+        "steps": [
+          {
+            "action": {
+              "action": "run_command",
+              "command": "pytest -q",
+              "timeout_seconds": null,
+              "workdir": null
+            },
+            "duration_seconds": 2.51,
+            "error": null,
+            "execution_id": "fa1f963734bf4dea9ba82fd3ceff33ab",
+            "iteration": 1,
+            "raw_response": "{\"action\": \"run_command\", \"command\": \"pytest -q\"}",
+            "result": {
+              "action_type": "run_command",
+              "command": "pytest -q",
+              "duration_seconds": 2.5,
+              "exit_code": 1,
+              "stderr": "",
+              "stdout": "1 failed, 4 passed",
+              "timed_out": false
+            }
+          }
+        ],
+        "task_prompt": "fix the failing test",
+        "termination_reason": null,
+        "total_tokens": 165
+      }
+    ],
+    "limit": 20,
+    "offset": 0,
+    "total": 2
+  },
+  "timeline": {
+    "commits": [
+      {
+        "author": "Dev",
+        "duration_seconds": 1.25,
+        "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "message": "tweak the tolerance",
+        "outcome": "good",
+        "short_hash": "aaaaaaa",
+        "test_output": "1 passed",
+        "timestamp": "2026-01-01T00:00:00+00:00"
+      },
+      {
+        "author": "Dev",
+        "duration_seconds": 2.5,
+        "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "message": "break the accumulator",
+        "outcome": "bad",
+        "short_hash": "bbbbbbb",
+        "test_output": "1 failed",
+        "timestamp": "2026-01-02T00:00:00+00:00"
+      },
+      {
+        "author": "Dev",
+        "duration_seconds": 2.75,
+        "hash": "cccccccccccccccccccccccccccccccccccccccc",
+        "message": "widen the rounding",
+        "outcome": "culprit",
+        "short_hash": "ccccccc",
+        "test_output": "1 failed",
+        "timestamp": "2026-01-03T00:00:00+00:00"
+      }
+    ],
+    "culprit_hash": "cccccccccccccccccccccccccccccccccccccccc",
+    "exists": true,
+    "session_id": "fa1f963734bf4dea9ba82fd3ceff33ab"
+  }
+}
