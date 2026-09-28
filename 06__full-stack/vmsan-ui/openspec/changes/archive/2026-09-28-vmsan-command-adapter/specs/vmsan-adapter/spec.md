@@ -1,0 +1,74 @@
+# Spec Delta
+
+## Purpose
+
+Provides a secure, strongly-typed server-side adapter for managing Firecracker microVM lifecycles via the host vmsan CLI with strict parameter validation and robust output parsing.
+
+## ADDED Requirements
+
+### Requirement: Command Execution and Injection Prevention
+The system SHALL execute the `vmsan` binary using safe process spawning with argument arrays and MUST NOT invoke shell interpreters or perform string interpolation on command arguments.
+
+#### Scenario: Safe process spawning without shell evaluation
+- **WHEN** a command operation is invoked with parameters
+- **THEN** the adapter executes the binary via argument array without passing arguments through a shell
+
+#### Scenario: Rejection of invalid VM identifiers
+- **WHEN** a VM lifecycle operation is requested with an invalid VM identifier containing shell metacharacters or malformed syntax
+- **THEN** the adapter rejects the request with a validation error before invoking any child process
+
+### Requirement: Resource Parameter Validation
+The system SHALL validate all microVM resource and runtime parameters against permitted types and bounds before constructing creation command arguments.
+
+#### Scenario: Valid creation options
+- **WHEN** a VM creation request specifies valid options (e.g. `runtime: "node22"`, `vcpus: 2`, `memoryMiB: 512`)
+- **THEN** the adapter translates the parameters to safe CLI flags (`--runtime=node22`, `--vcpus=2`, `--memory=512`)
+
+#### Scenario: Invalid resource bounds
+- **WHEN** a VM creation request specifies `vcpus < 1` or `memoryMiB < 128` or an unsupported runtime
+- **THEN** the adapter rejects the request with a descriptive validation error
+
+### Requirement: Structured Output Parsing
+The system SHALL parse JSON output from `vmsan --json list` and normalize the microVM records into standardized data objects containing id, status, memory, vCPUs, runtime, and age.
+
+#### Scenario: Parsing valid JSON VM list
+- **WHEN** `vmsan --json list` returns a valid JSON payload containing VM entries
+- **THEN** the adapter parses and returns an array of normalized VM objects
+
+#### Scenario: Handling empty VM list
+- **WHEN** `vmsan --json list` returns an empty VM list or zero VMs
+- **THEN** the adapter returns an empty array
+
+#### Scenario: Malformed CLI output
+- **WHEN** `vmsan` produces invalid JSON or corrupted text
+- **THEN** the adapter throws a `VmsanError` indicating a parsing failure without crashing the process
+
+### Requirement: Typed Error Handling
+The system SHALL encapsulate non-zero exit codes, command execution timeouts, or process failures into a typed `VmsanError` preserving command name, arguments, exit code, stdout, and stderr while redacting sensitive environment variables.
+
+#### Scenario: Command failure with exit code
+- **WHEN** a `vmsan` command exits with a non-zero exit code
+- **THEN** the adapter throws a `VmsanError` containing the exit code, command arguments, and captured stderr
+
+#### Scenario: Command execution timeout
+- **WHEN** a `vmsan` process exceeds the configured timeout threshold
+- **THEN** the process is terminated and a `VmsanError` indicating a timeout is thrown
+
+### Requirement: MicroVM Lifecycle Operations
+The system SHALL provide programmatic lifecycle operations including listing VMs (`listVMs`), creating VMs (`createVM`), starting VMs (`startVM`), stopping VMs (`stopVM`), and removing VMs (`removeVM`).
+
+#### Scenario: List microVMs
+- **WHEN** `listVMs` is called
+- **THEN** it executes `vmsan --json list` and returns the normalized list of microVMs
+
+#### Scenario: Start microVM
+- **WHEN** `startVM` is called with a validated VM ID
+- **THEN** it executes `vmsan start <vmId>` and returns the execution result
+
+#### Scenario: Stop microVM
+- **WHEN** `stopVM` is called with a validated VM ID
+- **THEN** it executes `vmsan stop <vmId>` and returns the execution result
+
+#### Scenario: Remove microVM
+- **WHEN** `removeVM` is called with a validated VM ID
+- **THEN** it executes `vmsan remove <vmId>` and returns the execution result
