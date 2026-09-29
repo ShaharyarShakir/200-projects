@@ -7,6 +7,11 @@ import {
 } from "../helpers";
 import { VmsanError, VmsanValidationError } from "@/lib/vmsan";
 import {
+  ManagerProtocolError,
+  ManagerRequestError,
+  ManagerUnavailableError,
+} from "@/lib/vmsan-manager/errors";
+import {
   VMMetadataConflictError,
   VMMetadataValidationError,
 } from "@/lib/vm-metadata";
@@ -83,34 +88,79 @@ describe("API Helpers - handleApiError", () => {
     );
   });
 
-  it("should map VmsanError with sudo password requirement to 503 VMSAN_UNAVAILABLE with sanitized message", async () => {
-    const failureOutputs = [
-      "sudo: a password is required",
-      "sudo: a terminal is required to read the password",
-      "sudo: no tty present and no askpass program specified",
-      "user is not in the sudoers file. This incident will be reported.",
-      "privilege escalation failed",
-      "pam_authenticate: Authentication failure",
+  it("should map ManagerUnavailableError to 503 MANAGER_UNAVAILABLE", async () => {
+    const error = new ManagerUnavailableError("vmsan manager socket is not reachable");
+    const response = handleApiError(error);
+    assert.equal(response.status, 503);
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "MANAGER_UNAVAILABLE");
+    assert.equal(body.error.message, "vmsan manager socket is not reachable");
+  });
+
+  it("should map ManagerProtocolError to 502 MANAGER_PROTOCOL_ERROR", async () => {
+    const error = new ManagerProtocolError(
+      "vmsan manager response did not match the protocol contract"
+    );
+    const response = handleApiError(error);
+    assert.equal(response.status, 502);
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "MANAGER_PROTOCOL_ERROR");
+  });
+
+  it("should map ManagerRequestError to 500 carrying the manager's own code", async () => {
+    const error = new ManagerRequestError("INTERNAL_ERROR", "manager rejected the request");
+    const response = handleApiError(error);
+    assert.equal(response.status, 500);
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "INTERNAL_ERROR");
+    assert.equal(body.error.message, "manager rejected the request");
+  });
+
+  it("names no socket path, errno, or stack in any manager error response", async () => {
+    const causes = [
+      new ManagerUnavailableError("vmsan manager socket is not reachable", {
+        cause: Object.assign(new Error("connect EACCES /run/vmsan-manager.sock"), {
+          code: "EACCES",
+        }),
+      }),
+      new ManagerProtocolError("vmsan manager returned an invalid response", {
+        cause: new SyntaxError("Unexpected token } in JSON at position 12"),
+      }),
+      new ManagerRequestError("UNKNOWN_METHOD", 'Unknown method "create"'),
     ];
 
-    for (const stderrMsg of failureOutputs) {
-      const error = new VmsanError({
-        command: "sudo",
-        args: ["-n", "/usr/local/bin/vmsan", "create"],
-        exitCode: 1,
-        stdout: "",
-        stderr: stderrMsg,
-      });
+    for (const error of causes) {
       const response = handleApiError(error);
-      assert.equal(response.status, 503);
+      const serialized = JSON.stringify(await response.json());
 
-      const body = (await response.json()) as { error: { code: string; message: string } };
-      assert.equal(body.error.code, "VMSAN_UNAVAILABLE");
-      assert.equal(
-        body.error.message,
-        "vmsan requires configured privilege escalation (passwordless sudo)"
-      );
+      assert.equal(serialized.includes("/run/"), false, "no socket path in the body");
+      assert.equal(serialized.includes(".sock"), false);
+      assert.equal(/EACCES|ECONNREFUSED|ENOENT/.test(serialized), false, "no errno");
+      assert.equal(serialized.includes("at "), false, "no stack frame");
+      assert.equal(serialized.includes("cause"), false);
     }
+  });
+
+  it("does not treat a vmsan privilege message as an escalation problem", async () => {
+    // The old branch translated any password-shaped stderr into "configure
+    // passwordless sudo". There is no escalation left to configure, so the
+    // same text now falls through to the ordinary command-failure mapping.
+    const error = new VmsanError({
+      command: "vmsan",
+      args: ["list"],
+      exitCode: 1,
+      stdout: "",
+      stderr: "sudo: a password is required",
+    });
+    const response = handleApiError(error);
+    assert.equal(response.status, 500);
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "VMSAN_COMMAND_FAILED");
+    assert.equal(body.error.message.includes("passwordless sudo"), false);
   });
 
   it("should map VmsanError indicating VM not found to 404 VM_NOT_FOUND", async () => {
