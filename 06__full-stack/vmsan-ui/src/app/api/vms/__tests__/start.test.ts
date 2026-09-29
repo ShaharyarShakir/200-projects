@@ -1,24 +1,33 @@
-import { describe, it, beforeEach, afterEach } from "node:test";
+import { describe, it, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { POST } from "../[id]/start/route";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const MOCK_BIN_PATH = path.resolve(
-  __dirname,
-  "../../../../lib/vmsan/__tests__/mock-vmsan.js"
-);
+/**
+ * Start is a privileged operation with no manager RPC behind it.
+ *
+ * The route validates the id, then reports the operation as unavailable. It
+ * runs no vmsan command and makes no manager call, so the response is the same
+ * whether or not a manager is running — a user cannot be told "starting failed"
+ * for a reason that has nothing to do with their VM.
+ */
+
+type ErrorBody = { error: { code: string; message: string } };
+
+function startRequest(id: string): {
+  request: Request;
+  context: { params: Promise<{ id: string }> };
+} {
+  return {
+    request: new Request(`http://localhost/api/vms/${encodeURIComponent(id)}/start`, {
+      method: "POST",
+    }),
+    context: { params: Promise.resolve({ id }) },
+  };
+}
 
 describe("POST /api/vms/:id/start route handler", () => {
   const originalBinPath = process.env.VMSAN_BIN_PATH;
-  const originalSudo = process.env.VMSAN_SUDO;
-
-  beforeEach(() => {
-    process.env.VMSAN_BIN_PATH = MOCK_BIN_PATH;
-    process.env.VMSAN_SUDO = "false";
-  });
+  const originalSocket = process.env.VMSAN_MANAGER_SOCKET;
 
   afterEach(() => {
     if (originalBinPath !== undefined) {
@@ -26,74 +35,68 @@ describe("POST /api/vms/:id/start route handler", () => {
     } else {
       delete process.env.VMSAN_BIN_PATH;
     }
-
-    if (originalSudo !== undefined) {
-      process.env.VMSAN_SUDO = originalSudo;
+    if (originalSocket !== undefined) {
+      process.env.VMSAN_MANAGER_SOCKET = originalSocket;
     } else {
-      delete process.env.VMSAN_SUDO;
+      delete process.env.VMSAN_MANAGER_SOCKET;
     }
-    delete process.env.MOCK_FAIL_SUDO;
   });
 
-  it("should start VM successfully with valid ID", async () => {
-    const req = new Request("http://localhost/api/vms/vm-mock1/start", {
-      method: "POST",
-    });
-    const context = { params: Promise.resolve({ id: "vm-mock1" }) };
+  it("returns 501 VM_LIFECYCLE_UNAVAILABLE for a valid ID", async () => {
+    const { request, context } = startRequest("vm-mock1");
 
-    const response = await POST(req, context);
-    assert.equal(response.status, 200);
+    const response = await POST(request, context);
 
-    const body = (await response.json()) as { success: boolean; vmId: string };
-    assert.equal(body.success, true);
-    assert.equal(body.vmId, "vm-mock1");
+    assert.equal(response.status, 501);
+    const body = (await response.json()) as ErrorBody;
+    assert.equal(body.error.code, "VM_LIFECYCLE_UNAVAILABLE");
+    assert.match(body.error.message, /not available over the vmsan manager/i);
   });
 
-  it("should reject invalid VM ID with 400 INVALID_REQUEST", async () => {
-    const req = new Request("http://localhost/api/vms/bad;id/start", {
-      method: "POST",
-    });
-    const context = { params: Promise.resolve({ id: "bad;id" }) };
+  it("rejects an invalid VM ID with 400 INVALID_REQUEST, ahead of the 501", async () => {
+    const { request, context } = startRequest("bad;id");
 
-    const response = await POST(req, context);
+    const response = await POST(request, context);
+
     assert.equal(response.status, 400);
-
-    const body = (await response.json()) as { error: { code: string; message: string } };
+    const body = (await response.json()) as ErrorBody;
     assert.equal(body.error.code, "INVALID_REQUEST");
     assert.ok(body.error.message.includes("Invalid VM ID"));
   });
 
-  it("should return 503 when vmsan binary is unavailable", async () => {
-    process.env.VMSAN_BIN_PATH = "/nonexistent/binary";
+  for (const id of ["", "a".repeat(65), "vm 123", "$(whoami)", "../../etc/passwd"]) {
+    it(`rejects ${JSON.stringify(id)} as an invalid VM ID`, async () => {
+      const { request, context } = startRequest(id);
 
-    const req = new Request("http://localhost/api/vms/vm-mock1/start", {
-      method: "POST",
+      const response = await POST(request, context);
+
+      assert.equal(response.status, 400);
+      const body = (await response.json()) as ErrorBody;
+      assert.equal(body.error.code, "INVALID_REQUEST");
     });
-    const context = { params: Promise.resolve({ id: "vm-mock1" }) };
+  }
 
-    const response = await POST(req, context);
-    assert.equal(response.status, 503);
+  it("invokes no vmsan command and contacts no manager", async () => {
+    // Both are pointed at paths that cannot work. Answering 501 proves neither
+    // was reached.
+    process.env.VMSAN_BIN_PATH = "/nonexistent/binary";
+    process.env.VMSAN_MANAGER_SOCKET = "/nonexistent/vmsan-manager.sock";
 
-    const body = (await response.json()) as { error: { code: string; message: string } };
-    assert.equal(body.error.code, "VMSAN_UNAVAILABLE");
+    const { request, context } = startRequest("vm-mock1");
+    const response = await POST(request, context);
+
+    assert.equal(response.status, 501);
+    const body = (await response.json()) as ErrorBody;
+    assert.equal(body.error.code, "VM_LIFECYCLE_UNAVAILABLE");
   });
 
-  it("should return sanitized 503 if sudo privilege escalation fails", async () => {
-    process.env.MOCK_FAIL_SUDO = "true";
+  it("names no socket path or errno in the message", async () => {
+    const { request, context } = startRequest("vm-mock1");
+    const response = await POST(request, context);
+    const serialized = JSON.stringify(await response.json());
 
-    const req = new Request("http://localhost/api/vms/vm-mock1/start", {
-      method: "POST",
-    });
-    const context = { params: Promise.resolve({ id: "vm-mock1" }) };
-
-    const response = await POST(req, context);
-    assert.equal(response.status, 503);
-
-    const body = (await response.json()) as { error: { code: string; message: string } };
-    assert.equal(body.error.code, "VMSAN_UNAVAILABLE");
-    assert.equal(
-      body.error.message,
-      "vmsan requires configured privilege escalation (passwordless sudo)"
-    );
+    assert.equal(serialized.includes(".sock"), false);
+    assert.equal(serialized.includes("/run/"), false);
+    assert.equal(serialized.includes("ENOENT"), false);
   });
 });

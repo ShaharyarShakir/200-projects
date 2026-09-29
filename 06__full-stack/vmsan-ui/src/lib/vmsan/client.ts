@@ -72,17 +72,14 @@ export async function runVmsan(
   args: string[],
   options?: RunVmsanOptions
 ): Promise<CommandResult> {
+  // The adapter is deliberately powerless: it runs `vmsan` as the calling
+  // user and never escalates. Anything privileged goes through the manager
+  // socket, which is the only process with privilege in this design.
   const binPath = options?.binPath || process.env.VMSAN_BIN_PATH || "vmsan";
   const timeoutMs = options?.timeoutMs ?? 15000;
-  const useSudo = options?.sudo ?? (process.env.VMSAN_SUDO === "true");
 
-  let executable = binPath;
-  let finalArgs = args;
-
-  if (useSudo) {
-    executable = "sudo";
-    finalArgs = ["-n", binPath, ...args];
-  }
+  const executable = binPath;
+  const finalArgs = args;
 
   return new Promise((resolve, reject) => {
     let stdoutData = "";
@@ -197,10 +194,7 @@ export async function createVM(
     args.push(`--memory=${options.memoryMiB}`);
   }
 
-  return runVmsan(args, {
-    ...execOptions,
-    sudo: execOptions?.sudo ?? (process.env.VMSAN_SUDO === "true"),
-  });
+  return runVmsan(args, execOptions);
 }
 
 export async function startVM(
@@ -208,10 +202,7 @@ export async function startVM(
   execOptions?: RunVmsanOptions
 ): Promise<CommandResult> {
   const validId = validateVmId(vmId);
-  return runVmsan(["start", validId], {
-    ...execOptions,
-    sudo: execOptions?.sudo ?? (process.env.VMSAN_SUDO === "true"),
-  });
+  return runVmsan(["start", validId], execOptions);
 }
 
 export async function stopVM(
@@ -219,10 +210,7 @@ export async function stopVM(
   execOptions?: RunVmsanOptions
 ): Promise<CommandResult> {
   const validId = validateVmId(vmId);
-  return runVmsan(["stop", validId], {
-    ...execOptions,
-    sudo: execOptions?.sudo ?? (process.env.VMSAN_SUDO === "true"),
-  });
+  return runVmsan(["stop", validId], execOptions);
 }
 
 export async function removeVM(
@@ -230,8 +218,5 @@ export async function removeVM(
   execOptions?: RunVmsanOptions
 ): Promise<CommandResult> {
   const validId = validateVmId(vmId);
-  return runVmsan(["remove", validId], {
-    ...execOptions,
-    sudo: execOptions?.sudo ?? (process.env.VMSAN_SUDO === "true"),
-  });
+  return runVmsan(["remove", validId], execOptions);
 }
