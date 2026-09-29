@@ -2,8 +2,8 @@
 
 const args = process.argv.slice(2);
 
-if (process.env.MOCK_FAIL_SUDO === "true") {
-  console.error("sudo: a password is required");
+if (process.env.MOCK_FAIL === "true") {
+  console.error("vmsan: the control socket is not reachable");
   process.exit(1);
 }
 
