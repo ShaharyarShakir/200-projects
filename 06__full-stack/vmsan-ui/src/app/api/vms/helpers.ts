@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import { VmsanError, VmsanValidationError } from "@/lib/vmsan";
+import {
+  VMMetadataConflictError,
+  VMMetadataValidationError,
+} from "@/lib/vm-metadata";
 
 export type ApiErrorCode =
   | "INVALID_REQUEST"
   | "VM_NOT_FOUND"
   | "INVALID_VM_STATE"
   | "OPERATION_CONFLICT"
+  | "VM_NAME_ALREADY_EXISTS"
   | "VMSAN_UNAVAILABLE"
   | "VMSAN_COMMAND_FAILED"
   | "INTERNAL_ERROR";
@@ -34,8 +39,15 @@ export function createErrorResponse(
 }
 
 export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
-  if (error instanceof VmsanValidationError) {
+  if (
+    error instanceof VmsanValidationError ||
+    error instanceof VMMetadataValidationError
+  ) {
     return createErrorResponse(400, "INVALID_REQUEST", error.message);
+  }
+
+  if (error instanceof VMMetadataConflictError) {
+    return createErrorResponse(409, "VM_NAME_ALREADY_EXISTS", error.message);
   }
 
   if (error instanceof SyntaxError) {
@@ -49,7 +61,24 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
   if (error instanceof VmsanError) {
     const errText = `${error.stderr} ${error.message}`.toLowerCase();
 
-    // 1. Missing binary / execution failure (ENOENT or cannot spawn)
+    // 1. Privilege escalation / sudo non-interactive password requirement
+    if (
+      errText.includes("password is required") ||
+      errText.includes("terminal is required") ||
+      errText.includes("no tty present") ||
+      errText.includes("sudoers") ||
+      errText.includes("privilege escalation") ||
+      errText.includes("pam_authenticate") ||
+      errText.includes("password attempt")
+    ) {
+      return createErrorResponse(
+        503,
+        "VMSAN_UNAVAILABLE",
+        "vmsan requires configured privilege escalation (passwordless sudo)"
+      );
+    }
+
+    // 2. Missing binary / execution failure (ENOENT or cannot spawn)
     if (
       errText.includes("enoent") ||
       errText.includes("failed to execute") ||
