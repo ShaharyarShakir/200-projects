@@ -1,0 +1,22 @@
+{
+  "name": "vmsan-manager",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Privileged vmsan manager process. Holds a single native vmsan service and exposes a typed RPC over a Unix domain socket.",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "build": "tsc --project tsconfig.build.json",
+    "test": "tsx --test 'src/**/*.test.ts'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "vmsan": "0.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsx": "^4.23.15",
+    "typescript": "^5"
+  }
+}
