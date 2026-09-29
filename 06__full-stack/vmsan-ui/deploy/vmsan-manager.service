@@ -1,0 +1,103 @@
+[Unit]
+# The manager in this build needs no network: it reads VM records from disk and
+# answers two methods over a Unix socket. The ordering below is required by the
+# deployment spec, and is recorded here so a future reader does not go looking
+# for the dependency that needs it. `Wants` rather than `Requires` is
+# deliberate — the manager is still correct if the network never comes up.
+Description=vmsan manager (privileged VM control plane)
+Documentation=file:/opt/vmsan-manager/README
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# Root is deliberate and is the whole point of this process: it is the only
+# component that opens vmsan's VM directory. It exposes `health` and `list`
+# only, over a socket restricted to the `vmsan` group.
+User=root
+Group=root
+
+# /usr/bin/node is the system Node, not a version manager's shim. A service that
+# resolved `node` through a user's shell profile would break the moment that
+# profile changed.
+ExecStart=/usr/bin/node /opt/vmsan-manager/dist/index.js
+WorkingDirectory=/opt/vmsan-manager
+
+Environment=NODE_ENV=production
+# Deliberate: the VM records on this host store absolute paths under the
+# operator's home. Moving the state directory is deferred to the lifecycle
+# change that will need it.
+Environment=VMSAN_DIR=/home/shaharyar/.vmsan
+Environment=VMSAN_MANAGER_SOCKET=/run/vmsan-manager.sock
+Environment=VMSAN_MANAGER_SOCKET_GROUP=vmsan
+Environment=VMSAN_MANAGER_LOG_LEVEL=info
+
+# No RuntimeDirectory: the socket is a direct child of /run, not something
+# inside a directory systemd would create and remove around the process.
+
+Restart=on-failure
+RestartSec=2
+
+# Initial hardening. Each of these is a restriction the manager's single
+# job — read records, answer two methods over a socket — does not need removed.
+#
+# Not set, deliberately, pending evidence rather than caution-by-default:
+#   PrivateDevices=true     Firecracker needs /dev/kvm
+#   RestrictNamespaces=true  the Jailer creates namespaces
+#   NoNewPrivileges=true    would need proving against the vmsan runtime
+# Those three are re-evaluated when lifecycle RPCs exist, which is the first
+# point at which the manager will execute anything rather than read files.
+
+ProtectSystem=strict
+ProtectHome=read-only
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+NoNewPrivileges=false
+
+# /run must be writable, because bind()ing the socket is a write to its
+# directory and ProtectSystem=strict makes every path except /dev, /proc, and
+# /sys read-only. Without this the service fails to start with
+# `listen EROFS: read-only file system, bind '/run/vmsan-manager.sock'`.
+#
+# This cannot be narrowed to the socket file itself: ReadWritePaths is applied
+# when the mount namespace is built, before the socket exists. A subdirectory
+# would allow it, but the socket is specified as a direct child of /run, and
+# /run is a tmpfs that does not survive a reboot, so the widened write access
+# does not outlive the process.
+ReadWritePaths=/run
+
+# The one writable path under $HOME, and the price of keeping ProtectHome.
+#
+# Why it is needed: vmsan 0.3.0's `list` is not a read operation. FileVmStateStore.list()
+# calls ensureDir() before reading anything, and mkdirSecure() then does an
+# unconditional `chmodSync(dir, 0700)`. Its catch block swallows only ENOENT, so
+# under a read-only home the EROFS propagates and every `list` fails with
+# INTERNAL_ERROR. Observed, not assumed:
+#
+#   ERROR request failed code=EROFS
+#   detail="EROFS: read-only file system, chmod '/home/shaharyar/.vmsan/vms'"
+#
+# Why this rather than dropping ProtectHome: design.md had directed that a
+# directive which breaks `list` be removed rather than worked around, on the
+# grounds that ReadWritePaths over the vmsan tree "would reopen Decision 1's
+# problem in a harder form". Removing ProtectHome reopens it too, and further:
+# it makes all of /home/shaharyar writable to a root process, not just
+# ~/.vmsan. Verified under bwrap with a read-only bind of / plus this single
+# exception: writes to ~/.bashrc, ~/.ssh, and /etc/hosts are all refused with
+# EROFS, while `list` succeeds. The operator chose this narrower form; the
+# deviation is recorded in phase-report.md and design.md is corrected.
+#
+# What it costs: root can now write inside ~/.vmsan, including the user-owned
+# ~/.vmsan/bin executables. chownToSudoUser() is a no-op here because systemd
+# sets no SUDO_UID, so records keep their existing shaharyar ownership. This
+# exposure is the same one Decision 1 already accepts, and it becomes real the
+# moment a lifecycle RPC can execute ~/.vmsan/bin — which is why relocating
+# state together with bin/ is the blocking precondition for that phase.
+ReadWritePaths=/home/shaharyar/.vmsan
+
+[Install]
+# Do not enable this unit yet. The operator must first confirm `health` and
+# `list` succeed; see scripts/install-vmsan-manager.sh and the README.
+WantedBy=multi-user.target
