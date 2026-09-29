@@ -1,11 +1,14 @@
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import path from "node:path";
+import path, { join } from "node:path";
+import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { POST as createVMRoute } from "../route";
 import { POST as startVMRoute } from "../[id]/start/route";
 import { POST as stopVMRoute } from "../[id]/stop/route";
 import { DELETE as removeVMRoute } from "../[id]/route";
+import { handleApiError, lifecycleUnavailableResponse } from "../helpers";
+import { ManagerUnavailableError } from "@/lib/vmsan-manager/errors";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,11 +19,9 @@ const MOCK_BIN_PATH = path.resolve(
 
 describe("Security tests for VM Management API routes", () => {
   const originalBinPath = process.env.VMSAN_BIN_PATH;
-  const originalSudo = process.env.VMSAN_SUDO;
 
   beforeEach(() => {
     process.env.VMSAN_BIN_PATH = MOCK_BIN_PATH;
-    process.env.VMSAN_SUDO = "false";
   });
 
   afterEach(() => {
@@ -28,12 +29,6 @@ describe("Security tests for VM Management API routes", () => {
       process.env.VMSAN_BIN_PATH = originalBinPath;
     } else {
       delete process.env.VMSAN_BIN_PATH;
-    }
-
-    if (originalSudo !== undefined) {
-      process.env.VMSAN_SUDO = originalSudo;
-    } else {
-      delete process.env.VMSAN_SUDO;
     }
   });
 
@@ -97,7 +92,7 @@ describe("Security tests for VM Management API routes", () => {
     });
   }
 
-  it("should strip injected command fields from create VM request body", async () => {
+  it("should ignore injected command fields in the create VM request body", async () => {
     const req = new Request("http://localhost/api/vms", {
       method: "POST",
       body: JSON.stringify({
@@ -112,14 +107,167 @@ describe("Security tests for VM Management API routes", () => {
       headers: { "Content-Type": "application/json" },
     });
 
+    // Create is unavailable, so nothing is executed; the fields are ignored
+    // rather than interpreted, which is the property that matters.
     const response = await createVMRoute(req);
-    assert.equal(response.status, 201);
+    assert.equal(response.status, 501);
 
-    const body = (await response.json()) as {
-      success: boolean;
-      result?: { stdout: string };
+    const body = (await response.json()) as { error: { code: string } };
+    assert.equal(body.error.code, "VM_LIFECYCLE_UNAVAILABLE");
+  });
+});
+
+/**
+ * The property this whole change rests on: no lifecycle route can reach a
+ * privileged command.
+ *
+ * Asserted against the source rather than only through the handlers, because
+ * the handlers' 501 responses are easy to read as "nothing happens here" while
+ * a future edit could reintroduce a call underneath.
+ */
+describe("VM lifecycle routes reach no privileged command", () => {
+  const API_DIR = fileURLToPath(new URL("..", import.meta.url));
+
+  const LIFECYCLE_ROUTES = [
+    join(API_DIR, "route.ts"),
+    join(API_DIR, "[id]", "route.ts"),
+    join(API_DIR, "[id]", "start", "route.ts"),
+    join(API_DIR, "[id]", "stop", "route.ts"),
+  ];
+
+  it("calls no vmsan command runner in any lifecycle route", () => {
+    for (const file of LIFECYCLE_ROUTES) {
+      const source = readFileSync(file, "utf8");
+      // The routes may import `validateVmId` from the adapter: validating input
+      // needs no privilege. What must not appear is a call that would run
+      // vmsan, directly or through the client.
+      for (const runner of ["createVM", "startVM", "stopVM", "removeVM", "listVMs", "runVmsan"]) {
+        assert.equal(
+          new RegExp(`\\b${runner}\\s*\\(`).test(source),
+          false,
+          `${file} must not call ${runner}`
+        );
+      }
+      for (const imported of [...source.matchAll(/import\s+\{([^}]*)\}\s+from\s+["']@\/lib\/vmsan["']/g)]) {
+        for (const name of (imported[1] ?? "").split(",").map((part) => part.trim())) {
+          assert.equal(
+            /^(validateVmId|validateCreateOptions|type\s)/.test(name) || name.length === 0,
+            true,
+            `${file} may only import validators from @/lib/vmsan, found ${name}`
+          );
+        }
+      }
+    }
+  });
+
+  it("imports no child_process anywhere under the API routes", () => {
+    const scan = (dir: string): void => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const path = join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (entry.name !== "__tests__") {
+            scan(path);
+          }
+          continue;
+        }
+        if (!/\.tsx?$/.test(entry.name)) {
+          continue;
+        }
+        const source = readFileSync(path, "utf8");
+        assert.equal(
+          /child_process/.test(source),
+          false,
+          `${path} must not import child_process`
+        );
+      }
     };
-    assert.equal(body.success, true);
-    assert.ok(body.result?.stdout.includes("Created VM"));
+
+    scan(API_DIR);
+  });
+
+  it("returns the same unavailable code from every lifecycle route", async () => {
+    const cases: Array<[string, () => Promise<Response>]> = [
+      [
+        "create",
+        () => createVMRoute(new Request("http://localhost/api/vms", { method: "POST", body: "{}" })),
+      ],
+      [
+        "start",
+        () => startVMRoute(new Request("http://localhost/api/vms/vm-1/start", { method: "POST" }), {
+          params: Promise.resolve({ id: "vm-1" }),
+        }),
+      ],
+      [
+        "stop",
+        () => stopVMRoute(new Request("http://localhost/api/vms/vm-1/stop", { method: "POST" }), {
+          params: Promise.resolve({ id: "vm-1" }),
+        }),
+      ],
+      [
+        "remove",
+        () => removeVMRoute(new Request("http://localhost/api/vms/vm-1", { method: "DELETE" }), {
+          params: Promise.resolve({ id: "vm-1" }),
+        }),
+      ],
+    ];
+
+    for (const [name, call] of cases) {
+      const response = await call();
+      assert.equal(response.status, 501, `${name} must answer 501`);
+      const body = (await response.json()) as { error: { code: string; message: string } };
+      assert.equal(body.error.code, "VM_LIFECYCLE_UNAVAILABLE", `${name} error code`);
+      assert.equal(
+        body.error.message.includes(".sock") || body.error.message.includes("/run/"),
+        false,
+        `${name} message names no socket path`
+      );
+    }
+  });
+});
+
+/**
+ * What the user actually reads.
+ *
+ * The dashboard renders `error.message` from the API response verbatim, so the
+ * API's message is the entire user-facing story for these failures. These tests
+ * pin the two messages an operator will see and assert they carry no host
+ * detail: a socket path tells a user nothing they can act on and describes the
+ * privileged boundary to anyone who can read the page.
+ */
+describe("the dashboard shows a controlled message, not a raw failure", () => {
+  it("shows a fixed sentence when the manager is not running", async () => {
+    const response = handleApiError(
+      new ManagerUnavailableError("vmsan manager socket is not reachable", {
+        cause: Object.assign(new Error("connect EACCES /run/vmsan-manager.sock"), {
+          code: "EACCES",
+        }),
+      })
+    );
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "MANAGER_UNAVAILABLE");
+    assert.equal(body.error.message, "vmsan manager socket is not reachable");
+  });
+
+  it("shows a fixed sentence for an unavailable lifecycle operation", async () => {
+    const response = lifecycleUnavailableResponse();
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "VM_LIFECYCLE_UNAVAILABLE");
+    assert.equal(body.error.message.includes(".sock"), false);
+    assert.equal(body.error.message.includes("/run/"), false);
+    assert.equal(body.error.message.includes("ENOENT"), false);
+  });
+
+  it("keeps the UI client's message path limited to the API's error field", () => {
+    // The client builds its Error from `data.error.message` only. If it ever
+    // started appending the response body or the URL, a socket path in a
+    // future error would reach the page.
+    const source = readFileSync(
+      fileURLToPath(new URL("../../../../lib/api/vms.ts", import.meta.url)),
+      "utf8"
+    );
+    assert.equal(/response\.url/.test(source), false, "no URL in the error path");
+    assert.equal(/JSON\.stringify\(data\)/.test(source), false, "no raw body in the error");
   });
 });

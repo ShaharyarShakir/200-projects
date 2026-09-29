@@ -74,11 +74,19 @@ The system SHALL provide programmatic lifecycle operations including listing VMs
 - **THEN** it executes `vmsan remove <vmId>` and returns the execution result
 
 ### Requirement: No In-Process Privilege Escalation
-The system SHALL NOT reach Firecracker by escalating privileges from the unprivileged web process. The sanctioned path to privileged microVM operations SHALL be the separate `vmsan-manager` process, which runs as the privileged user, holds a single native vmsan service, and is reached over a Unix domain socket. The web process SHALL NOT request passwordless sudo, SHALL NOT spawn `sudo`, SHALL NOT construct shell command lines, and no sudoers rule pointing at the vmsan executable SHALL be required or documented as part of the supported setup.
+The system SHALL NOT reach Firecracker by escalating privileges from the unprivileged web process, and the adapter SHALL contain no mechanism to do so. The adapter MUST NOT spawn `sudo`, MUST NOT build a `sudo -n` argument vector, MUST NOT read a setting that enables passwordless privilege escalation, and MUST NOT accept a caller-supplied executable path or privilege flag. The sanctioned path to privileged microVM operations SHALL be the separate `vmsan-manager` process, which runs as the privileged user, holds a single native vmsan service, and is reached over a Unix domain socket. No sudoers rule pointing at the vmsan executable SHALL be required or documented as part of the supported setup.
 
 #### Scenario: No sudo invocation on the request path
 - **WHEN** any microVM operation is invoked through the adapter
-- **THEN** the adapter performs no `sudo` invocation and requests no passwordless privilege escalation, regardless of the `VMSAN_SUDO` setting
+- **THEN** the adapter performs no `sudo` invocation and requests no passwordless privilege escalation
+
+#### Scenario: No sudo branch remains in the adapter
+- **WHEN** the adapter's source is inspected for an escalation path
+- **THEN** it contains no code path that selects a `sudo` executable, builds a non-interactive sudo argument list, or branches on a setting that enables privilege escalation
+
+#### Scenario: No caller-selectable privilege or executable
+- **WHEN** an operation is invoked with options that name an executable, a privilege flag, or an escalation setting
+- **THEN** those options are not part of the adapter's accepted surface and have no effect on how the command is executed
 
 #### Scenario: No sudoers rule is required
 - **WHEN** the application is deployed without any `/etc/sudoers.d` entry for vmsan
