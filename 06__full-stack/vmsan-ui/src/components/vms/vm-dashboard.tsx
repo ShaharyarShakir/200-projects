@@ -14,11 +14,17 @@ import { cn } from "@/lib/utils";
 export interface VMDashboardProps extends React.ComponentProps<"div"> {
   initialVMs?: ClientVM[];
   fetchVMsFn?: () => Promise<ClientVM[]>;
+  onStart?: (id: string) => Promise<unknown> | unknown;
+  onStop?: (id: string) => Promise<unknown> | unknown;
+  onDelete?: (id: string) => Promise<unknown> | unknown;
 }
 
 export function VMDashboard({
   initialVMs,
   fetchVMsFn = getVMs,
+  onStart,
+  onStop,
+  onDelete,
   className,
   ...props
 }: VMDashboardProps) {
@@ -106,6 +112,7 @@ export function VMDashboard({
         <div className="flex items-center gap-2">
           <CreateVMDialog onSuccess={handleRefresh} />
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={handleRefresh}
@@ -143,6 +150,7 @@ export function VMDashboard({
             </span>
           </div>
           <Button
+            type="button"
             variant="ghost"
             size="sm"
             onClick={handleRefresh}
@@ -162,7 +170,15 @@ export function VMDashboard({
           isRetrying={isLoading || isRefreshing}
         />
       ) : (
-        <VMList vms={vms} isLoading={isLoading} />
+        <VMList
+          vms={vms}
+          isLoading={isLoading}
+          onStart={onStart}
+          onStop={onStop}
+          onDelete={onDelete}
+          onRefresh={handleRefresh}
+          onSuccess={handleRefresh}
+        />
       )}
     </div>
   );
