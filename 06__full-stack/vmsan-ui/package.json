@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
-    "test": "tsx --test 'src/**/*.test.ts'"
+    "typecheck": "tsc --noEmit && pnpm --filter vmsan-manager typecheck",
+    "test": "tsx --test 'src/**/*.test.ts' && pnpm --filter vmsan-manager test"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
