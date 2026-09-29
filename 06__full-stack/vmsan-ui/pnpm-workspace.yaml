@@ -1,3 +1,6 @@
+packages:
+  - vmsan-manager
+
 allowBuilds:
   esbuild: true
   sharp: false
