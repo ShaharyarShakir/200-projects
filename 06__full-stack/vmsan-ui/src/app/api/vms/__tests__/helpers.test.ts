@@ -6,6 +6,10 @@ import {
   createErrorResponse,
 } from "../helpers";
 import { VmsanError, VmsanValidationError } from "@/lib/vmsan";
+import {
+  VMMetadataConflictError,
+  VMMetadataValidationError,
+} from "@/lib/vm-metadata";
 
 describe("API Helpers - createErrorResponse", () => {
   it("should create standard error response with specified status and code", async () => {
@@ -19,6 +23,26 @@ describe("API Helpers - createErrorResponse", () => {
 });
 
 describe("API Helpers - handleApiError", () => {
+  it("should map VMMetadataConflictError to 409 VM_NAME_ALREADY_EXISTS", async () => {
+    const error = new VMMetadataConflictError("A VM with name 'node-dev' already exists");
+    const response = handleApiError(error);
+    assert.equal(response.status, 409);
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "VM_NAME_ALREADY_EXISTS");
+    assert.equal(body.error.message, "A VM with name 'node-dev' already exists");
+  });
+
+  it("should map VMMetadataValidationError to 400 INVALID_REQUEST", async () => {
+    const error = new VMMetadataValidationError("VM name cannot start with reserved prefix 'vm-'");
+    const response = handleApiError(error);
+    assert.equal(response.status, 400);
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "INVALID_REQUEST");
+    assert.equal(body.error.message, "VM name cannot start with reserved prefix 'vm-'");
+  });
+
   it("should map VmsanValidationError to 400 INVALID_REQUEST", async () => {
     const error = new VmsanValidationError("Invalid runtime", "runtime", "bad-runtime");
     const response = handleApiError(error);
@@ -53,6 +77,40 @@ describe("API Helpers - handleApiError", () => {
 
     const body = (await response.json()) as { error: { code: string; message: string } };
     assert.equal(body.error.code, "VMSAN_UNAVAILABLE");
+    assert.equal(
+      body.error.message,
+      "vmsan executable is not available or cannot be executed on the host"
+    );
+  });
+
+  it("should map VmsanError with sudo password requirement to 503 VMSAN_UNAVAILABLE with sanitized message", async () => {
+    const failureOutputs = [
+      "sudo: a password is required",
+      "sudo: a terminal is required to read the password",
+      "sudo: no tty present and no askpass program specified",
+      "user is not in the sudoers file. This incident will be reported.",
+      "privilege escalation failed",
+      "pam_authenticate: Authentication failure",
+    ];
+
+    for (const stderrMsg of failureOutputs) {
+      const error = new VmsanError({
+        command: "sudo",
+        args: ["-n", "/usr/local/bin/vmsan", "create"],
+        exitCode: 1,
+        stdout: "",
+        stderr: stderrMsg,
+      });
+      const response = handleApiError(error);
+      assert.equal(response.status, 503);
+
+      const body = (await response.json()) as { error: { code: string; message: string } };
+      assert.equal(body.error.code, "VMSAN_UNAVAILABLE");
+      assert.equal(
+        body.error.message,
+        "vmsan requires configured privilege escalation (passwordless sudo)"
+      );
+    }
   });
 
   it("should map VmsanError indicating VM not found to 404 VM_NOT_FOUND", async () => {
