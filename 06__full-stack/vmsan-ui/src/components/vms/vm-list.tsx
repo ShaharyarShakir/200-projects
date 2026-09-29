@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VMCard } from "./vm-card";
 import { VMEmptyState } from "./vm-empty-state";
@@ -33,6 +33,10 @@ export function VMCardSkeleton({ className, ...props }: React.ComponentProps<typ
           </div>
         </div>
       </CardContent>
+      <CardFooter className="flex items-center justify-between gap-2 border-t bg-muted/50 p-4">
+        <Skeleton className="h-7 w-16 rounded-lg" />
+        <Skeleton className="h-7 w-16 rounded-lg" />
+      </CardFooter>
     </Card>
   );
 }
@@ -58,9 +62,24 @@ export function VMListSkeleton({ count = 6, className, ...props }: VMListSkeleto
 export interface VMListProps extends React.ComponentProps<"div"> {
   vms?: ClientVM[];
   isLoading?: boolean;
+  onStart?: (id: string) => Promise<unknown> | unknown;
+  onStop?: (id: string) => Promise<unknown> | unknown;
+  onDelete?: (id: string) => Promise<unknown> | unknown;
+  onRefresh?: () => Promise<unknown> | unknown;
+  onSuccess?: () => void;
 }
 
-export function VMList({ vms = [], isLoading = false, className, ...props }: VMListProps) {
+export function VMList({
+  vms = [],
+  isLoading = false,
+  onStart,
+  onStop,
+  onDelete,
+  onRefresh,
+  onSuccess,
+  className,
+  ...props
+}: VMListProps) {
   if (isLoading) {
     return <VMListSkeleton className={className} />;
   }
@@ -76,7 +95,15 @@ export function VMList({ vms = [], isLoading = false, className, ...props }: VML
       {...props}
     >
       {vms.map((vm) => (
-        <VMCard key={vm.id} vm={vm} />
+        <VMCard
+          key={vm.id}
+          vm={vm}
+          onStart={onStart}
+          onStop={onStop}
+          onDelete={onDelete}
+          onRefresh={onRefresh}
+          onSuccess={onSuccess}
+        />
       ))}
     </div>
   );
