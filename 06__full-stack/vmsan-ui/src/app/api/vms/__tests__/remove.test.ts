@@ -32,6 +32,7 @@ describe("DELETE /api/vms/:id route handler", () => {
     } else {
       delete process.env.VMSAN_SUDO;
     }
+    delete process.env.MOCK_FAIL_SUDO;
   });
 
   it("should remove VM successfully with valid ID", async () => {
@@ -75,5 +76,24 @@ describe("DELETE /api/vms/:id route handler", () => {
 
     const body = (await response.json()) as { error: { code: string; message: string } };
     assert.equal(body.error.code, "VMSAN_UNAVAILABLE");
+  });
+
+  it("should return sanitized 503 if sudo privilege escalation fails", async () => {
+    process.env.MOCK_FAIL_SUDO = "true";
+
+    const req = new Request("http://localhost/api/vms/vm-mock1", {
+      method: "DELETE",
+    });
+    const context = { params: Promise.resolve({ id: "vm-mock1" }) };
+
+    const response = await DELETE(req, context);
+    assert.equal(response.status, 503);
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "VMSAN_UNAVAILABLE");
+    assert.equal(
+      body.error.message,
+      "vmsan requires configured privilege escalation (passwordless sudo)"
+    );
   });
 });
