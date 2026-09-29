@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Compiled manager output: linted when authored, not as a build artifact.
+    "vmsan-manager/dist/**",
   ]),
 ]);
 

@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# manager build output (compiled by scripts/install-vmsan-manager.sh)
+/vmsan-manager/dist
