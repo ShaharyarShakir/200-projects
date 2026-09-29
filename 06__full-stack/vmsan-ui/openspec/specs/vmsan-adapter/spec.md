@@ -73,17 +73,25 @@ The system SHALL provide programmatic lifecycle operations including listing VMs
 - **WHEN** `removeVM` is called with a validated VM ID
 - **THEN** it executes `vmsan remove <vmId>` and returns the execution result
 
-### Requirement: Privileged Command Execution
-The system SHALL support optional privileged execution via `sudo -n` targeting the absolute path of the `vmsan` binary when `VMSAN_SUDO=true` or `{ sudo: true }`, without invoking the `env` intermediary or relying on shell PATH resolution, and MUST fail fast when passwordless sudo is not configured.
+### Requirement: No In-Process Privilege Escalation
+The system SHALL NOT reach Firecracker by escalating privileges from the unprivileged web process. The sanctioned path to privileged microVM operations SHALL be the separate `vmsan-manager` process, which runs as the privileged user, holds a single native vmsan service, and is reached over a Unix domain socket. The web process SHALL NOT request passwordless sudo, SHALL NOT spawn `sudo`, SHALL NOT construct shell command lines, and no sudoers rule pointing at the vmsan executable SHALL be required or documented as part of the supported setup.
 
-#### Scenario: Direct privileged execution with VMSAN_SUDO enabled
-- **WHEN** a microVM operation is invoked with `VMSAN_SUDO=true` or `{ sudo: true }`
-- **THEN** the adapter spawns `sudo` with arguments `["-n", "<absolute-vmsan-path>", ...args]` as a pure array without invoking `env` or shell interpreters
+#### Scenario: No sudo invocation on the request path
+- **WHEN** any microVM operation is invoked through the adapter
+- **THEN** the adapter performs no `sudo` invocation and requests no passwordless privilege escalation, regardless of the `VMSAN_SUDO` setting
 
-#### Scenario: Unprivileged execution when sudo is disabled
-- **WHEN** a microVM operation is invoked with `VMSAN_SUDO=false` (or unset) and `{ sudo: false }`
-- **THEN** the adapter executes the resolved `vmsan` binary directly without `sudo`
+#### Scenario: No sudoers rule is required
+- **WHEN** the application is deployed without any `/etc/sudoers.d` entry for vmsan
+- **THEN** privileged microVM operations remain reachable through the manager process over its Unix socket
 
-#### Scenario: Fail fast when passwordless sudo is not configured
-- **WHEN** a privileged command fails because `sudo -n` requires a password or non-interactive sudo is denied
-- **THEN** the adapter throws a `VmsanError` indicating privilege escalation is required without hanging on interactive terminal prompts or leaking raw host environment details
+#### Scenario: Web process runs unprivileged
+- **WHEN** the web application server is running
+- **THEN** it runs under a non-root user and the manager process is the only privileged process in the architecture
+
+#### Scenario: No executable path selected by configuration
+- **WHEN** a privileged operation is requested
+- **THEN** no configuration value, request field, or environment variable selects an executable path to run as a privileged operation; the privileged surface is fixed to the manager process and the native vmsan API it imports
+
+#### Scenario: Privilege boundary verified explicitly
+- **WHEN** the architecture is validated during development
+- **THEN** the effective user id of the web process and of the manager are recorded and shown to differ, with the manager at `uid = 0` and the web process at `uid != 0`
