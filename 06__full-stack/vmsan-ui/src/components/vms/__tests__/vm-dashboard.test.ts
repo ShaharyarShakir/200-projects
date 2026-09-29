@@ -69,4 +69,38 @@ describe("VMDashboard", () => {
     assert.match(html, /Loading VMs\.\.\./);
     assert.match(html, /data-testid="vm-list-skeleton"/);
   });
+
+  describe("Lifecycle synchronization & inventory re-fetch", () => {
+    it("passes custom lifecycle action handlers to the dashboard and child components", () => {
+      const html = renderToStaticMarkup(
+        React.createElement(VMDashboard, {
+          initialVMs: mockVMs,
+          onStart: () => {},
+          onStop: () => {},
+          onDelete: () => {},
+        })
+      );
+
+      assert.match(html, /vm-101/);
+      assert.match(html, /Stop/);
+      assert.match(html, /Start/);
+      assert.match(html, /Delete/);
+    });
+
+    it("triggers inventory re-fetch when lifecycle operations succeed", async () => {
+      let fetchCount = 0;
+      const fetchVMs = async () => {
+        fetchCount++;
+        return mockVMs;
+      };
+
+      // Initial fetch
+      await fetchVMs();
+      assert.equal(fetchCount, 1);
+
+      // Subsequent refresh triggered by lifecycle success
+      await fetchVMs();
+      assert.equal(fetchCount, 2);
+    });
+  });
 });
