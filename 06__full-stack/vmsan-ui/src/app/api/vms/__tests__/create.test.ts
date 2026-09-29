@@ -1,24 +1,29 @@
-import { describe, it, beforeEach, afterEach } from "node:test";
+import { describe, it, afterEach } from "node:test";
 import assert from "node:assert/strict";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { POST } from "../route";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const MOCK_BIN_PATH = path.resolve(
-  __dirname,
-  "../../../../lib/vmsan/__tests__/mock-vmsan.js"
-);
+/**
+ * Create is a privileged operation with no manager RPC behind it.
+ *
+ * Two properties matter and are easy to get backwards. The route must not run
+ * any vmsan command, because doing so would need privilege the web app does not
+ * have and would reintroduce the escalation this change removed. And it must
+ * still validate first, so an invalid request reports the invalid request
+ * rather than a blanket 501 that hides the real problem.
+ */
+
+function createRequest(body: unknown | string): Request {
+  return new Request("http://localhost/api/vms", {
+    method: "POST",
+    body: typeof body === "string" ? body : JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+type ErrorBody = { error: { code: string; message: string } };
 
 describe("POST /api/vms route handler", () => {
   const originalBinPath = process.env.VMSAN_BIN_PATH;
-  const originalSudo = process.env.VMSAN_SUDO;
-
-  beforeEach(() => {
-    process.env.VMSAN_BIN_PATH = MOCK_BIN_PATH;
-    process.env.VMSAN_SUDO = "false";
-  });
 
   afterEach(() => {
     if (originalBinPath !== undefined) {
@@ -26,176 +31,99 @@ describe("POST /api/vms route handler", () => {
     } else {
       delete process.env.VMSAN_BIN_PATH;
     }
-
-    if (originalSudo !== undefined) {
-      process.env.VMSAN_SUDO = originalSudo;
-    } else {
-      delete process.env.VMSAN_SUDO;
-    }
-    delete process.env.MOCK_FAIL_SUDO;
   });
 
-  it("should create VM successfully with valid options", async () => {
-    const req = new Request("http://localhost/api/vms", {
-      method: "POST",
-      body: JSON.stringify({
-        runtime: "node22",
-        vcpus: 2,
-        memoryMiB: 512,
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
+  it("returns 501 VM_LIFECYCLE_UNAVAILABLE for valid options", async () => {
+    const response = await POST(
+      createRequest({ runtime: "node22", vcpus: 2, memoryMiB: 512 })
+    );
 
-    const response = await POST(req);
-    assert.equal(response.status, 201);
-
-    const body = (await response.json()) as {
-      success: boolean;
-      result: { stdout: string; exitCode: number };
-    };
-    assert.equal(body.success, true);
-    assert.ok(body.result.stdout.includes("Created VM"));
+    assert.equal(response.status, 501);
+    const body = (await response.json()) as ErrorBody;
+    assert.equal(body.error.code, "VM_LIFECYCLE_UNAVAILABLE");
+    assert.match(body.error.message, /not available over the vmsan manager/i);
   });
 
-  it("should create VM successfully with default / empty options object", async () => {
-    const req = new Request("http://localhost/api/vms", {
-      method: "POST",
-      body: JSON.stringify({}),
-      headers: { "Content-Type": "application/json" },
-    });
+  it("returns 501 for an empty options object, which is valid", async () => {
+    const response = await POST(createRequest({}));
 
-    const response = await POST(req);
-    assert.equal(response.status, 201);
-
-    const body = (await response.json()) as { success: boolean };
-    assert.equal(body.success, true);
+    assert.equal(response.status, 501);
+    const body = (await response.json()) as ErrorBody;
+    assert.equal(body.error.code, "VM_LIFECYCLE_UNAVAILABLE");
   });
 
-  it("should reject invalid runtime with 400 INVALID_REQUEST", async () => {
-    const req = new Request("http://localhost/api/vms", {
-      method: "POST",
-      body: JSON.stringify({ runtime: "ruby3.2" }),
-      headers: { "Content-Type": "application/json" },
-    });
+  it("rejects an invalid runtime before answering 501", async () => {
+    const response = await POST(createRequest({ runtime: "ruby3.2" }));
 
-    const response = await POST(req);
     assert.equal(response.status, 400);
-
-    const body = (await response.json()) as { error: { code: string; message: string } };
+    const body = (await response.json()) as ErrorBody;
     assert.equal(body.error.code, "INVALID_REQUEST");
     assert.ok(body.error.message.includes("Invalid runtime"));
   });
 
-  it("should reject vCPUs < 1 with 400 INVALID_REQUEST", async () => {
-    const req = new Request("http://localhost/api/vms", {
-      method: "POST",
-      body: JSON.stringify({ vcpus: 0 }),
-      headers: { "Content-Type": "application/json" },
-    });
+  it("rejects vCPUs below 1 before answering 501", async () => {
+    const response = await POST(createRequest({ vcpus: 0 }));
 
-    const response = await POST(req);
     assert.equal(response.status, 400);
-
-    const body = (await response.json()) as { error: { code: string; message: string } };
+    const body = (await response.json()) as ErrorBody;
     assert.equal(body.error.code, "INVALID_REQUEST");
     assert.ok(body.error.message.includes("vCPUs must be an integer"));
   });
 
-  it("should reject memoryMiB < 128 with 400 INVALID_REQUEST", async () => {
-    const req = new Request("http://localhost/api/vms", {
-      method: "POST",
-      body: JSON.stringify({ memoryMiB: 64 }),
-      headers: { "Content-Type": "application/json" },
-    });
+  it("rejects memory below 128 MiB before answering 501", async () => {
+    const response = await POST(createRequest({ memoryMiB: 64 }));
 
-    const response = await POST(req);
     assert.equal(response.status, 400);
-
-    const body = (await response.json()) as { error: { code: string; message: string } };
+    const body = (await response.json()) as ErrorBody;
     assert.equal(body.error.code, "INVALID_REQUEST");
     assert.ok(body.error.message.includes("memoryMiB must be an integer of at least 128"));
   });
 
-  it("should reject malformed JSON with 400 INVALID_REQUEST", async () => {
-    const req = new Request("http://localhost/api/vms", {
-      method: "POST",
-      body: "{ not-json",
-      headers: { "Content-Type": "application/json" },
-    });
+  it("rejects a malformed body before answering 501", async () => {
+    const response = await POST(createRequest("{ not-json"));
 
-    const response = await POST(req);
     assert.equal(response.status, 400);
-
-    const body = (await response.json()) as { error: { code: string; message: string } };
+    const body = (await response.json()) as ErrorBody;
     assert.equal(body.error.code, "INVALID_REQUEST");
     assert.equal(body.error.message, "Malformed JSON payload in request body");
   });
 
-  it("should reject empty request body with 400 INVALID_REQUEST", async () => {
-    const req = new Request("http://localhost/api/vms", {
-      method: "POST",
-      body: "",
-      headers: { "Content-Type": "application/json" },
-    });
+  it("rejects an empty body before answering 501", async () => {
+    const response = await POST(createRequest(""));
 
-    const response = await POST(req);
     assert.equal(response.status, 400);
-
-    const body = (await response.json()) as { error: { code: string; message: string } };
+    const body = (await response.json()) as ErrorBody;
     assert.equal(body.error.code, "INVALID_REQUEST");
   });
 
-  it("should ignore arbitrary extra properties and succeed", async () => {
-    const req = new Request("http://localhost/api/vms", {
-      method: "POST",
-      body: JSON.stringify({
-        runtime: "node22",
-        command: "rm -rf /",
-        flags: ["--danger"],
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
+  it("ignores unknown extra properties rather than rejecting the request", async () => {
+    const response = await POST(
+      createRequest({ runtime: "node22", command: "rm -rf /", flags: ["--danger"] })
+    );
 
-    const response = await POST(req);
-    assert.equal(response.status, 201);
-
-    const body = (await response.json()) as { success: boolean };
-    assert.equal(body.success, true);
+    assert.equal(response.status, 501);
+    const body = (await response.json()) as ErrorBody;
+    assert.equal(body.error.code, "VM_LIFECYCLE_UNAVAILABLE");
   });
 
-  it("should return 503 if vmsan binary is missing", async () => {
+  it("invokes no vmsan command, even when a binary is configured", async () => {
+    // Pointed at a path that would fail loudly if executed. A 501 rather than
+    // 503 proves the binary was never spawned.
     process.env.VMSAN_BIN_PATH = "/nonexistent/binary";
 
-    const req = new Request("http://localhost/api/vms", {
-      method: "POST",
-      body: JSON.stringify({ runtime: "node22" }),
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await POST(createRequest({ runtime: "node22" }));
 
-    const response = await POST(req);
-    assert.equal(response.status, 503);
-
-    const body = (await response.json()) as { error: { code: string; message: string } };
-    assert.equal(body.error.code, "VMSAN_UNAVAILABLE");
+    assert.equal(response.status, 501);
+    const body = (await response.json()) as ErrorBody;
+    assert.equal(body.error.code, "VM_LIFECYCLE_UNAVAILABLE");
   });
 
-  it("should return sanitized 503 if sudo privilege escalation fails", async () => {
-    process.env.MOCK_FAIL_SUDO = "true";
+  it("names no socket path, errno, or internal detail", async () => {
+    const response = await POST(createRequest({ runtime: "node22" }));
+    const serialized = JSON.stringify(await response.json());
 
-    const req = new Request("http://localhost/api/vms", {
-      method: "POST",
-      body: JSON.stringify({ runtime: "node22" }),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    const response = await POST(req);
-    assert.equal(response.status, 503);
-
-    const body = (await response.json()) as { error: { code: string; message: string } };
-    assert.equal(body.error.code, "VMSAN_UNAVAILABLE");
-    assert.equal(
-      body.error.message,
-      "vmsan requires configured privilege escalation (passwordless sudo)"
-    );
+    assert.equal(serialized.includes(".sock"), false);
+    assert.equal(serialized.includes("/run/"), false);
+    assert.equal(serialized.includes("ENOENT"), false);
   });
 });
