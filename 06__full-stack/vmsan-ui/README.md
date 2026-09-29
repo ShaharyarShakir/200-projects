@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# vmsan UI
+
+Web dashboard and management interface for microVMs powered by the `vmsan` CLI and Firecracker.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- `pnpm`
+- `vmsan` CLI installed on the host system
+
+### Environment Configuration
+
+Create a `.env.local` file (or set environment variables in your shell):
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Path to the vmsan executable (defaults to "vmsan" in PATH if unset)
+VMSAN_BIN_PATH=/usr/local/bin/vmsan
+
+# Enable privileged execution for operations requiring root (e.g. VM creation, tap configuration)
+VMSAN_SUDO=true
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Privileged Execution & Sudo Configuration
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+MicroVM operations (such as `vmsan create` for configuring network TAP interfaces, cgroups, and chroots) require root privileges on Linux.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**IMPORTANT: Do NOT run the Next.js process as root (`sudo pnpm dev`).**
 
-## Learn More
+The Next.js server runs as an unprivileged user. When `VMSAN_SUDO=true`, the backend adapter executes privileged commands using non-interactive sudo:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+sudo -n /path/to/vmsan <args...>
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+To allow the application to execute `vmsan` without hanging on interactive password prompts, configure passwordless sudo for the exact `vmsan` binary:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Create a drop-in sudoers rule at `/etc/sudoers.d/vmsan`:
 
-## Deploy on Vercel
+   ```bash
+   sudo visudo -f /etc/sudoers.d/vmsan
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. Add the following rule (replace `<username>` with your local user or service account, and verify the path to `vmsan`):
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```text
+   <username> ALL=(ALL) NOPASSWD: /usr/local/bin/vmsan
+   ```
+
+3. Ensure correct file permissions:
+
+   ```bash
+   sudo chmod 0440 /etc/sudoers.d/vmsan
+   ```
+
+If passwordless sudo is not configured and `VMSAN_SUDO=true` is enabled, API endpoints will fail fast and return HTTP 503 (`VMSAN_UNAVAILABLE`) with:
+
+> `vmsan requires configured privilege escalation (passwordless sudo)`
+
+### Development Server
+
+Run the development server as a normal (unprivileged) user:
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to access the dashboard.
+
+## Testing & Quality Checks
+
+Run linting:
+
+```bash
+pnpm lint
+```
+
+Run TypeScript type checking:
+
+```bash
+pnpm typecheck
+```
+
+Run test suite:
+
+```bash
+pnpm test
+```
