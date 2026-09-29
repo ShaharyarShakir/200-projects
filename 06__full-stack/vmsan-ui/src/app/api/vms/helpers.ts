@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { VmsanError, VmsanValidationError } from "@/lib/vmsan";
 import {
+  ManagerProtocolError,
+  ManagerRequestError,
+  ManagerUnavailableError,
+} from "@/lib/vmsan-manager/errors";
+import {
   VMMetadataConflictError,
   VMMetadataValidationError,
 } from "@/lib/vm-metadata";
@@ -11,6 +16,9 @@ export type ApiErrorCode =
   | "INVALID_VM_STATE"
   | "OPERATION_CONFLICT"
   | "VM_NAME_ALREADY_EXISTS"
+  | "VM_LIFECYCLE_UNAVAILABLE"
+  | "MANAGER_UNAVAILABLE"
+  | "MANAGER_PROTOCOL_ERROR"
   | "VMSAN_UNAVAILABLE"
   | "VMSAN_COMMAND_FAILED"
   | "INTERNAL_ERROR";
@@ -38,7 +46,56 @@ export function createErrorResponse(
   );
 }
 
+/**
+ * The response every lifecycle route returns until the manager grows lifecycle
+ * RPCs.
+ *
+ * 501 rather than 503: the request is well-formed and the server understood it,
+ * but this build does not implement the operation. The dashboard shows the
+ * message, so it states the fact and the reason without naming a socket path or
+ * an internal method.
+ */
+export function lifecycleUnavailableResponse(): NextResponse<ApiErrorResponse> {
+  return createErrorResponse(
+    501,
+    "VM_LIFECYCLE_UNAVAILABLE",
+    "Creating, starting, stopping, and deleting VMs are not available over the vmsan manager in this build. The manager currently exposes health and list only."
+  );
+}
+
+/**
+ * Map a manager client error to a status and a code.
+ *
+ * The manager is the privileged process, so the three failure classes mean
+ * three different things to an operator: nothing is listening (start the
+ * service), something answered that is not the manager (a version mismatch or
+ * a wrong socket), and the manager itself rejected the request (its own code is
+ * the actionable one). Their messages already name no socket path, errno, or
+ * stack, and are passed through unchanged.
+ */
+function mapManagerError(
+  error: ManagerUnavailableError | ManagerProtocolError | ManagerRequestError
+): NextResponse<ApiErrorResponse> {
+  if (error instanceof ManagerUnavailableError) {
+    return createErrorResponse(503, "MANAGER_UNAVAILABLE", error.message);
+  }
+
+  if (error instanceof ManagerProtocolError) {
+    return createErrorResponse(502, "MANAGER_PROTOCOL_ERROR", error.message);
+  }
+
+  return createErrorResponse(500, error.managerCode, error.message);
+}
+
 export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
+  if (
+    error instanceof ManagerUnavailableError ||
+    error instanceof ManagerProtocolError ||
+    error instanceof ManagerRequestError
+  ) {
+    return mapManagerError(error);
+  }
+
   if (
     error instanceof VmsanValidationError ||
     error instanceof VMMetadataValidationError
@@ -61,24 +118,7 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
   if (error instanceof VmsanError) {
     const errText = `${error.stderr} ${error.message}`.toLowerCase();
 
-    // 1. Privilege escalation / sudo non-interactive password requirement
-    if (
-      errText.includes("password is required") ||
-      errText.includes("terminal is required") ||
-      errText.includes("no tty present") ||
-      errText.includes("sudoers") ||
-      errText.includes("privilege escalation") ||
-      errText.includes("pam_authenticate") ||
-      errText.includes("password attempt")
-    ) {
-      return createErrorResponse(
-        503,
-        "VMSAN_UNAVAILABLE",
-        "vmsan requires configured privilege escalation (passwordless sudo)"
-      );
-    }
-
-    // 2. Missing binary / execution failure (ENOENT or cannot spawn)
+    // 1. Missing binary / execution failure (ENOENT or cannot spawn)
     if (
       errText.includes("enoent") ||
       errText.includes("failed to execute") ||
