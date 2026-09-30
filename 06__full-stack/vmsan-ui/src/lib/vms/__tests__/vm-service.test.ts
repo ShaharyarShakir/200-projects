@@ -130,6 +130,66 @@ describe("VmService", () => {
     });
   });
 
+  describe("getVm", () => {
+    it("validates VM ID and rejects invalid characters", async () => {
+      await assert.rejects(async () => service.getVm("vm-1; rm -rf /"), VmValidationError);
+      assert.equal(calls.list, 0);
+    });
+
+    it("validates VM ID and rejects empty ID", async () => {
+      await assert.rejects(async () => service.getVm(""), VmValidationError);
+      assert.equal(calls.list, 0);
+    });
+
+    it("returns mapped and sanitized Vm DTO when VM exists", async () => {
+      const vm = await service.getVm("vm-test-1");
+
+      assert.equal(calls.list, 1);
+      assert.equal(vm.id, "vm-test-1");
+      assert.equal(vm.status, "running");
+      assert.equal(vm.runtime, "node22");
+      assert.equal(vm.vcpus, 2);
+      assert.equal(vm.memoryMib, 512);
+      assert.equal(vm.diskSizeGb, 1);
+      assert.equal(vm.createdAt, "2026-09-29T10:00:00.000Z");
+      assert.equal(typeof vm.age, "string");
+      assert.equal((vm as any).agentToken, undefined);
+      assert.equal((vm as any).hostTap, undefined);
+    });
+
+    it("throws VmNotFoundError when VM does not exist in manager list", async () => {
+      await assert.rejects(async () => service.getVm("vm-unknown"), (err: any) => {
+        assert.equal(err instanceof VmNotFoundError, true);
+        assert.equal(err.statusCode, 404);
+        assert.equal(err.code, "VM_NOT_FOUND");
+        assert.equal(err.vmId, "vm-unknown");
+        return true;
+      });
+      assert.equal(calls.list, 1);
+    });
+
+    it("translates ManagerUnavailableError to VmManagerUnavailableError (503)", async () => {
+      mockHandlers.list = async () => {
+        throw new ManagerUnavailableError("connect ENOENT /run/vmsan-manager.sock");
+      };
+
+      await assert.rejects(async () => service.getVm("vm-test-1"), VmManagerUnavailableError);
+    });
+
+    it("translates ManagerProtocolError to VmOperationFailedError (502)", async () => {
+      mockHandlers.list = async () => {
+        throw new ManagerProtocolError("Malformed response payload");
+      };
+
+      await assert.rejects(async () => service.getVm("vm-test-1"), (err: any) => {
+        assert.equal(err instanceof VmOperationFailedError, true);
+        assert.equal(err.statusCode, 502);
+        assert.equal(err.code, "MANAGER_PROTOCOL_ERROR");
+        return true;
+      });
+    });
+  });
+
   describe("createVm", () => {
     it("validates input before calling manager client", async () => {
       await assert.rejects(async () => service.createVm({ vcpus: 999 }), VmValidationError);

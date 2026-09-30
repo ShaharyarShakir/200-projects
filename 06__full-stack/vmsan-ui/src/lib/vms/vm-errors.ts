@@ -44,8 +44,11 @@ export class VmValidationError extends VmError {
 }
 
 export class VmNotFoundError extends VmError {
+  readonly vmId: string;
+
   constructor(vmId: string, message?: string) {
     super(message || `VM '${vmId}' not found`, "VM_NOT_FOUND", 404);
+    this.vmId = vmId;
   }
 }
 
