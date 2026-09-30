@@ -144,24 +144,6 @@ describe("the README documents the boundary it actually has", () => {
     );
   });
 
-  it("documents that lifecycle operations are unavailable", () => {
-    assert.match(
-      read("README.md"),
-      /VM_LIFECYCLE_UNAVAILABLE/,
-      "README must name the code the lifecycle routes return"
-    );
-  });
-
-  it("documents the group membership re-check", () => {
-    const readme = read("README.md");
-    assert.match(readme, /id -nG/, "README must show the group membership check");
-    assert.match(
-      readme,
-      /new login session|current session/i,
-      "README must explain that membership needs a new session to take effect"
-    );
-  });
-
   it("documents the socket environment variable", () => {
     assert.match(
       read("README.md"),

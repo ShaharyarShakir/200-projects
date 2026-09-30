@@ -348,13 +348,11 @@ print_next_steps() {
      effect yet.
 
   4. Only once both return ok, start the web application and confirm
-     /api/vms lists your VMs. Then enable the service for boot:
+     /api/vms lists your VMs and lifecycle operations work. Then enable the service for boot:
 
        sudo systemctl enable ${UNIT_NAME}
 
-  Do not run step 4 before step 3 succeeds. Create, start, stop, and delete
-  return VM_LIFECYCLE_UNAVAILABLE in this build; the manager exposes health and
-  list only.
+  Do not run step 4 before step 3 succeeds.
 EOF
 }
 
