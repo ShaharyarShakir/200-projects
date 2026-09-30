@@ -59,6 +59,35 @@ function vmState(id: string): VmState {
   } as VmState;
 }
 
+function createFakeService(overrides: Partial<VmsanService> = {}): VmsanService {
+  return {
+    list: () => [],
+    get: (_id: string) => null,
+    create: async () => ({
+      state: vmState("vm-mock"),
+      config: {} as any,
+      vmId: "vm-mock",
+      pid: 1234,
+    }),
+    start: async (id: string) => ({
+      success: true,
+      state: vmState(id),
+      vmId: id,
+      pid: 1234,
+    }),
+    stop: async (id: string) => ({
+      success: true,
+      alreadyStopped: false,
+      vmId: id,
+    }),
+    remove: async (id: string) => ({
+      success: true,
+      vmId: id,
+    }),
+    ...overrides,
+  };
+}
+
 /** Send one or more frames and collect one response per frame. */
 function exchange(
   socketPath: string,
@@ -100,7 +129,7 @@ describe("manager server - socket integration", () => {
   const servers: ManagerServer[] = [];
 
   function buildServer(
-    service: VmsanService,
+    service: Partial<VmsanService> = {},
     overrides: Partial<ManagerConfig> = {}
   ): ManagerServer {
     const config: ManagerConfig = {
@@ -113,7 +142,7 @@ describe("manager server - socket integration", () => {
     const server = new ManagerServer({
       config,
       logger: createLogger("error", () => {}),
-      service,
+      service: createFakeService(service),
     });
     servers.push(server);
     return server;
@@ -263,11 +292,11 @@ describe("manager server - socket integration", () => {
   });
 
   it("reports a handler failure as a structured error without leaking details", async () => {
-    const service: VmsanService = {
+    const service = createFakeService({
       list: () => {
         throw new Error("EACCES reading /CANARY/secret/path");
       },
-    };
+    });
     const server = buildServer(service);
     await server.listen();
 
@@ -279,6 +308,110 @@ describe("manager server - socket integration", () => {
       assert.equal(JSON.stringify(response).includes("CANARY"), false);
       assert.equal(JSON.stringify(response).includes("EACCES"), false);
       assert.equal(response.error.message.includes("at "), false);
+    }
+  });
+
+  it("serves vm.create request with sanitized output", async () => {
+    const service = createFakeService({
+      list: () => [],
+      create: async () => ({
+        state: vmState("vm-created-1"),
+        config: {} as any,
+        vmId: "vm-created-1",
+        pid: 1234,
+      }),
+    });
+    const server = buildServer(service);
+    await server.listen();
+
+    const [response] = await exchange(socketPath, [
+      '{"id":"create-1","method":"vm.create","params":{"runtime":"node22","vcpus":2,"memoryMib":512}}',
+    ]);
+
+    assert.equal(response?.ok, true);
+    if (response?.ok === true) {
+      const result = response.result as Record<string, unknown>;
+      assert.equal(result.id, "vm-created-1");
+      assert.equal(result.vcpuCount, 1);
+      assert.equal(JSON.stringify(response).includes("CANARY"), false);
+      assert.equal(JSON.stringify(response).includes("agentToken"), false);
+    }
+  });
+
+  it("serves vm.start request with sanitized output", async () => {
+    const service = createFakeService({
+      list: () => [],
+      start: async (id) => ({
+        success: true,
+        state: vmState(id),
+        vmId: id,
+        pid: 1234,
+      }),
+    });
+    const server = buildServer(service);
+    await server.listen();
+
+    const [response] = await exchange(socketPath, [
+      '{"id":"start-1","method":"vm.start","params":{"vmId":"vm-start-target"}}',
+    ]);
+
+    assert.equal(response?.ok, true);
+    if (response?.ok === true) {
+      const result = response.result as Record<string, unknown>;
+      assert.equal(result.id, "vm-start-target");
+      assert.equal(JSON.stringify(response).includes("CANARY"), false);
+    }
+  });
+
+  it("serves vm.stop request with sanitized output", async () => {
+    const stopped = vmState("vm-stop-target");
+    (stopped as any).status = "stopped";
+    const service = createFakeService({
+      list: () => [],
+      stop: async (id) => ({
+        success: true,
+        alreadyStopped: false,
+        vmId: id,
+      }),
+      get: () => stopped,
+    });
+    const server = buildServer(service);
+    await server.listen();
+
+    const [response] = await exchange(socketPath, [
+      '{"id":"stop-1","method":"vm.stop","params":{"vmId":"vm-stop-target"}}',
+    ]);
+
+    assert.equal(response?.ok, true);
+    if (response?.ok === true) {
+      const result = response.result as Record<string, unknown>;
+      assert.equal(result.id, "vm-stop-target");
+      assert.equal(result.status, "stopped");
+      assert.equal(JSON.stringify(response).includes("CANARY"), false);
+    }
+  });
+
+  it("serves vm.remove request with clean response", async () => {
+    const service = createFakeService({
+      list: () => [],
+      remove: async (id) => ({
+        success: true,
+        vmId: id,
+      }),
+    });
+    const server = buildServer(service);
+    await server.listen();
+
+    const [response] = await exchange(socketPath, [
+      '{"id":"remove-1","method":"vm.remove","params":{"vmId":"vm-remove-target"}}',
+    ]);
+
+    assert.equal(response?.ok, true);
+    if (response?.ok === true) {
+      assert.deepEqual(response.result, {
+        removed: true,
+        vmId: "vm-remove-target",
+      });
     }
   });
 
@@ -447,7 +580,7 @@ describe("manager server - socket group ownership", () => {
     const server = new ManagerServer({
       config,
       logger: createLogger(options.level ?? "error", options.sink ?? (() => {})),
-      service: { list: () => [] },
+      service: createFakeService(),
       ...(options.resolveGroup ? { resolveGroup: options.resolveGroup } : {}),
       ...(options.chownSocket ? { chownSocket: options.chownSocket } : {}),
     });
@@ -690,7 +823,7 @@ describe("manager server - stale socket handling", () => {
         maxRequestBytes: DEFAULT_MAX_REQUEST_BYTES,
       },
       logger: createLogger("error", () => {}),
-      service: { list: () => [] },
+      service: createFakeService(),
     });
     await server.listen();
 
@@ -713,7 +846,7 @@ describe("manager server - stale socket handling", () => {
         maxRequestBytes: DEFAULT_MAX_REQUEST_BYTES,
       },
       logger: createLogger("error", () => {}),
-      service: { list: () => [] },
+      service: createFakeService(),
     });
     await server.listen();
     // Simulate a crash: close the listener but leave the file behind.

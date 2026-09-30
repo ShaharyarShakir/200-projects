@@ -8,13 +8,49 @@
  * fails if the two declarations drift apart.
  */
 
-export type ManagerMethod = "health" | "list";
+export type ManagerMethod =
+  | "health"
+  | "list"
+  | "vm.create"
+  | "vm.start"
+  | "vm.stop"
+  | "vm.remove";
 
 /**
  * Runtime list of methods, so the client can check a frame it did not build
  * itself. Kept in step with the manager's `MANAGER_METHODS` by the sync test.
  */
-export const MANAGER_METHODS: readonly ManagerMethod[] = ["health", "list"];
+export const MANAGER_METHODS: readonly ManagerMethod[] = [
+  "health",
+  "list",
+  "vm.create",
+  "vm.start",
+  "vm.stop",
+  "vm.remove",
+];
+
+export const VALID_RUNTIMES = ["base", "node22", "node24", "python3.13"] as const;
+export type RuntimeOption = (typeof VALID_RUNTIMES)[number];
+
+export const VALID_NETWORK_POLICIES = ["allow-all", "deny-all", "custom"] as const;
+export type NetworkPolicyOption = (typeof VALID_NETWORK_POLICIES)[number];
+
+export interface VmCreateParams {
+  runtime?: RuntimeOption;
+  vcpus?: number;
+  memoryMib?: number;
+  diskSizeGb?: number;
+  networkPolicy?: NetworkPolicyOption;
+  timeoutMs?: number;
+}
+
+export interface VmIdParams {
+  vmId: string;
+}
+
+export type VmStartParams = VmIdParams;
+export type VmStopParams = VmIdParams;
+export type VmRemoveParams = VmIdParams;
 
 export interface HealthRequest {
   id: string;
@@ -26,7 +62,37 @@ export interface ListRequest {
   method: "list";
 }
 
-export type ManagerRequest = HealthRequest | ListRequest;
+export interface VmCreateRequest {
+  id: string;
+  method: "vm.create";
+  params?: VmCreateParams;
+}
+
+export interface VmStartRequest {
+  id: string;
+  method: "vm.start";
+  params: VmStartParams;
+}
+
+export interface VmStopRequest {
+  id: string;
+  method: "vm.stop";
+  params: VmStopParams;
+}
+
+export interface VmRemoveRequest {
+  id: string;
+  method: "vm.remove";
+  params: VmRemoveParams;
+}
+
+export type ManagerRequest =
+  | HealthRequest
+  | ListRequest
+  | VmCreateRequest
+  | VmStartRequest
+  | VmStopRequest
+  | VmRemoveRequest;
 
 export interface HealthResult {
   status: "ok";
@@ -48,14 +114,31 @@ export interface ListResult {
   vms: ManagerVm[];
 }
 
+export type VmCreateResult = ManagerVm;
+export type VmStartResult = ManagerVm;
+export type VmStopResult = ManagerVm;
+
+export interface VmRemoveResult {
+  removed: true;
+  vmId: string;
+}
+
 export interface ManagerResultMap {
   health: HealthResult;
   list: ListResult;
+  "vm.create": VmCreateResult;
+  "vm.start": VmStartResult;
+  "vm.stop": VmStopResult;
+  "vm.remove": VmRemoveResult;
 }
 
 export type ManagerErrorCode =
   | "INVALID_JSON"
   | "INVALID_REQUEST"
+  | "VALIDATION_ERROR"
+  | "VM_NOT_FOUND"
+  | "VM_INVALID_STATE"
+  | "VM_OPERATION_FAILED"
   | "UNKNOWN_METHOD"
   | "REQUEST_TOO_LARGE"
   | "INVALID_FRAME"
@@ -72,6 +155,10 @@ export type ManagerErrorCode =
 export const MANAGER_ERROR_CODES: readonly ManagerErrorCode[] = [
   "INVALID_JSON",
   "INVALID_REQUEST",
+  "VALIDATION_ERROR",
+  "VM_NOT_FOUND",
+  "VM_INVALID_STATE",
+  "VM_OPERATION_FAILED",
   "UNKNOWN_METHOD",
   "REQUEST_TOO_LARGE",
   "INVALID_FRAME",
@@ -82,7 +169,7 @@ export const MANAGER_ERROR_CODES: readonly ManagerErrorCode[] = [
 export function isManagerErrorCode(value: unknown): value is ManagerErrorCode {
   return (
     typeof value === "string" &&
-    (MANAGER_ERROR_CODES as readonly string[]).includes(value)
+    (MANAGER_ERROR_CODES as readonly string[]).includes(value as ManagerErrorCode)
   );
 }
 
@@ -138,6 +225,26 @@ export function isManagerResponse(value: unknown): value is ManagerResponse<unkn
   return false;
 }
 
+/** Runtime guard for ManagerVm */
+export function isManagerVm(value: unknown): value is ManagerVm {
+  if (value === null || typeof value !== "object") {
+    return false;
+  }
+  const entry = value as Record<string, unknown>;
+  return (
+    typeof entry.id === "string" &&
+    typeof entry.status === "string" &&
+    typeof entry.runtime === "string" &&
+    typeof entry.vcpuCount === "number" &&
+    typeof entry.memSizeMib === "number" &&
+    typeof entry.createdAt === "string" &&
+    (entry.snapshot === null || typeof entry.snapshot === "string") &&
+    (entry.timeoutAt === null || typeof entry.timeoutAt === "string") &&
+    Array.isArray(entry.tunnelHostnames) &&
+    entry.tunnelHostnames.every((h) => typeof h === "string")
+  );
+}
+
 /** Runtime guard for the `list` result, so a malformed payload is typed out. */
 export function isListResult(value: unknown): value is ListResult {
   if (value === null || typeof value !== "object") {
@@ -147,18 +254,14 @@ export function isListResult(value: unknown): value is ListResult {
   if (!Array.isArray(candidate.vms)) {
     return false;
   }
-  return candidate.vms.every((vm) => {
-    if (vm === null || typeof vm !== "object") {
-      return false;
-    }
-    const entry = vm as Record<string, unknown>;
-    return (
-      typeof entry.id === "string" &&
-      typeof entry.status === "string" &&
-      typeof entry.runtime === "string" &&
-      typeof entry.vcpuCount === "number" &&
-      typeof entry.memSizeMib === "number" &&
-      typeof entry.createdAt === "string"
-    );
-  });
+  return candidate.vms.every((vm) => isManagerVm(vm));
+}
+
+/** Runtime guard for VmRemoveResult */
+export function isVmRemoveResult(value: unknown): value is VmRemoveResult {
+  if (value === null || typeof value !== "object") {
+    return false;
+  }
+  const entry = value as Record<string, unknown>;
+  return entry.removed === true && typeof entry.vmId === "string";
 }
