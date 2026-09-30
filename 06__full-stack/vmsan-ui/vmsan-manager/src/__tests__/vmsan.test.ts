@@ -1,7 +1,17 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import type { VmState } from "vmsan";
-import { createVmsanService, listVms, toProtocolVm } from "../vmsan.js";
+import {
+  categorizeVmsanError,
+  createVm,
+  createVmsanService,
+  getVm,
+  listVms,
+  removeVm,
+  startVm,
+  stopVm,
+  toProtocolVm,
+} from "../vmsan.js";
 import type { VmsanService } from "../vmsan.js";
 import type { ManagerConfig } from "../config.js";
 
@@ -54,8 +64,36 @@ function vmStateFixture(overrides: Partial<VmState> = {}): VmState {
   } as VmState;
 }
 
-function fakeService(states: VmState[]): VmsanService {
-  return { list: () => states };
+function fakeService(
+  states: VmState[] = [],
+  overrides: Partial<VmsanService> = {}
+): VmsanService {
+  return {
+    list: () => states,
+    get: (id: string) => states.find((s) => s.id === id) ?? null,
+    create: async () => ({
+      state: states[0] ?? vmStateFixture(),
+      config: {} as any,
+      vmId: states[0]?.id ?? "vm-default",
+      pid: 1234,
+    }),
+    start: async (id: string) => ({
+      success: true,
+      state: states.find((s) => s.id === id) ?? vmStateFixture({ id }),
+      vmId: id,
+      pid: 1234,
+    }),
+    stop: async (id: string) => ({
+      success: true,
+      alreadyStopped: false,
+      vmId: id,
+    }),
+    remove: async (id: string) => ({
+      success: true,
+      vmId: id,
+    }),
+    ...overrides,
+  };
 }
 
 const config: ManagerConfig = {
@@ -214,15 +252,299 @@ describe("manager vmsan - listVms", () => {
 
   it("reads from the service rather than executing anything", async () => {
     let listCount = 0;
-    const service: VmsanService = {
+    const service = fakeService([], {
       list: () => {
         listCount += 1;
         return [vmStateFixture()];
       },
-    };
+    });
 
     await listVms(service);
 
     assert.equal(listCount, 1);
+  });
+});
+
+describe("manager vmsan - getVm", () => {
+  it("returns redacted single VM when it exists", async () => {
+    const fixture = vmStateFixture({ id: "vm-target" });
+    const service = fakeService([fixture]);
+
+    const vm = await getVm(service, "vm-target");
+    assert.equal(vm.id, "vm-target");
+    assert.equal(JSON.stringify(vm).includes(CANARY_TOKEN), false);
+  });
+
+  it("throws ERR_VM_NOT_FOUND when VM does not exist", async () => {
+    const service = fakeService([]);
+    await assert.rejects(
+      async () => {
+        await getVm(service, "non-existent");
+      },
+      (err: any) => err.code === "ERR_VM_NOT_FOUND"
+    );
+  });
+});
+
+describe("manager vmsan - createVm", () => {
+  it("maps memoryMib to memMib and passes all options", async () => {
+    let passedOpts: any;
+    const fixture = vmStateFixture({ id: "vm-new", memSizeMib: 512, vcpuCount: 2 });
+    const service = fakeService([], {
+      create: async (opts) => {
+        passedOpts = opts;
+        return { state: fixture, config: {} as any, vmId: "vm-new", pid: 1234 };
+      },
+    });
+
+    const result = await createVm(service, {
+      runtime: "node22",
+      vcpus: 2,
+      memoryMib: 512,
+      diskSizeGb: 10,
+      networkPolicy: "allow-all",
+      timeoutMs: 120000,
+    });
+
+    assert.deepEqual(passedOpts, {
+      runtime: "node22",
+      vcpus: 2,
+      memMib: 512,
+      diskSizeGb: 10,
+      networkPolicy: "allow-all",
+      timeoutMs: 120000,
+    });
+    assert.equal(result.id, "vm-new");
+    assert.equal(JSON.stringify(result).includes(CANARY_TOKEN), false);
+  });
+
+  it("handles undefined params gracefully", async () => {
+    let passedOpts: any;
+    const fixture = vmStateFixture({ id: "vm-default" });
+    const service = fakeService([], {
+      create: async (opts) => {
+        passedOpts = opts;
+        return { state: fixture, config: {} as any, vmId: "vm-default", pid: 1234 };
+      },
+    });
+
+    const result = await createVm(service);
+    assert.deepEqual(passedOpts, {});
+    assert.equal(result.id, "vm-default");
+  });
+});
+
+describe("manager vmsan - startVm", () => {
+  it("starts the VM and returns redacted state", async () => {
+    const fixture = vmStateFixture({ id: "vm-to-start", status: "running" });
+    const service = fakeService([], {
+      start: async (id) => ({
+        success: true,
+        state: fixture,
+        vmId: id,
+        pid: 1234,
+      }),
+    });
+
+    const result = await startVm(service, "vm-to-start");
+    assert.equal(result.id, "vm-to-start");
+    assert.equal(result.status, "running");
+    assert.equal(JSON.stringify(result).includes(CANARY_TOKEN), false);
+  });
+
+  it("throws error if start result fails", async () => {
+    const nativeError = new Error("VM already running");
+    (nativeError as any).code = "ERR_VM_NOT_STOPPED";
+
+    const service = fakeService([], {
+      start: async (id) => ({
+        success: false,
+        error: nativeError as any,
+        vmId: id,
+        pid: 0,
+        state: vmStateFixture({ id }),
+      }),
+    });
+
+    await assert.rejects(
+      async () => {
+        await startVm(service, "vm-failed");
+      },
+      (err: any) => err.code === "ERR_VM_NOT_STOPPED"
+    );
+  });
+});
+
+describe("manager vmsan - stopVm", () => {
+  it("stops the VM and returns redacted state from get", async () => {
+    const stoppedState = vmStateFixture({ id: "vm-to-stop", status: "stopped" });
+    const service = fakeService([stoppedState], {
+      stop: async (id) => ({
+        success: true,
+        alreadyStopped: false,
+        vmId: id,
+      }),
+      get: () => stoppedState,
+    });
+
+    const result = await stopVm(service, "vm-to-stop");
+    assert.equal(result.id, "vm-to-stop");
+    assert.equal(result.status, "stopped");
+    assert.equal(JSON.stringify(result).includes(CANARY_TOKEN), false);
+  });
+
+  it("throws ERR_VM_NOT_RUNNING if alreadyStopped is true", async () => {
+    const service = fakeService([], {
+      stop: async (id) => ({
+        success: true,
+        alreadyStopped: true,
+        vmId: id,
+      }),
+    });
+
+    await assert.rejects(
+      async () => {
+        await stopVm(service, "vm-already-stopped");
+      },
+      (err: any) => err.code === "ERR_VM_NOT_RUNNING"
+    );
+  });
+
+  it("throws error if stop result fails", async () => {
+    const nativeError = new Error("VM not found");
+    (nativeError as any).code = "ERR_VM_NOT_FOUND";
+
+    const service = fakeService([], {
+      stop: async (id) => ({
+        success: false,
+        error: nativeError as any,
+        vmId: id,
+      }),
+    });
+
+    await assert.rejects(
+      async () => {
+        await stopVm(service, "vm-missing");
+      },
+      (err: any) => err.code === "ERR_VM_NOT_FOUND"
+    );
+  });
+});
+
+describe("manager vmsan - removeVm", () => {
+  it("removes the VM and returns VmRemoveResult", async () => {
+    const service = fakeService([], {
+      remove: async (id) => ({
+        success: true,
+        vmId: id,
+      }),
+    });
+
+    const result = await removeVm(service, "vm-to-remove");
+    assert.deepEqual(result, {
+      removed: true,
+      vmId: "vm-to-remove",
+    });
+  });
+
+  it("throws error if remove result fails", async () => {
+    const nativeError = new Error("VM is running");
+    (nativeError as any).code = "ERR_VM_NOT_STOPPED";
+
+    const service = fakeService([], {
+      remove: async (id) => ({
+        success: false,
+        error: nativeError as any,
+        vmId: id,
+      }),
+    });
+
+    await assert.rejects(
+      async () => {
+        await removeVm(service, "vm-running");
+      },
+      (err: any) => err.code === "ERR_VM_NOT_STOPPED"
+    );
+  });
+});
+
+describe("manager vmsan - categorizeVmsanError", () => {
+  it("preserves existing valid ManagerErrorCode", () => {
+    const err = { code: "VM_NOT_FOUND", message: "Not found" };
+    assert.deepEqual(categorizeVmsanError(err), {
+      code: "VM_NOT_FOUND",
+      message: "Not found",
+    });
+  });
+
+  it("maps ERR_VM_NOT_FOUND and ERR_VM_STATE_NOT_FOUND to VM_NOT_FOUND", () => {
+    assert.equal(
+      categorizeVmsanError({ code: "ERR_VM_NOT_FOUND", message: "VM does not exist" }).code,
+      "VM_NOT_FOUND"
+    );
+    assert.equal(
+      categorizeVmsanError({ code: "ERR_VM_STATE_NOT_FOUND", message: "State missing" }).code,
+      "VM_NOT_FOUND"
+    );
+  });
+
+  it("maps ERR_VM_NOT_STOPPED and ERR_VM_NOT_RUNNING to VM_INVALID_STATE", () => {
+    assert.equal(
+      categorizeVmsanError({ code: "ERR_VM_NOT_STOPPED", message: "VM is running" }).code,
+      "VM_INVALID_STATE"
+    );
+    assert.equal(
+      categorizeVmsanError({ code: "ERR_VM_NOT_RUNNING", message: "VM is stopped" }).code,
+      "VM_INVALID_STATE"
+    );
+  });
+
+  it("maps ERR_VALIDATION_* to VALIDATION_ERROR", () => {
+    assert.equal(
+      categorizeVmsanError({ code: "ERR_VALIDATION_RUNTIME", message: "Invalid runtime" }).code,
+      "VALIDATION_ERROR"
+    );
+  });
+
+  it("maps ERR_FIRECRACKER_*, ERR_SETUP_*, ERR_NETWORK_*, ERR_VM_* to VM_OPERATION_FAILED", () => {
+    assert.equal(
+      categorizeVmsanError({ code: "ERR_FIRECRACKER_API", message: "FC failed" }).code,
+      "VM_OPERATION_FAILED"
+    );
+    assert.equal(
+      categorizeVmsanError({ code: "ERR_NETWORK_TAP", message: "TAP failed" }).code,
+      "VM_OPERATION_FAILED"
+    );
+    assert.equal(
+      categorizeVmsanError({ code: "ERR_TIMEOUT_START", message: "Timeout" }).code,
+      "VM_OPERATION_FAILED"
+    );
+  });
+
+  it("maps messages with 'not found' to VM_NOT_FOUND", () => {
+    assert.equal(
+      categorizeVmsanError(new Error("VM vm-123 was not found")).code,
+      "VM_NOT_FOUND"
+    );
+  });
+
+  it("maps messages with 'already running' or 'not stopped' to VM_INVALID_STATE", () => {
+    assert.equal(
+      categorizeVmsanError(new Error("VM vm-123 is already running")).code,
+      "VM_INVALID_STATE"
+    );
+    assert.equal(
+      categorizeVmsanError(new Error("VM is in invalid state")).code,
+      "VM_INVALID_STATE"
+    );
+  });
+
+  it("maps unclassified errors to INTERNAL_ERROR", () => {
+    assert.equal(
+      categorizeVmsanError(new Error("Unexpected low-level failure")).code,
+      "INTERNAL_ERROR"
+    );
+    assert.equal(categorizeVmsanError("raw string error").code, "INTERNAL_ERROR");
+    assert.equal(categorizeVmsanError(null).code, "INTERNAL_ERROR");
   });
 });
