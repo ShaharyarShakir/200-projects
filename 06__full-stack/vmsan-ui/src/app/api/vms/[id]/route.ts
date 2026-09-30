@@ -1,14 +1,11 @@
-import { validateVmId } from "@/lib/vmsan";
-import { handleApiError, lifecycleUnavailableResponse } from "../helpers";
+import { NextResponse } from "next/server";
+import { createVmService } from "@/lib/vms/vm-service";
+import { toApiErrorResponse } from "@/lib/vms/vm-errors";
+
+const vmService = createVmService();
 
 /**
- * Deleting a VM is a privileged operation and there is no manager RPC for it.
- *
- * The route still exists, and still validates the id, so that a request naming
- * something that could never be a VM is rejected as invalid input rather than
- * being answered with a blanket 501. It performs no vmsan call and touches no
- * metadata record: an unavailable operation must not leave a half-applied
- * change behind for a later run to pick up.
+ * Deleting a VM is a privileged operation and goes through the manager via VmService.
  */
 export async function DELETE(
   _request: Request,
@@ -17,10 +14,13 @@ export async function DELETE(
   const { id } = await context.params;
 
   try {
-    validateVmId(id);
+    const result = await vmService.removeVm(id);
+    return NextResponse.json(
+      { removed: result.removed, vmId: result.vmId, id: result.vmId },
+      { status: 200 }
+    );
   } catch (error) {
-    return handleApiError(error);
+    const { status, body } = toApiErrorResponse(error);
+    return NextResponse.json(body, { status });
   }
-
-  return lifecycleUnavailableResponse();
 }

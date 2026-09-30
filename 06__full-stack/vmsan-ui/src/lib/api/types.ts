@@ -1,3 +1,7 @@
+import type { SupportedRuntime } from "../vms/types";
+
+export * from "../vms/types";
+
 export type ClientVMStatus = "running" | "stopped" | "unknown";
 
 export type ClientVM = {
@@ -19,8 +23,6 @@ export type ClientVM = {
 export type GetVMsResponse = {
   vms: ClientVM[];
 };
-
-export type SupportedRuntime = "base" | "node22" | "node24" | "python3.13";
 
 export type CreateVMRequest = {
   /**
