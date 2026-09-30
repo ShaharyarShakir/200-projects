@@ -12,8 +12,20 @@ import {
   type ListResult,
   type ManagerRequest,
   type ManagerResponse,
+  type VmCreateResult,
+  type VmStartResult,
+  type VmStopResult,
+  type VmRemoveResult,
 } from "./protocol.js";
-import { listVms, type VmsanService } from "./vmsan.js";
+import {
+  categorizeVmsanError,
+  createVm,
+  listVms,
+  removeVm,
+  startVm,
+  stopVm,
+  type VmsanService,
+} from "./vmsan.js";
 
 /** Owner read/write, group read/write, nothing for others. Never 0o777. */
 export const SOCKET_MODE = 0o660;
@@ -337,7 +349,16 @@ export class ManagerServer {
 
   private async execute(
     request: ManagerRequest
-  ): Promise<ManagerResponse<HealthResult | ListResult>> {
+  ): Promise<
+    ManagerResponse<
+      | HealthResult
+      | ListResult
+      | VmCreateResult
+      | VmStartResult
+      | VmStopResult
+      | VmRemoveResult
+    >
+  > {
     try {
       switch (request.method) {
         case "health": {
@@ -350,20 +371,72 @@ export class ManagerServer {
           this.logger.debug("list served", { count: vms.length, id: request.id });
           return success(request.id, result);
         }
+        case "vm.create": {
+          this.logger.info("creating vm", {
+            id: request.id,
+            runtime: request.params?.runtime,
+            vcpus: request.params?.vcpus,
+            memoryMib: request.params?.memoryMib,
+          });
+          const vm = await createVm(this.service, request.params);
+          this.logger.info("vm created", {
+            id: request.id,
+            vmId: vm.id,
+            runtime: vm.runtime,
+            status: vm.status,
+          });
+          return success(request.id, vm);
+        }
+        case "vm.start": {
+          this.logger.info("starting vm", {
+            id: request.id,
+            vmId: request.params.vmId,
+          });
+          const vm = await startVm(this.service, request.params.vmId);
+          this.logger.info("vm started", {
+            id: request.id,
+            vmId: vm.id,
+            status: vm.status,
+          });
+          return success(request.id, vm);
+        }
+        case "vm.stop": {
+          this.logger.info("stopping vm", {
+            id: request.id,
+            vmId: request.params.vmId,
+          });
+          const vm = await stopVm(this.service, request.params.vmId);
+          this.logger.info("vm stopped", {
+            id: request.id,
+            vmId: vm.id,
+            status: vm.status,
+          });
+          return success(request.id, vm);
+        }
+        case "vm.remove": {
+          this.logger.info("removing vm", {
+            id: request.id,
+            vmId: request.params.vmId,
+          });
+          const result = await removeVm(this.service, request.params.vmId);
+          this.logger.info("vm removed", {
+            id: request.id,
+            vmId: result.vmId,
+          });
+          return success(request.id, result);
+        }
       }
     } catch (error) {
-      // Log the code, request id, and a capped cause for the operator. The
-      // detail stays in the manager's root-owned stderr and is never echoed to
-      // the client, which only sees the generic message below.
+      const categorized = categorizeVmsanError(error);
       this.logger.error("request failed", {
-        code: "INTERNAL_ERROR",
+        code: categorized.code,
         id: request.id,
         ...describeError(error),
       });
       return failure(
         request.id,
-        "INTERNAL_ERROR",
-        "The manager could not complete this request"
+        categorized.code,
+        categorized.message
       );
     }
   }
