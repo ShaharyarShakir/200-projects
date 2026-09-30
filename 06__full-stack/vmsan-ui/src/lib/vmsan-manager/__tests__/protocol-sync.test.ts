@@ -22,7 +22,14 @@ const CLIENT_DIR = fileURLToPath(new URL("..", import.meta.url));
  * renamed on one side, they fail here.
  */
 
-const METHODS = ["health", "list"] as const;
+const METHODS = [
+  "health",
+  "list",
+  "vm.create",
+  "vm.start",
+  "vm.stop",
+  "vm.remove",
+] as const;
 
 const VM_FIXTURE = {
   id: "vm-1691d65a",
@@ -77,20 +84,50 @@ describe("protocol sync - error codes agree", () => {
 });
 
 describe("protocol sync - methods agree", () => {
-  it("declares exactly the health and list methods on both sides", () => {
+  it("declares exactly the expected methods on both sides", () => {
     assert.deepEqual([...managerProtocol.MANAGER_METHODS], METHODS);
     assert.deepEqual([...clientProtocol.MANAGER_METHODS], METHODS);
   });
 
-  it("the manager accepts every frame the client can send", () => {
-    for (const method of METHODS) {
-      const result = validateFrame(JSON.stringify({ id: "1", method }), 65536);
-      assert.equal(result.ok, true);
-    }
+  it("the manager accepts valid request frames for all methods", () => {
+    assert.equal(validateFrame(JSON.stringify({ id: "1", method: "health" }), 65536).ok, true);
+    assert.equal(validateFrame(JSON.stringify({ id: "2", method: "list" }), 65536).ok, true);
+    assert.equal(
+      validateFrame(
+        JSON.stringify({
+          id: "3",
+          method: "vm.create",
+          params: { runtime: "node22", vcpus: 2, memoryMib: 512 },
+        }),
+        65536
+      ).ok,
+      true
+    );
+    assert.equal(
+      validateFrame(
+        JSON.stringify({ id: "4", method: "vm.start", params: { vmId: "vm-123" } }),
+        65536
+      ).ok,
+      true
+    );
+    assert.equal(
+      validateFrame(
+        JSON.stringify({ id: "5", method: "vm.stop", params: { vmId: "vm-123" } }),
+        65536
+      ).ok,
+      true
+    );
+    assert.equal(
+      validateFrame(
+        JSON.stringify({ id: "6", method: "vm.remove", params: { vmId: "vm-123" } }),
+        65536
+      ).ok,
+      true
+    );
   });
 
-  it("both sides agree the request union is health plus list only", () => {
-    for (const method of ["stop", "remove", "create", "start"]) {
+  it("both sides reject unknown methods", () => {
+    for (const method of ["destroy", "unknown.method", "restart", "delete"]) {
       assert.equal(validateFrame(JSON.stringify({ id: "1", method }), 65536).ok, false);
     }
   });
@@ -117,8 +154,32 @@ describe("protocol sync - response shapes agree", () => {
     assert.deepEqual(parsed.result.vms, [VM_FIXTURE]);
   });
 
+  it("a manager-built vm.create / vm.start / vm.stop success parses as a client ManagerVm", () => {
+    const frame: managerProtocol.ManagerResponse<managerProtocol.ProtocolVm> = success(
+      "3",
+      VM_FIXTURE
+    );
+
+    assert.ok(clientProtocol.isManagerResponse(frame));
+    const parsed = frame as clientProtocol.ManagerSuccess<clientProtocol.ManagerVm>;
+    assert.ok(clientProtocol.isManagerVm(parsed.result));
+    assert.deepEqual(parsed.result, VM_FIXTURE);
+  });
+
+  it("a manager-built vm.remove success parses as a client VmRemoveResult", () => {
+    const frame: managerProtocol.ManagerResponse<managerProtocol.VmRemoveResult> = success(
+      "4",
+      { removed: true, vmId: "vm-1691d65a" }
+    );
+
+    assert.ok(clientProtocol.isManagerResponse(frame));
+    const parsed = frame as clientProtocol.ManagerSuccess<clientProtocol.VmRemoveResult>;
+    assert.ok(clientProtocol.isVmRemoveResult(parsed.result));
+    assert.deepEqual(parsed.result, { removed: true, vmId: "vm-1691d65a" });
+  });
+
   it("a manager-built failure parses as a client failure with the same code", () => {
-    const frame = failure("3", "UNKNOWN_METHOD", "Unknown method");
+    const frame = failure("5", "UNKNOWN_METHOD", "Unknown method");
 
     assert.ok(clientProtocol.isManagerResponse(frame));
     const parsed = frame as clientProtocol.ManagerFailure;

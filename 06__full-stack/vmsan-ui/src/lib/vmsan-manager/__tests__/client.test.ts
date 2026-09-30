@@ -151,6 +151,128 @@ describe("manager client - successful calls", () => {
     assert.deepEqual(await client.list(), []);
   });
 
+  it("creates a VM with custom parameters", async () => {
+    manager = new FakeManager((request) =>
+      JSON.stringify({
+        id: request.id,
+        ok: true,
+        result: VM_FIXTURE,
+      })
+    );
+    await manager.start();
+
+    const client = createManagerClient({ socketPath: manager.socketPath });
+    const vm = await client.createVm({
+      runtime: "base",
+      vcpus: 2,
+      memoryMib: 512,
+      diskSizeGb: 5,
+    });
+
+    assert.deepEqual(vm, VM_FIXTURE);
+    const frame = JSON.parse(manager.requests[0] ?? "{}") as {
+      method: string;
+      params: Record<string, unknown>;
+    };
+    assert.equal(frame.method, "vm.create");
+    assert.deepEqual(frame.params, {
+      runtime: "base",
+      vcpus: 2,
+      memoryMib: 512,
+      diskSizeGb: 5,
+    });
+  });
+
+  it("creates a VM with default parameters when none provided", async () => {
+    manager = new FakeManager((request) =>
+      JSON.stringify({
+        id: request.id,
+        ok: true,
+        result: VM_FIXTURE,
+      })
+    );
+    await manager.start();
+
+    const client = createManagerClient({ socketPath: manager.socketPath });
+    const vm = await client.createVm();
+
+    assert.deepEqual(vm, VM_FIXTURE);
+    const frame = JSON.parse(manager.requests[0] ?? "{}") as {
+      method: string;
+      params?: unknown;
+    };
+    assert.equal(frame.method, "vm.create");
+    assert.equal(frame.params, undefined);
+  });
+
+  it("starts a VM by ID", async () => {
+    manager = new FakeManager((request) =>
+      JSON.stringify({
+        id: request.id,
+        ok: true,
+        result: { ...VM_FIXTURE, status: "running" },
+      })
+    );
+    await manager.start();
+
+    const client = createManagerClient({ socketPath: manager.socketPath });
+    const vm = await client.startVm("vm-1691d65a");
+
+    assert.equal(vm.id, "vm-1691d65a");
+    assert.equal(vm.status, "running");
+    const frame = JSON.parse(manager.requests[0] ?? "{}") as {
+      method: string;
+      params: { vmId: string };
+    };
+    assert.equal(frame.method, "vm.start");
+    assert.equal(frame.params.vmId, "vm-1691d65a");
+  });
+
+  it("stops a VM by ID", async () => {
+    manager = new FakeManager((request) =>
+      JSON.stringify({
+        id: request.id,
+        ok: true,
+        result: { ...VM_FIXTURE, status: "stopped" },
+      })
+    );
+    await manager.start();
+
+    const client = createManagerClient({ socketPath: manager.socketPath });
+    const vm = await client.stopVm("vm-1691d65a");
+
+    assert.equal(vm.id, "vm-1691d65a");
+    assert.equal(vm.status, "stopped");
+    const frame = JSON.parse(manager.requests[0] ?? "{}") as {
+      method: string;
+      params: { vmId: string };
+    };
+    assert.equal(frame.method, "vm.stop");
+    assert.equal(frame.params.vmId, "vm-1691d65a");
+  });
+
+  it("removes a VM by ID", async () => {
+    manager = new FakeManager((request) =>
+      JSON.stringify({
+        id: request.id,
+        ok: true,
+        result: { removed: true, vmId: "vm-1691d65a" },
+      })
+    );
+    await manager.start();
+
+    const client = createManagerClient({ socketPath: manager.socketPath });
+    const result = await client.removeVm("vm-1691d65a");
+
+    assert.deepEqual(result, { removed: true, vmId: "vm-1691d65a" });
+    const frame = JSON.parse(manager.requests[0] ?? "{}") as {
+      method: string;
+      params: { vmId: string };
+    };
+    assert.equal(frame.method, "vm.remove");
+    assert.equal(frame.params.vmId, "vm-1691d65a");
+  });
+
   it("sends a health request frame the manager can parse", async () => {
     manager = new FakeManager((request) =>
       JSON.stringify({ id: request.id, ok: true, result: { status: "ok" } })
@@ -322,6 +444,62 @@ describe("manager client - error mapping", () => {
     const client = createManagerClient({ socketPath: manager.socketPath });
 
     await assert.rejects(client.list(), ManagerProtocolError);
+  });
+
+  it("raises ManagerProtocolError when create result is invalid", async () => {
+    manager = new FakeManager((request) =>
+      JSON.stringify({
+        id: request.id,
+        ok: true,
+        result: { status: "not-a-vm" },
+      })
+    );
+    await manager.start();
+
+    const client = createManagerClient({ socketPath: manager.socketPath });
+    await assert.rejects(client.createVm(), ManagerProtocolError);
+  });
+
+  it("raises ManagerProtocolError when start result is invalid", async () => {
+    manager = new FakeManager((request) =>
+      JSON.stringify({
+        id: request.id,
+        ok: true,
+        result: { status: "not-a-vm" },
+      })
+    );
+    await manager.start();
+
+    const client = createManagerClient({ socketPath: manager.socketPath });
+    await assert.rejects(client.startVm("vm-1"), ManagerProtocolError);
+  });
+
+  it("raises ManagerProtocolError when stop result is invalid", async () => {
+    manager = new FakeManager((request) =>
+      JSON.stringify({
+        id: request.id,
+        ok: true,
+        result: { status: "not-a-vm" },
+      })
+    );
+    await manager.start();
+
+    const client = createManagerClient({ socketPath: manager.socketPath });
+    await assert.rejects(client.stopVm("vm-1"), ManagerProtocolError);
+  });
+
+  it("raises ManagerProtocolError when remove result is invalid", async () => {
+    manager = new FakeManager((request) =>
+      JSON.stringify({
+        id: request.id,
+        ok: true,
+        result: { removed: "not-a-boolean" },
+      })
+    );
+    await manager.start();
+
+    const client = createManagerClient({ socketPath: manager.socketPath });
+    await assert.rejects(client.removeVm("vm-1"), ManagerProtocolError);
   });
 
   it("raises ManagerRequestError on a manager failure response", async () => {
