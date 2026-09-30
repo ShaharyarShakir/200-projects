@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { VmsanError, VmsanValidationError } from "@/lib/vmsan";
 import {
   ManagerProtocolError,
   ManagerRequestError,
@@ -16,11 +15,11 @@ export type ApiErrorCode =
   | "INVALID_VM_STATE"
   | "OPERATION_CONFLICT"
   | "VM_NAME_ALREADY_EXISTS"
-  | "VM_LIFECYCLE_UNAVAILABLE"
   | "MANAGER_UNAVAILABLE"
   | "MANAGER_PROTOCOL_ERROR"
   | "VMSAN_UNAVAILABLE"
   | "VMSAN_COMMAND_FAILED"
+  | "VM_OPERATION_FAILED"
   | "INTERNAL_ERROR";
 
 export type ApiErrorResponse = {
@@ -47,31 +46,15 @@ export function createErrorResponse(
 }
 
 /**
- * The response every lifecycle route returns until the manager grows lifecycle
- * RPCs.
- *
- * 501 rather than 503: the request is well-formed and the server understood it,
- * but this build does not implement the operation. The dashboard shows the
- * message, so it states the fact and the reason without naming a socket path or
- * an internal method.
- */
-export function lifecycleUnavailableResponse(): NextResponse<ApiErrorResponse> {
-  return createErrorResponse(
-    501,
-    "VM_LIFECYCLE_UNAVAILABLE",
-    "Creating, starting, stopping, and deleting VMs are not available over the vmsan manager in this build. The manager currently exposes health and list only."
-  );
-}
-
-/**
  * Map a manager client error to a status and a code.
  *
  * The manager is the privileged process, so the three failure classes mean
  * three different things to an operator: nothing is listening (start the
  * service), something answered that is not the manager (a version mismatch or
  * a wrong socket), and the manager itself rejected the request (its own code is
- * the actionable one). Their messages already name no socket path, errno, or
- * stack, and are passed through unchanged.
+ * the actionable one). Request rejections are then mapped onto the HTTP codes
+ * the dashboard already understands. Messages already name no socket path,
+ * errno, or stack, and are passed through unchanged.
  */
 function mapManagerError(
   error: ManagerUnavailableError | ManagerProtocolError | ManagerRequestError
@@ -82,6 +65,21 @@ function mapManagerError(
 
   if (error instanceof ManagerProtocolError) {
     return createErrorResponse(502, "MANAGER_PROTOCOL_ERROR", error.message);
+  }
+
+  if (
+    error.managerCode === "VALIDATION_ERROR" ||
+    error.managerCode === "INVALID_REQUEST"
+  ) {
+    return createErrorResponse(400, "INVALID_REQUEST", error.message);
+  }
+
+  if (error.managerCode === "VM_NOT_FOUND") {
+    return createErrorResponse(404, "VM_NOT_FOUND", error.message);
+  }
+
+  if (error.managerCode === "VM_INVALID_STATE") {
+    return createErrorResponse(409, "INVALID_VM_STATE", error.message);
   }
 
   return createErrorResponse(500, error.managerCode, error.message);
@@ -97,10 +95,10 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
   }
 
   if (
-    error instanceof VmsanValidationError ||
+    (error && typeof error === "object" && "name" in error && (error as { name: string }).name === "VmsanValidationError") ||
     error instanceof VMMetadataValidationError
   ) {
-    return createErrorResponse(400, "INVALID_REQUEST", error.message);
+    return createErrorResponse(400, "INVALID_REQUEST", (error as Error).message);
   }
 
   if (error instanceof VMMetadataConflictError) {
@@ -115,14 +113,21 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
     );
   }
 
-  if (error instanceof VmsanError) {
-    const errText = `${error.stderr} ${error.message}`.toLowerCase();
+  if (
+    error &&
+    typeof error === "object" &&
+    "command" in error &&
+    "stderr" in error &&
+    "message" in error
+  ) {
+    const vmsanErr = error as unknown as { stderr: string; message: string; exitCode: number | null };
+    const errText = `${vmsanErr.stderr} ${vmsanErr.message}`.toLowerCase();
 
     // 1. Missing binary / execution failure (ENOENT or cannot spawn)
     if (
       errText.includes("enoent") ||
       errText.includes("failed to execute") ||
-      (errText.includes("not found") && error.exitCode === null)
+      (errText.includes("not found") && vmsanErr.exitCode === null)
     ) {
       return createErrorResponse(
         503,
@@ -141,7 +146,7 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
       return createErrorResponse(
         404,
         "VM_NOT_FOUND",
-        error.stderr.trim() || error.message || "Target microVM was not found"
+        vmsanErr.stderr.trim() || vmsanErr.message || "Target microVM was not found"
       );
     }
 
@@ -154,7 +159,7 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
       return createErrorResponse(
         409,
         "OPERATION_CONFLICT",
-        error.stderr.trim() || error.message || "Operation conflict on target microVM"
+        vmsanErr.stderr.trim() || vmsanErr.message || "Operation conflict on target microVM"
       );
     }
 
@@ -169,16 +174,16 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
       return createErrorResponse(
         409,
         "INVALID_VM_STATE",
-        error.stderr.trim() || error.message || "Invalid microVM state for requested operation"
+        vmsanErr.stderr.trim() || vmsanErr.message || "Invalid microVM state for requested operation"
       );
     }
 
     // 5. General vmsan command failure
     const sanitizedMsg =
-      error.stderr.trim() ||
-      (error.message.startsWith("Command '")
+      vmsanErr.stderr.trim() ||
+      (vmsanErr.message.startsWith("Command '")
         ? "vmsan command execution failed"
-        : error.message) ||
+        : vmsanErr.message) ||
       "vmsan command failed";
 
     return createErrorResponse(500, "VMSAN_COMMAND_FAILED", sanitizedMsg);
