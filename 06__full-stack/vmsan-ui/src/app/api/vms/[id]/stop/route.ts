@@ -1,11 +1,11 @@
-import { validateVmId } from "@/lib/vmsan";
-import { handleApiError, lifecycleUnavailableResponse } from "../../helpers";
+import { NextResponse } from "next/server";
+import { createVmService } from "@/lib/vms/vm-service";
+import { toApiErrorResponse } from "@/lib/vms/vm-errors";
+
+const vmService = createVmService();
 
 /**
- * Stopping a VM is a privileged operation and there is no manager RPC for it.
- *
- * See `POST /api/vms/[id]/start`: the route validates, then reports the
- * operation as unavailable, and runs no vmsan command.
+ * Stopping a VM is a privileged operation and goes through the manager via VmService.
  */
 export async function POST(
   _request: Request,
@@ -14,10 +14,10 @@ export async function POST(
   const { id } = await context.params;
 
   try {
-    validateVmId(id);
+    const vm = await vmService.stopVm(id);
+    return NextResponse.json({ vm }, { status: 200 });
   } catch (error) {
-    return handleApiError(error);
+    const { status, body } = toApiErrorResponse(error);
+    return NextResponse.json(body, { status });
   }
-
-  return lifecycleUnavailableResponse();
 }
