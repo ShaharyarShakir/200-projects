@@ -99,6 +99,23 @@ export class VmService {
   }
 
   /**
+   * Get a single microVM by ID.
+   */
+  async getVm(id: unknown): Promise<Vm> {
+    const validatedId = validateVmId(id);
+    try {
+      const vms = await this.client.list();
+      const vm = vms.find((v) => v.id === validatedId);
+      if (!vm) {
+        throw new VmNotFoundError(validatedId, `Virtual machine not found: ${validatedId}`);
+      }
+      return toVmDto(vm);
+    } catch (error) {
+      this.mapError(error, validatedId);
+    }
+  }
+
+  /**
    * Create a new microVM.
    */
   async createVm(input: unknown = {}): Promise<Vm> {
