@@ -126,9 +126,12 @@ describe("GET /api/vms route handler", () => {
     assert.deepEqual(body.vms[0], {
       id: "vm-1691d65a",
       status: "running",
+      memoryMib: 512,
       memoryMiB: 512,
       vcpus: 2,
+      diskSizeGb: 1,
       runtime: "base",
+      createdAt: "2026-09-29T10:00:00.000Z",
       age: body.vms[0]?.age,
     });
     // Age is computed from the wall clock, so its exact value belongs in the
@@ -138,8 +141,8 @@ describe("GET /api/vms route handler", () => {
     assert.equal(body.vms[1]?.status, "stopped");
   });
 
-  it("reports an intermediate vmsan status as unknown rather than guessing", async () => {
-    await serve(listResponse([vm({ status: "creating" })]));
+  it("reports an unrecognized vmsan status as unknown rather than guessing", async () => {
+    await serve(listResponse([vm({ status: "paused" })]));
 
     const response = await GET();
     const body = (await response.json()) as { vms: Record<string, unknown>[] };

@@ -109,6 +109,43 @@ describe("API Helpers - handleApiError", () => {
     assert.equal(body.error.code, "MANAGER_PROTOCOL_ERROR");
   });
 
+  it("should map ManagerRequestError VALIDATION_ERROR to 400 INVALID_REQUEST", async () => {
+    const error = new ManagerRequestError("VALIDATION_ERROR", "vcpus must be between 1 and 4");
+    const response = handleApiError(error);
+    assert.equal(response.status, 400);
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "INVALID_REQUEST");
+    assert.equal(body.error.message, "vcpus must be between 1 and 4");
+  });
+
+  it("should map ManagerRequestError INVALID_REQUEST to 400 INVALID_REQUEST", async () => {
+    const error = new ManagerRequestError("INVALID_REQUEST", "request is missing a method");
+    const response = handleApiError(error);
+    assert.equal(response.status, 400);
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "INVALID_REQUEST");
+  });
+
+  it("should map ManagerRequestError VM_NOT_FOUND to 404", async () => {
+    const error = new ManagerRequestError("VM_NOT_FOUND", "VM not found: vm-missing");
+    const response = handleApiError(error);
+    assert.equal(response.status, 404);
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "VM_NOT_FOUND");
+  });
+
+  it("should map ManagerRequestError VM_INVALID_STATE to 409 INVALID_VM_STATE", async () => {
+    const error = new ManagerRequestError("VM_INVALID_STATE", "VM vm-1 is already running");
+    const response = handleApiError(error);
+    assert.equal(response.status, 409);
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "INVALID_VM_STATE");
+  });
+
   it("should map ManagerRequestError to 500 carrying the manager's own code", async () => {
     const error = new ManagerRequestError("INTERNAL_ERROR", "manager rejected the request");
     const response = handleApiError(error);
@@ -117,6 +154,15 @@ describe("API Helpers - handleApiError", () => {
     const body = (await response.json()) as { error: { code: string; message: string } };
     assert.equal(body.error.code, "INTERNAL_ERROR");
     assert.equal(body.error.message, "manager rejected the request");
+  });
+
+  it("should map ManagerRequestError VM_OPERATION_FAILED to 500", async () => {
+    const error = new ManagerRequestError("VM_OPERATION_FAILED", "jailer could not start");
+    const response = handleApiError(error);
+    assert.equal(response.status, 500);
+
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "VM_OPERATION_FAILED");
   });
 
   it("names no socket path, errno, or stack in any manager error response", async () => {
