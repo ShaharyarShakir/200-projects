@@ -9,16 +9,20 @@ import {
   isManagerFailure,
   isManagerResponse,
   isManagerSuccess,
+  isManagerVm,
+  isVmRemoveResult,
   type HealthResult,
   type ListResult,
   type ManagerMethod,
   type ManagerRequest,
   type ManagerResponse,
   type ManagerVm,
+  type VmCreateParams,
+  type VmRemoveResult,
 } from "./protocol";
 
 const SOCKET_FILE_NAME = "vmsan-manager.sock";
-const DEFAULT_TIMEOUT_MS = 5000;
+const DEFAULT_TIMEOUT_MS = 30000;
 
 export interface ManagerClientOptions {
   /**
@@ -175,13 +179,17 @@ function send(
 export interface ManagerClient {
   health(): Promise<HealthResult>;
   list(): Promise<ManagerVm[]>;
-  request(method: ManagerMethod): Promise<unknown>;
+  createVm(params?: VmCreateParams): Promise<ManagerVm>;
+  startVm(vmId: string): Promise<ManagerVm>;
+  stopVm(vmId: string): Promise<ManagerVm>;
+  removeVm(vmId: string): Promise<VmRemoveResult>;
+  request(method: ManagerMethod, params?: unknown): Promise<unknown>;
 }
 
 export function createManagerClient(
   options: ManagerClientOptions = {}
 ): ManagerClient {
-  const socketPath = options.socketPath ?? defaultSocketPath();
+  const getSocketPath = (): string => options.socketPath ?? defaultSocketPath();
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   let counter = 0;
@@ -191,7 +199,7 @@ export function createManagerClient(
   };
 
   const call = async (request: ManagerRequest): Promise<unknown> => {
-    const response = await send(socketPath, request, timeoutMs);
+    const response = await send(getSocketPath(), request, timeoutMs);
 
     if (isManagerFailure(response)) {
       throw new ManagerRequestError(
@@ -226,8 +234,70 @@ export function createManagerClient(
       return (result as ListResult).vms;
     },
 
-    request(method: "health" | "list"): Promise<unknown> {
-      return call({ id: nextId(), method });
+    async createVm(params?: VmCreateParams): Promise<ManagerVm> {
+      const request: ManagerRequest = {
+        id: nextId(),
+        method: "vm.create",
+        ...(params !== undefined ? { params } : {}),
+      };
+      const result = await call(request);
+      if (!isManagerVm(result)) {
+        throw new ManagerProtocolError(
+          "vmsan manager returned an invalid create result"
+        );
+      }
+      return result;
+    },
+
+    async startVm(vmId: string): Promise<ManagerVm> {
+      const result = await call({
+        id: nextId(),
+        method: "vm.start",
+        params: { vmId },
+      });
+      if (!isManagerVm(result)) {
+        throw new ManagerProtocolError(
+          "vmsan manager returned an invalid start result"
+        );
+      }
+      return result;
+    },
+
+    async stopVm(vmId: string): Promise<ManagerVm> {
+      const result = await call({
+        id: nextId(),
+        method: "vm.stop",
+        params: { vmId },
+      });
+      if (!isManagerVm(result)) {
+        throw new ManagerProtocolError(
+          "vmsan manager returned an invalid stop result"
+        );
+      }
+      return result;
+    },
+
+    async removeVm(vmId: string): Promise<VmRemoveResult> {
+      const result = await call({
+        id: nextId(),
+        method: "vm.remove",
+        params: { vmId },
+      });
+      if (!isVmRemoveResult(result)) {
+        throw new ManagerProtocolError(
+          "vmsan manager returned an invalid remove result"
+        );
+      }
+      return result;
+    },
+
+    request(method: ManagerMethod, params?: unknown): Promise<unknown> {
+      const req = {
+        id: nextId(),
+        method,
+        ...(params !== undefined ? { params } : {}),
+      } as ManagerRequest;
+      return call(req);
     },
   };
 }

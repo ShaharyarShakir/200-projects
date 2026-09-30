@@ -7,8 +7,11 @@ import { POST as createVMRoute } from "../route";
 import { POST as startVMRoute } from "../[id]/start/route";
 import { POST as stopVMRoute } from "../[id]/stop/route";
 import { DELETE as removeVMRoute } from "../[id]/route";
-import { handleApiError, lifecycleUnavailableResponse } from "../helpers";
-import { ManagerUnavailableError } from "@/lib/vmsan-manager/errors";
+import { handleApiError } from "../helpers";
+import {
+  ManagerProtocolError,
+  ManagerUnavailableError,
+} from "@/lib/vmsan-manager/errors";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +22,7 @@ const MOCK_BIN_PATH = path.resolve(
 
 describe("Security tests for VM Management API routes", () => {
   const originalBinPath = process.env.VMSAN_BIN_PATH;
+  const originalSocket = process.env.VMSAN_MANAGER_SOCKET;
 
   beforeEach(() => {
     process.env.VMSAN_BIN_PATH = MOCK_BIN_PATH;
@@ -29,6 +33,11 @@ describe("Security tests for VM Management API routes", () => {
       process.env.VMSAN_BIN_PATH = originalBinPath;
     } else {
       delete process.env.VMSAN_BIN_PATH;
+    }
+    if (originalSocket !== undefined) {
+      process.env.VMSAN_MANAGER_SOCKET = originalSocket;
+    } else {
+      delete process.env.VMSAN_MANAGER_SOCKET;
     }
   });
 
@@ -93,6 +102,11 @@ describe("Security tests for VM Management API routes", () => {
   }
 
   it("should ignore injected command fields in the create VM request body", async () => {
+    process.env.VMSAN_MANAGER_SOCKET = join(
+      path.dirname(MOCK_BIN_PATH),
+      "vmsan-manager-absent.sock"
+    );
+
     const req = new Request("http://localhost/api/vms", {
       method: "POST",
       body: JSON.stringify({
@@ -107,13 +121,16 @@ describe("Security tests for VM Management API routes", () => {
       headers: { "Content-Type": "application/json" },
     });
 
-    // Create is unavailable, so nothing is executed; the fields are ignored
-    // rather than interpreted, which is the property that matters.
+    // Extra fields are stripped before the socket is opened. Pointing the
+    // socket at a path that cannot work proves they were never interpreted as
+    // a command: the only remaining failure is that the manager is not there.
     const response = await createVMRoute(req);
-    assert.equal(response.status, 501);
+    assert.equal(response.status, 503);
 
-    const body = (await response.json()) as { error: { code: string } };
-    assert.equal(body.error.code, "VM_LIFECYCLE_UNAVAILABLE");
+    const body = (await response.json()) as { error: { code: string; message: string } };
+    assert.equal(body.error.code, "MANAGER_UNAVAILABLE");
+    assert.equal(body.error.message.includes("rm -rf"), false);
+    assert.equal(body.error.message.includes("whoami"), false);
   });
 });
 
@@ -185,7 +202,9 @@ describe("VM lifecycle routes reach no privileged command", () => {
     scan(API_DIR);
   });
 
-  it("returns the same unavailable code from every lifecycle route", async () => {
+  it("returns the same unavailable code from every lifecycle route when the manager is down", async () => {
+    process.env.VMSAN_MANAGER_SOCKET = join(API_DIR, "vmsan-manager-absent.sock");
+
     const cases: Array<[string, () => Promise<Response>]> = [
       [
         "create",
@@ -213,9 +232,9 @@ describe("VM lifecycle routes reach no privileged command", () => {
 
     for (const [name, call] of cases) {
       const response = await call();
-      assert.equal(response.status, 501, `${name} must answer 501`);
+      assert.equal(response.status, 503, `${name} must answer 503`);
       const body = (await response.json()) as { error: { code: string; message: string } };
-      assert.equal(body.error.code, "VM_LIFECYCLE_UNAVAILABLE", `${name} error code`);
+      assert.equal(body.error.code, "MANAGER_UNAVAILABLE", `${name} error code`);
       assert.equal(
         body.error.message.includes(".sock") || body.error.message.includes("/run/"),
         false,
@@ -249,11 +268,13 @@ describe("the dashboard shows a controlled message, not a raw failure", () => {
     assert.equal(body.error.message, "vmsan manager socket is not reachable");
   });
 
-  it("shows a fixed sentence for an unavailable lifecycle operation", async () => {
-    const response = lifecycleUnavailableResponse();
+  it("shows a fixed sentence when the manager answers off-contract", async () => {
+    const response = handleApiError(
+      new ManagerProtocolError("vmsan manager response did not match the protocol contract")
+    );
 
     const body = (await response.json()) as { error: { code: string; message: string } };
-    assert.equal(body.error.code, "VM_LIFECYCLE_UNAVAILABLE");
+    assert.equal(body.error.code, "MANAGER_PROTOCOL_ERROR");
     assert.equal(body.error.message.includes(".sock"), false);
     assert.equal(body.error.message.includes("/run/"), false);
     assert.equal(body.error.message.includes("ENOENT"), false);
