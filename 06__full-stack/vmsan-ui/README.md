@@ -40,8 +40,10 @@ The manager currently exposes two methods:
 
 | Method     | Purpose                     | Used by            |
 | ---------- | --------------------------- | ------------------ |
-| `health`   | liveness and readiness      | service monitoring |
-| `list`     | reads the on-disk VM records | `GET /api/vms`   |
+| `vm.create`| creates a new VM                | `POST /api/vms`    |
+| `vm.start` | starts a stopped VM             | `POST /api/vms/[id]/start` |
+| `vm.stop`  | stops a running VM              | `POST /api/vms/[id]/stop` |
+| `vm.remove`| removes a stopped VM            | `DELETE /api/vms/[id]` |
 
 ### Installing the manager
 
@@ -123,28 +125,13 @@ the `vmsan` binary would hand the web server the same power the manager was
 built to contain, and would defeat the socket group boundary. Do not create one,
 and remove any that an earlier version of this setup may have left behind.
 
-### Lifecycle operations are unavailable in this build
+### Unprivileged Error Handling
 
-Create, start, stop, and delete return HTTP 501 with the code
-`VM_LIFECYCLE_UNAVAILABLE`. The manager has no lifecycle methods, so these
-endpoints validate their input and then decline:
-
-```json
-{
-  "error": {
-    "code": "VM_LIFECYCLE_UNAVAILABLE",
-    "message": "VM lifecycle operations are not available in this deployment..."
-  }
-}
-```
-
-Listing VMs and the health check work. The lifecycle endpoints exist so the UI
-and API fail with an honest, specific answer instead of a permission error or a
-hang; they will be implemented when lifecycle RPCs are added to the manager.
-
-If the manager is not running, `GET /api/vms` returns `MANAGER_UNAVAILABLE`.
+If the manager is not running, `GET /api/vms` and the lifecycle routes return `MANAGER_UNAVAILABLE` (HTTP 503).
 The message is deliberately fixed and never includes the socket path, an errno,
-or a stack trace.
+or a stack trace. Invalid parameters return `INVALID_REQUEST` without
+opening the socket. Manager service failures return specific mapped codes
+like `VM_NOT_FOUND` or `VM_INVALID_STATE` while isolating the host runtime data.
 
 ### Development
 
