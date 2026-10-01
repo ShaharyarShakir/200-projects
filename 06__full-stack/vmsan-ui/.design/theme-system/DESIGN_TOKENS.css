@@ -1,0 +1,131 @@
+/**
+ * Hypervisor Monolith Design Tokens
+ * Derived from bare-metal telemetry (Incus/Proxmox) + developer cloud consoles (Fly.io/Linear/DigitalOcean/AWS).
+ * Tech Stack: Tailwind CSS v4 + OKLCH CSS Custom Properties.
+ */
+
+:root {
+  /* ==========================================================================
+     LIGHT THEME: Refined Cool Titanium & Ink
+     ========================================================================== */
+
+  /* Canvas & Surfaces */
+  --background: oklch(0.985 0.005 240);       /* Cool titanium canvas (#f8fafc feel) */
+  --foreground: oklch(0.160 0.020 250);       /* Deep slate ink text */
+  --card: oklch(1.000 0.000 0);               /* Pure crisp card surface */
+  --card-foreground: oklch(0.160 0.020 250);
+  --popover: oklch(1.000 0.000 0);
+  --popover-foreground: oklch(0.160 0.020 250);
+
+  /* Brand / Primary Action: Hypervisor Cobalt */
+  --primary: oklch(0.520 0.220 255);          /* Electric Cobalt (#2563eb feel) */
+  --primary-foreground: oklch(0.990 0.000 0);
+
+  /* Secondary & Muted Surfaces */
+  --secondary: oklch(0.945 0.010 240);        /* Technical light slate container */
+  --secondary-foreground: oklch(0.200 0.025 250);
+  --muted: oklch(0.950 0.008 240);            /* Metric wells / subtle fills */
+  --muted-foreground: oklch(0.480 0.020 250);  /* Secondary labels */
+  --accent: oklch(0.930 0.015 245);
+  --accent-foreground: oklch(0.180 0.025 250);
+
+  /* Borders & Inputs */
+  --border: oklch(0.890 0.012 240);           /* Crisp 1px structural dividing lines */
+  --input: oklch(0.890 0.012 240);
+  --ring: oklch(0.520 0.220 255);
+
+  /* Semantic Feedback & Status */
+  --destructive: oklch(0.550 0.220 27);       /* Warning/Destructive Rose-Red */
+  --destructive-foreground: oklch(0.990 0.000 0);
+
+  /* Status Diodes (Jewel Tones for Hypervisor Telemetry) */
+  --status-running: oklch(0.600 0.190 150);   /* Emerald running LED */
+  --status-stopped: oklch(0.520 0.020 240);   /* Muted zinc stopped LED */
+  --status-starting: oklch(0.580 0.200 250);  /* Cobalt starting LED */
+  --status-stopping: oklch(0.700 0.180 75);   /* Amber stopping LED */
+  --status-error: oklch(0.580 0.220 27);      /* Rose error LED */
+
+  /* Charts & Telemetry */
+  --chart-1: oklch(0.520 0.220 255);          /* Cobalt Primary */
+  --chart-2: oklch(0.600 0.180 180);          /* Cyan / VCPUs */
+  --chart-3: oklch(0.650 0.190 150);          /* Emerald / Memory */
+  --chart-4: oklch(0.700 0.180 75);           /* Amber / Network */
+  --chart-5: oklch(0.550 0.220 27);           /* Rose / Error */
+
+  /* Geometry & Radius */
+  --radius: 0.625rem;
+}
+
+.dark,
+[data-theme="dark"] {
+  /* ==========================================================================
+     DARK THEME: Tiered Obsidian Slate & Glowing Cobalt
+     ========================================================================== */
+
+  /* Canvas & Tiered Surfaces */
+  --background: oklch(0.130 0.022 255);       /* Deep Obsidian Slate (#090d16) */
+  --foreground: oklch(0.965 0.010 240);       /* Off-white luminance */
+  --card: oklch(0.180 0.026 252);             /* Layered card surface (#111827) */
+  --card-foreground: oklch(0.965 0.010 240);
+  --popover: oklch(0.180 0.026 252);
+  --popover-foreground: oklch(0.965 0.010 240);
+
+  /* Brand / Primary Action: Glowing Electric Cobalt */
+  --primary: oklch(0.620 0.210 255);          /* Vibrant Cobalt with dark luminance */
+  --primary-foreground: oklch(0.990 0.000 0);
+
+  /* Secondary & Muted Surfaces */
+  --secondary: oklch(0.230 0.025 250);        /* Elevated button/well background */
+  --secondary-foreground: oklch(0.965 0.010 240);
+  --muted: oklch(0.220 0.022 250);            /* Metric wells / subtle tiles */
+  --muted-foreground: oklch(0.650 0.020 240);  /* High-legibility secondary labels */
+  --accent: oklch(0.250 0.030 250);
+  --accent-foreground: oklch(0.965 0.010 240);
+
+  /* Borders & Inputs */
+  --border: oklch(0.300 0.025 250 / 0.50);    /* Precision 1px translucent border */
+  --input: oklch(0.300 0.025 250 / 0.60);
+  --ring: oklch(0.620 0.210 255);
+
+  /* Semantic Feedback & Status */
+  --destructive: oklch(0.620 0.220 27);
+  --destructive-foreground: oklch(0.990 0.000 0);
+
+  /* Status Diodes (Phosphor Glow in Dark) */
+  --status-running: oklch(0.700 0.200 150);   /* Vivid glowing emerald LED */
+  --status-stopped: oklch(0.600 0.020 240);   /* Clean slate stopped LED */
+  --status-starting: oklch(0.680 0.210 250);  /* Glowing cobalt LED */
+  --status-stopping: oklch(0.780 0.180 75);   /* Glowing amber LED */
+  --status-error: oklch(0.680 0.220 27);      /* Vivid rose LED */
+
+  /* Charts & Telemetry */
+  --chart-1: oklch(0.620 0.210 255);
+  --chart-2: oklch(0.700 0.170 190);
+  --chart-3: oklch(0.700 0.200 150);
+  --chart-4: oklch(0.780 0.180 75);
+  --chart-5: oklch(0.680 0.220 27);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: oklch(0.130 0.022 255);
+    --foreground: oklch(0.965 0.010 240);
+    --card: oklch(0.180 0.026 252);
+    --card-foreground: oklch(0.965 0.010 240);
+    --popover: oklch(0.180 0.026 252);
+    --popover-foreground: oklch(0.965 0.010 240);
+    --primary: oklch(0.620 0.210 255);
+    --primary-foreground: oklch(0.990 0.000 0);
+    --secondary: oklch(0.230 0.025 250);
+    --secondary-foreground: oklch(0.965 0.010 240);
+    --muted: oklch(0.220 0.022 250);
+    --muted-foreground: oklch(0.650 0.020 240);
+    --accent: oklch(0.250 0.030 250);
+    --accent-foreground: oklch(0.965 0.010 240);
+    --border: oklch(0.300 0.025 250 / 0.50);
+    --input: oklch(0.300 0.025 250 / 0.60);
+    --ring: oklch(0.620 0.210 255);
+    --destructive: oklch(0.620 0.220 27);
+    --destructive-foreground: oklch(0.990 0.000 0);
+  }
+}
