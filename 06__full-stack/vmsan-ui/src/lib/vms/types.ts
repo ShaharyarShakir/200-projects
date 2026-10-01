@@ -44,3 +44,17 @@ export interface RemoveVmResult {
   removed: boolean;
   vmId: string;
 }
+
+export interface ExecVmInput {
+  command: string;
+  timeoutMs?: number;
+  workingDirectory?: string;
+}
+
+export interface ExecVmResult {
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+  durationMs?: number;
+}
+

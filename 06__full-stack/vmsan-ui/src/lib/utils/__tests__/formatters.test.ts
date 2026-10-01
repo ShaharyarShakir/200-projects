@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { formatValue, formatMemory, formatVmCount } from "../formatters";
+import { formatValue, formatMemory, formatDiskSize, formatDate, formatVmCount } from "../formatters";
 
 describe("formatters", () => {
   describe("formatValue", () => {
@@ -42,6 +42,41 @@ describe("formatters", () => {
     });
   });
 
+  describe("formatDiskSize", () => {
+    it("formats disk size in GB for valid numbers", () => {
+      assert.equal(formatDiskSize(1), "1 GB");
+      assert.equal(formatDiskSize(10), "10 GB");
+      assert.equal(formatDiskSize(0), "0 GB");
+    });
+
+    it("returns em dash for null, undefined, and NaN", () => {
+      assert.equal(formatDiskSize(null), "—");
+      assert.equal(formatDiskSize(undefined), "—");
+      assert.equal(formatDiskSize(Number.NaN), "—");
+    });
+  });
+
+  describe("formatDate", () => {
+    it("formats valid ISO date string", () => {
+      const formatted = formatDate("2026-09-29T10:00:00.000Z");
+      assert.notEqual(formatted, "—");
+      assert.match(formatted, /2026/);
+    });
+
+    it("formats valid Date object", () => {
+      const formatted = formatDate(new Date("2026-09-29T10:00:00.000Z"));
+      assert.notEqual(formatted, "—");
+      assert.match(formatted, /2026/);
+    });
+
+    it("returns em dash for null, undefined, empty string, and invalid dates", () => {
+      assert.equal(formatDate(null), "—");
+      assert.equal(formatDate(undefined), "—");
+      assert.equal(formatDate(""), "—");
+      assert.equal(formatDate("not-a-date"), "—");
+    });
+  });
+
   describe("formatVmCount", () => {
     it("returns '1 VM' for count 1", () => {
       assert.equal(formatVmCount(1), "1 VM");
@@ -57,3 +92,4 @@ describe("formatters", () => {
     });
   });
 });
+
