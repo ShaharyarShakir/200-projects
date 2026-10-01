@@ -26,6 +26,23 @@ describe("VMCard", () => {
     assert.match(html, /2h 15m/);
   });
 
+  it("renders clickable VM identifier and View Details link leading to /vms/[id]", () => {
+    const vm: ClientVM = {
+      id: "vm-inspect-789",
+      status: "running",
+      runtime: "node22",
+      vcpus: 4,
+      memoryMiB: 1024,
+      age: "1d",
+    };
+
+    const html = renderToStaticMarkup(React.createElement(VMCard, { vm }));
+
+    assert.match(html, /href="\/vms\/vm-inspect-789"/);
+    assert.match(html, /View Details/);
+    assert.match(html, /aria-label="View details for VM vm-inspect-789"/);
+  });
+
   it("renders null/missing resource fields safely as em dashes", () => {
     const vm: ClientVM = {
       id: "vm-sparse456",
