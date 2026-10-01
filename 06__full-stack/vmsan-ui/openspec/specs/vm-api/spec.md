@@ -146,3 +146,47 @@ The system SHALL validate dynamic VM ID path parameters against strict character
 #### Scenario: Malicious VM ID rejection
 - **WHEN** a request contains shell metacharacters, directory traversal tokens, or separators (e.g. `;`, `&&`, `|`, `$()`, `../`) in the `:id` parameter
 - **THEN** the endpoint rejects the request with HTTP 400 and error code `INVALID_REQUEST` without calling the vmsan adapter
+
+### Requirement: Single MicroVM Fetch Endpoint
+The system SHALL expose an HTTP GET endpoint at `/api/vms/:id` that validates the VM ID parameter, queries the manager client for the requested microVM state, and returns the microVM presentation model, or appropriate structured error responses upon failure. The endpoint MUST NOT invoke a privileged command path, MUST NOT bypass the manager, and MUST NOT reveal the control socket path or process internals in error responses.
+
+#### Scenario: Successful single VM retrieval
+- **WHEN** a client performs a `GET` request to `/api/vms/:id` with a valid, existing VM ID
+- **THEN** the endpoint delegates to the VM service and returns HTTP 200 with `{ "vm": VM }` containing the complete presentation model
+
+#### Scenario: Single VM retrieval for non-existent VM
+- **WHEN** a client performs a `GET` request to `/api/vms/:id` for a VM ID that does not exist in the manager state
+- **THEN** the endpoint returns HTTP 404 with error code `VM_NOT_FOUND` and message `Virtual machine not found`
+
+#### Scenario: Invalid VM ID rejected before querying manager
+- **WHEN** a client performs a `GET` request to `/api/vms/:id` with an invalid ID containing disallowed characters or exceeding 64 characters
+- **THEN** the endpoint returns HTTP 400 with error code `INVALID_REQUEST` without querying the manager
+
+#### Scenario: Manager unavailable during single VM retrieval
+- **WHEN** a client performs a `GET` request to `/api/vms/:id` and the manager socket is unavailable or unresponsive
+- **THEN** the endpoint returns HTTP 503 with error code `MANAGER_UNAVAILABLE` without exposing socket paths or filesystem errors
+
+### Requirement: MicroVM Terminal Execution Endpoint
+The system SHALL expose an HTTP POST endpoint at `/api/vms/:id/terminal` that accepts `{ "command": string, "timeoutMs"?: number, "workingDirectory"?: string }`, validates the dynamic VM ID parameter (`^[a-zA-Z0-9_-]{1,64}$`) and request body, and forwards the command execution request to `vmsan-manager` over its Unix socket via `VmService.execVm()`. The endpoint MUST NOT execute any host processes, MUST NOT import the native `vmsan` package, and MUST return structured responses conforming to the standard API schema with appropriate HTTP status codes (200 on success, 400 for validation errors, 404 for missing VMs, 409 for invalid state such as stopped VMs, 503 when the manager is unavailable, and 500 for internal errors).
+
+#### Scenario: Successful command execution via HTTP
+- **WHEN** an authenticated client sends a valid `POST /api/vms/:id/terminal` request with `{ "command": "uname -a" }` for a running microVM
+- **THEN** the endpoint returns HTTP 200 with `{ "data": { "exitCode": 0, "stdout": "<output>", "stderr": "", "durationMs": <ms> } }`
+
+#### Scenario: Command execution on non-existent VM
+- **WHEN** a client sends `POST /api/vms/:id/terminal` for a non-existent VM ID
+- **THEN** the endpoint returns HTTP 404 with structured error `{ "error": { "code": "VM_NOT_FOUND", "message": "<msg>" } }`
+
+#### Scenario: Command execution on non-running VM
+- **WHEN** a client sends `POST /api/vms/:id/terminal` for a VM in `stopped` status
+- **THEN** the endpoint returns HTTP 409 with structured error `{ "error": { "code": "VM_INVALID_STATE", "message": "<msg>" } }`
+
+#### Scenario: Manager unavailable during command execution
+- **WHEN** the manager socket is disconnected, unreachable, or unresponsive
+- **THEN** the endpoint returns HTTP 503 with structured error `{ "error": { "code": "SERVICE_UNAVAILABLE", "message": "<msg>" } }`
+
+#### Scenario: Invalid command parameters rejected
+- **WHEN** a client sends a request with an empty command or timeout exceeding 120,000 ms
+- **THEN** the endpoint returns HTTP 400 with structured error `{ "error": { "code": "VALIDATION_ERROR", "message": "<msg>" } }`
+
+
