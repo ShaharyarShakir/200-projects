@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Card,
   CardHeader,
@@ -9,7 +10,7 @@ import {
   CardFooter,
   CardAction,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { VMStatusBadge } from "./vm-status-badge";
 import { DeleteVMDialog } from "./delete-vm-dialog";
 import { formatValue, formatMemory } from "@/lib/utils/formatters";
@@ -27,6 +28,7 @@ import {
   RefreshCw,
   Loader2,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 
 export interface VMCardProps extends React.ComponentProps<typeof Card> {
@@ -150,58 +152,68 @@ export function VMCard({
 
   return (
     <Card
-      className={cn("transition-all hover:border-foreground/20", className)}
+      className={cn(
+        "group transition-all duration-200 border-border/70 bg-card text-card-foreground hover:border-primary/40 hover:shadow-md",
+        className
+      )}
       {...props}
     >
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle
-          className="max-w-[200px] truncate font-mono text-base tracking-tight"
+          className="max-w-[200px] truncate font-mono text-sm sm:text-base font-semibold tracking-tight"
           title={vm.id}
         >
-          {vm.id}
+          <Link
+            href={`/vms/${vm.id}`}
+            className="inline-flex items-center gap-1.5 text-foreground hover:text-primary transition-colors focus-visible:underline focus-visible:outline-none"
+            aria-label={`View details for VM ${vm.id}`}
+          >
+            <span>{vm.id}</span>
+            <ExternalLink className="size-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          </Link>
         </CardTitle>
         <CardAction>
           <VMStatusBadge status={vm.status} />
         </CardAction>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="flex flex-col gap-1 rounded-md bg-muted/40 p-2.5">
-            <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
-              <Layers className="size-3.5" aria-hidden="true" />
+        <div className="grid grid-cols-2 gap-2.5 text-xs">
+          <div className="flex flex-col gap-1 rounded-lg border border-border/40 bg-muted/30 dark:bg-muted/20 p-2.5 transition-colors">
+            <span className="flex items-center gap-1.5 font-medium text-muted-foreground text-[11px]">
+              <Layers className="size-3.5 text-muted-foreground/80" aria-hidden="true" />
               Runtime
             </span>
-            <span className="truncate font-mono font-semibold text-foreground">
+            <span className="truncate font-mono font-semibold text-foreground text-xs">
               {formatValue(vm.runtime)}
             </span>
           </div>
 
-          <div className="flex flex-col gap-1 rounded-md bg-muted/40 p-2.5">
-            <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
-              <Cpu className="size-3.5" aria-hidden="true" />
+          <div className="flex flex-col gap-1 rounded-lg border border-border/40 bg-muted/30 dark:bg-muted/20 p-2.5 transition-colors">
+            <span className="flex items-center gap-1.5 font-medium text-muted-foreground text-[11px]">
+              <Cpu className="size-3.5 text-muted-foreground/80" aria-hidden="true" />
               vCPUs
             </span>
-            <span className="font-mono font-semibold text-foreground">
+            <span className="font-mono font-semibold text-foreground text-xs">
               {formatValue(vm.vcpus)}
             </span>
           </div>
 
-          <div className="flex flex-col gap-1 rounded-md bg-muted/40 p-2.5">
-            <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
-              <HardDrive className="size-3.5" aria-hidden="true" />
+          <div className="flex flex-col gap-1 rounded-lg border border-border/40 bg-muted/30 dark:bg-muted/20 p-2.5 transition-colors">
+            <span className="flex items-center gap-1.5 font-medium text-muted-foreground text-[11px]">
+              <HardDrive className="size-3.5 text-muted-foreground/80" aria-hidden="true" />
               Memory
             </span>
-            <span className="font-mono font-semibold text-foreground">
+            <span className="font-mono font-semibold text-foreground text-xs">
               {formatMemory(vm.memoryMiB)}
             </span>
           </div>
 
-          <div className="flex flex-col gap-1 rounded-md bg-muted/40 p-2.5">
-            <span className="flex items-center gap-1.5 font-medium text-muted-foreground">
-              <Clock className="size-3.5" aria-hidden="true" />
+          <div className="flex flex-col gap-1 rounded-lg border border-border/40 bg-muted/30 dark:bg-muted/20 p-2.5 transition-colors">
+            <span className="flex items-center gap-1.5 font-medium text-muted-foreground text-[11px]">
+              <Clock className="size-3.5 text-muted-foreground/80" aria-hidden="true" />
               Age
             </span>
-            <span className="truncate font-mono font-semibold text-foreground">
+            <span className="truncate font-mono font-semibold text-foreground text-xs">
               {formatValue(vm.age)}
             </span>
           </div>
@@ -211,7 +223,7 @@ export function VMCard({
         {error && (
           <div
             role="alert"
-            className="mt-3 flex items-center justify-between gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-2.5 text-xs text-destructive"
+            className="mt-3 flex items-center justify-between gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-2.5 text-xs text-destructive"
           >
             <div className="flex min-w-0 items-center gap-1.5">
               <AlertCircle className="size-3.5 shrink-0" aria-hidden="true" />
@@ -233,7 +245,7 @@ export function VMCard({
         )}
       </CardContent>
 
-      <CardFooter className="flex items-center justify-between gap-2">
+      <CardFooter className="flex items-center justify-between gap-2 border-t border-border/30 pt-3">
         <div className="flex items-center gap-2">
           {vm.status === "running" && (
             <Button
@@ -245,7 +257,7 @@ export function VMCard({
               aria-label={
                 actionState === "stopping" ? "Stopping..." : `Stop VM ${vm.id}`
               }
-              className="gap-1.5"
+              className="gap-1.5 cursor-pointer border-border/80 hover:border-amber-500/50 hover:text-amber-600 dark:hover:text-amber-400"
             >
               {actionState === "stopping" ? (
                 <>
@@ -271,7 +283,7 @@ export function VMCard({
               aria-label={
                 actionState === "starting" ? "Starting..." : `Start VM ${vm.id}`
               }
-              className="gap-1.5"
+              className="gap-1.5 cursor-pointer border-border/80 hover:border-emerald-500/50 hover:text-emerald-600 dark:hover:text-emerald-400"
             >
               {actionState === "starting" ? (
                 <>
@@ -295,12 +307,23 @@ export function VMCard({
               onClick={handleRefresh}
               disabled={isLoading}
               aria-label={`Refresh VM ${vm.id}`}
-              className="gap-1.5"
+              className="gap-1.5 cursor-pointer border-border/80 hover:border-primary/40"
             >
               <RefreshCw className="size-3.5" aria-hidden="true" />
               <span>Refresh</span>
             </Button>
           )}
+
+          <Link
+            href={`/vms/${vm.id}`}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "gap-1 text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+            )}
+            aria-label={`View details for VM ${vm.id}`}
+          >
+            <span>View Details</span>
+          </Link>
         </div>
 
         <DeleteVMDialog
@@ -318,7 +341,7 @@ export function VMCard({
                   ? "Deleting..."
                   : `Delete VM ${vm.id}`
               }
-              className="gap-1.5"
+              className="gap-1.5 cursor-pointer border border-destructive/30"
             >
               {actionState === "deleting" ? (
                 <>

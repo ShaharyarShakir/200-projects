@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { VMList } from "./vm-list";
 import { VMErrorState } from "./vm-error-state";
 import { CreateVMDialog } from "./create-vm-dialog";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { getVMs } from "@/lib/api/vms";
 import { formatVmCount } from "@/lib/utils/formatters";
 import type { ClientVM } from "@/lib/api/types";
@@ -100,7 +101,7 @@ export function VMDashboard({
       {/* Top Application Bar */}
       <header className="flex flex-col gap-4 border-b border-border/40 pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20 shadow-xs">
             <Server className="size-5" aria-hidden="true" />
           </div>
           <div>
@@ -110,6 +111,7 @@ export function VMDashboard({
         </div>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <CreateVMDialog onSuccess={handleRefresh} />
           <Button
             type="button"
@@ -117,7 +119,7 @@ export function VMDashboard({
             size="sm"
             onClick={handleRefresh}
             disabled={isLoading || isRefreshing}
-            className="gap-1.5"
+            className="gap-1.5 cursor-pointer border-border/80 hover:border-primary/40"
             aria-label="Refresh virtual machines"
           >
             <RefreshCw
