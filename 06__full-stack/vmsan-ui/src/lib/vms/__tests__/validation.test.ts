@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   validateVmId,
   validateCreateVmInput,
-  RESOURCE_LIMITS,
+  validateVmExecInput,
 } from "../validation";
 import { VmValidationError } from "../vm-errors";
 
@@ -158,3 +158,97 @@ describe("validateCreateVmInput", () => {
     assert.equal((validated as any).token, undefined);
   });
 });
+
+describe("validateVmExecInput", () => {
+  it("accepts valid command string", () => {
+    const input = { command: "echo hello" };
+    const validated = validateVmExecInput(input);
+    assert.deepEqual(validated, { command: "echo hello" });
+  });
+
+  it("accepts optional timeoutMs and workingDirectory", () => {
+    const input = {
+      command: "npm test",
+      timeoutMs: 5000,
+      workingDirectory: "/app",
+    };
+    const validated = validateVmExecInput(input);
+    assert.deepEqual(validated, {
+      command: "npm test",
+      timeoutMs: 5000,
+      workingDirectory: "/app",
+    });
+  });
+
+  it("rejects non-object inputs", () => {
+    assert.throws(() => validateVmExecInput(null), VmValidationError);
+    assert.throws(() => validateVmExecInput(undefined), VmValidationError);
+    assert.throws(() => validateVmExecInput("echo hello"), VmValidationError);
+    assert.throws(() => validateVmExecInput([]), VmValidationError);
+  });
+
+  it("rejects non-string or empty command", () => {
+    assert.throws(() => validateVmExecInput({ command: 123 }), VmValidationError);
+    assert.throws(() => validateVmExecInput({ command: null }), VmValidationError);
+    assert.throws(() => validateVmExecInput({ command: "" }), VmValidationError);
+    assert.throws(() => validateVmExecInput({ command: "   " }), VmValidationError);
+  });
+
+  it("rejects command exceeding 8192 characters", () => {
+    assert.throws(
+      () => validateVmExecInput({ command: "a".repeat(8193) }),
+      VmValidationError
+    );
+  });
+
+  it("validates timeoutMs bounds (1000..120000 ms)", () => {
+    assert.throws(() => validateVmExecInput({ command: "ls", timeoutMs: 999 }), VmValidationError);
+    assert.throws(
+      () => validateVmExecInput({ command: "ls", timeoutMs: 120001 }),
+      VmValidationError
+    );
+    assert.throws(
+      () => validateVmExecInput({ command: "ls", timeoutMs: 5000.5 }),
+      VmValidationError
+    );
+    assert.throws(
+      () => validateVmExecInput({ command: "ls", timeoutMs: "5000" }),
+      VmValidationError
+    );
+  });
+
+  it("validates workingDirectory", () => {
+    assert.throws(
+      () => validateVmExecInput({ command: "ls", workingDirectory: 123 }),
+      VmValidationError
+    );
+    assert.throws(
+      () => validateVmExecInput({ command: "ls", workingDirectory: "" }),
+      VmValidationError
+    );
+    assert.throws(
+      () => validateVmExecInput({ command: "ls", workingDirectory: "   " }),
+      VmValidationError
+    );
+  });
+
+  it("strips extraneous fields", () => {
+    const dirty = {
+      command: "whoami",
+      timeoutMs: 10000,
+      workingDirectory: "/root",
+      agentToken: "secret",
+      hostExecution: true,
+      privileged: true,
+    };
+    const validated = validateVmExecInput(dirty);
+    assert.deepEqual(validated, {
+      command: "whoami",
+      timeoutMs: 10000,
+      workingDirectory: "/root",
+    });
+    assert.equal((validated as any).agentToken, undefined);
+    assert.equal((validated as any).hostExecution, undefined);
+  });
+});
+
