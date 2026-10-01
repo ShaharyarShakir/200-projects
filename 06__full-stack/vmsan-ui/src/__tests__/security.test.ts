@@ -1,12 +1,11 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path, { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateVmId, validateCreateVmInput } from "@/lib/vms/validation";
 import { toVmDto } from "@/lib/vms/vm-mapper";
 import { toApiErrorResponse, VmValidationError } from "@/lib/vms/vm-errors";
-import { POST as createVmRoute } from "@/app/api/vms/route";
 import { POST as startVmRoute } from "@/app/api/vms/[id]/start/route";
 import { POST as stopVmRoute } from "@/app/api/vms/[id]/stop/route";
 import { DELETE as removeVmRoute } from "@/app/api/vms/[id]/route";
