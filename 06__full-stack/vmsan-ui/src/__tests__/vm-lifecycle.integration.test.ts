@@ -180,7 +180,7 @@ class InMemoryVmService implements VmsanService {
     };
   }
 
-  async remove(id: string, _opts?: { force?: boolean }): Promise<{
+  async remove(id: string): Promise<{
     success: boolean;
     alreadyStopped?: boolean;
     error?: any;
