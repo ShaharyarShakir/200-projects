@@ -5,8 +5,8 @@ import {
   ManagerUnavailableError,
 } from "../vmsan-manager/errors";
 import type { VmCreateParams } from "../vmsan-manager/protocol";
-import type { Vm, CreateVmInput, RemoveVmResult } from "./types";
-import { validateVmId, validateCreateVmInput } from "./validation";
+import type { Vm, RemoveVmResult, ExecVmResult } from "./types";
+import { validateVmId, validateCreateVmInput, validateVmExecInput } from "./validation";
 import { toVmDto } from "./vm-mapper";
 import {
   VmError,
@@ -187,6 +187,30 @@ export class VmService {
       return {
         removed: result.removed,
         vmId: result.vmId,
+      };
+    } catch (error) {
+      this.mapError(error, validatedId);
+    }
+  }
+
+  /**
+   * Execute a command inside a running microVM.
+   */
+  async execVm(id: unknown, input: unknown): Promise<ExecVmResult> {
+    const validatedId = validateVmId(id);
+    const validatedInput = validateVmExecInput(input);
+    try {
+      const result = await this.client.execVm({
+        vmId: validatedId,
+        command: validatedInput.command,
+        timeoutMs: validatedInput.timeoutMs,
+        workingDirectory: validatedInput.workingDirectory,
+      });
+      return {
+        exitCode: result.exitCode,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        durationMs: result.durationMs,
       };
     } catch (error) {
       this.mapError(error, validatedId);

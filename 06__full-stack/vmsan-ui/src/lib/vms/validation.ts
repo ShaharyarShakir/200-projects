@@ -1,4 +1,4 @@
-import { SupportedRuntime, NetworkPolicy, CreateVmInput } from "./types";
+import { SupportedRuntime, NetworkPolicy, CreateVmInput, ExecVmInput } from "./types";
 import { VmValidationError } from "./vm-errors";
 
 export const VM_ID_REGEX = /^[a-zA-Z0-9_-]{1,64}$/;
@@ -21,6 +21,11 @@ export const RESOURCE_LIMITS = {
   memoryMib: { min: 128, max: 32768 },
   diskSizeGb: { min: 1, max: 500 },
   timeoutMs: { min: 0, max: 86400000 }, // up to 24h
+} as const;
+
+export const EXEC_LIMITS = {
+  command: { maxChars: 8192 },
+  timeoutMs: { min: 1000, max: 120000, default: 30000 },
 } as const;
 
 /**
@@ -152,3 +157,63 @@ export function validateCreateVmInput(input: unknown): CreateVmInput {
 
   return validated;
 }
+
+/**
+ * Validates parameters for VM command execution.
+ *
+ * @throws {VmValidationError} if any parameter violates validation rules
+ */
+export function validateVmExecInput(input: unknown): ExecVmInput {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    throw new VmValidationError("Invalid request body: expected a JSON object");
+  }
+
+  const raw = input as Record<string, unknown>;
+
+  if (typeof raw.command !== "string") {
+    throw new VmValidationError("Command must be a string");
+  }
+
+  const trimmed = raw.command.trim();
+  if (trimmed.length === 0) {
+    throw new VmValidationError("Command cannot be empty");
+  }
+
+  if (raw.command.length > EXEC_LIMITS.command.maxChars) {
+    throw new VmValidationError(
+      `Command length cannot exceed ${EXEC_LIMITS.command.maxChars} characters`
+    );
+  }
+
+  const validated: ExecVmInput = {
+    command: raw.command,
+  };
+
+  if (raw.timeoutMs !== undefined && raw.timeoutMs !== null) {
+    if (
+      typeof raw.timeoutMs !== "number" ||
+      !Number.isInteger(raw.timeoutMs) ||
+      raw.timeoutMs < EXEC_LIMITS.timeoutMs.min ||
+      raw.timeoutMs > EXEC_LIMITS.timeoutMs.max
+    ) {
+      throw new VmValidationError(
+        `timeoutMs must be an integer between ${EXEC_LIMITS.timeoutMs.min} and ${EXEC_LIMITS.timeoutMs.max}`
+      );
+    }
+    validated.timeoutMs = raw.timeoutMs;
+  }
+
+  if (raw.workingDirectory !== undefined && raw.workingDirectory !== null) {
+    if (typeof raw.workingDirectory !== "string") {
+      throw new VmValidationError("workingDirectory must be a string");
+    }
+    const trimmedDir = raw.workingDirectory.trim();
+    if (trimmedDir.length === 0) {
+      throw new VmValidationError("workingDirectory cannot be empty");
+    }
+    validated.workingDirectory = trimmedDir;
+  }
+
+  return validated;
+}
+
