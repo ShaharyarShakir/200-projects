@@ -1,8 +1,8 @@
-import type { SupportedRuntime } from "../vms/types";
+import type { SupportedRuntime, VmStatus, VmNetwork } from "../vms/types";
 
 export * from "../vms/types";
 
-export type ClientVMStatus = "running" | "stopped" | "unknown";
+export type ClientVMStatus = VmStatus;
 
 export type ClientVM = {
   id: string;
@@ -15,13 +15,25 @@ export type ClientVM = {
   vmsanId?: string;
   status: ClientVMStatus;
   memoryMiB: number | null;
+  memoryMib?: number | null;
   vcpus: number | null;
+  diskSizeGb?: number | null;
+  diskSizeGB?: number | null;
   runtime: string | null;
+  createdAt?: string | null;
   age: string | null;
+  network?: VmNetwork;
+  ipAddress?: string | null;
+  networkPolicy?: string | null;
+  publishedPorts?: string[] | number[] | Array<{ hostPort: number; guestPort: number; protocol?: string }>;
 };
 
 export type GetVMsResponse = {
   vms: ClientVM[];
+};
+
+export type GetVMResponse = {
+  vm: ClientVM;
 };
 
 export type CreateVMRequest = {
@@ -51,6 +63,23 @@ export type LifecycleActionResponse = {
 };
 
 export type VMAction = "starting" | "stopping" | "deleting" | null;
+
+export type ExecuteVmCommandRequest = {
+  command: string;
+  timeoutMs?: number;
+  workingDirectory?: string;
+};
+
+export type ExecuteVmCommandResult = {
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+  durationMs?: number;
+};
+
+export type ExecuteVmCommandResponse = {
+  data: ExecuteVmCommandResult;
+};
 
 export type ApiErrorDetail = {
   code: string;
