@@ -9,6 +9,16 @@ import { toApiErrorResponse, VmValidationError } from "@/lib/vms/vm-errors";
 import { POST as startVmRoute } from "@/app/api/vms/[id]/start/route";
 import { POST as stopVmRoute } from "@/app/api/vms/[id]/stop/route";
 import { DELETE as removeVmRoute } from "@/app/api/vms/[id]/route";
+import {
+  GET as listFilesRoute,
+  POST as uploadFileRoute,
+  DELETE as deleteFileRoute,
+} from "@/app/api/vms/[id]/files/route";
+import { GET as readFileRoute } from "@/app/api/vms/[id]/files/read/route";
+import { POST as mkdirRoute } from "@/app/api/vms/[id]/files/mkdir/route";
+import { GET as downloadRoute } from "@/app/api/vms/[id]/files/download/route";
+import { validateVmPath, validateSingleFilename } from "@/lib/vms/validation";
+import { normalizeVmPath } from "@/lib/vms/path-utils";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -253,6 +263,150 @@ describe("Security: Sensitive Host Details Omission", () => {
       assert.equal(body.error.message.includes("/tmp/"), false, "Error message must not leak /tmp/");
       assert.equal(body.error.message.includes("ENOENT"), false, "Error message must not leak ENOENT");
       assert.equal(body.error.message.includes("EACCES"), false, "Error message must not leak EACCES");
+    }
+  });
+});
+
+describe("Security: MicroVM Filesystem & Path Traversal Rejection (Phase 2C)", () => {
+  it("strictly normalizes and clamps traversal paths at root without host breakout", () => {
+    assert.equal(normalizeVmPath("/"), "/");
+    assert.equal(normalizeVmPath("/etc/../var/log/../../home"), "/home");
+    assert.equal(normalizeVmPath("../../../etc/passwd"), "/etc/passwd");
+    assert.equal(normalizeVmPath("///etc///shadow"), "/etc/shadow");
+    assert.equal(normalizeVmPath("/tmp/./././file.txt"), "/tmp/file.txt");
+  });
+
+  it("rejects control characters, null bytes, and non-printable sequences in paths", () => {
+    const maliciousPaths = [
+      "/etc/passwd\0.txt",
+      "/var/log/\nmalicious",
+      "/home/\r\ninjection",
+      "/home/\tuser",
+      "",
+      "   ",
+      "\0/etc/shadow",
+    ];
+
+    for (const badPath of maliciousPaths) {
+      assert.throws(
+        () => validateVmPath(badPath),
+        VmValidationError,
+        `Expected validateVmPath to reject path: ${JSON.stringify(badPath)}`
+      );
+    }
+  });
+
+  it("rejects path separators and traversal segments in single entry filenames", () => {
+    const maliciousFilenames = [
+      "../evil.sh",
+      "dir/file.txt",
+      "subdir\\file.txt",
+      "..",
+      ".",
+      "file\0name",
+      "file\nname",
+      "",
+      "   ",
+    ];
+
+    for (const badName of maliciousFilenames) {
+      assert.throws(
+        () => validateSingleFilename(badName),
+        VmValidationError,
+        `Expected validateSingleFilename to reject filename: ${JSON.stringify(badName)}`
+      );
+    }
+  });
+
+  it("rejects malicious VM IDs on all filesystem API routes (400)", async () => {
+    const maliciousId = "vm-123;rm -rf /";
+
+    // 1. List files
+    const listRes = await listFilesRoute(
+      new Request(`http://localhost/api/vms/${encodeURIComponent(maliciousId)}/files`),
+      { params: Promise.resolve({ id: maliciousId }) }
+    );
+    assert.equal(listRes.status, 400);
+
+    // 2. Read file
+    const readRes = await readFileRoute(
+      new Request(`http://localhost/api/vms/${encodeURIComponent(maliciousId)}/files/read?path=/test.txt`),
+      { params: Promise.resolve({ id: maliciousId }) }
+    );
+    assert.equal(readRes.status, 400);
+
+    // 3. Upload file
+    const uploadRes = await uploadFileRoute(
+      new Request(`http://localhost/api/vms/${encodeURIComponent(maliciousId)}/files`, {
+        method: "POST",
+        body: JSON.stringify({ destDir: "/", fileName: "test.txt", contentBase64: "aGVsbG8=" }),
+      }),
+      { params: Promise.resolve({ id: maliciousId }) }
+    );
+    assert.equal(uploadRes.status, 400);
+
+    // 4. Create directory
+    const mkdirRes = await mkdirRoute(
+      new Request(`http://localhost/api/vms/${encodeURIComponent(maliciousId)}/files/mkdir`, {
+        method: "POST",
+        body: JSON.stringify({ path: "/new-dir" }),
+      }),
+      { params: Promise.resolve({ id: maliciousId }) }
+    );
+    assert.equal(mkdirRes.status, 400);
+
+    // 5. Delete file
+    const deleteRes = await deleteFileRoute(
+      new Request(`http://localhost/api/vms/${encodeURIComponent(maliciousId)}/files?path=/test.txt`, {
+        method: "DELETE",
+      }),
+      { params: Promise.resolve({ id: maliciousId }) }
+    );
+    assert.equal(deleteRes.status, 400);
+
+    // 6. Download file
+    const downloadRes = await downloadRoute(
+      new Request(`http://localhost/api/vms/${encodeURIComponent(maliciousId)}/files/download?path=/test.txt`),
+      { params: Promise.resolve({ id: maliciousId }) }
+    );
+    assert.equal(downloadRes.status, 400);
+  });
+});
+
+describe("Security: Terminal Isolation & Zero Secret Exposure (Phase 2B)", () => {
+  it("verifies terminal bridge rejects invalid or malicious VM IDs before socket connection", () => {
+    const maliciousVmIds = [
+      "; rm -rf /",
+      "vm-1; whoami",
+      "../etc/passwd",
+      "$(id)",
+      "",
+      "a".repeat(65),
+    ];
+
+    for (const badId of maliciousVmIds) {
+      assert.throws(
+        () => validateVmId(badId),
+        VmValidationError,
+        `Expected validateVmId to reject terminal VM ID: ${badId}`
+      );
+    }
+  });
+
+  it("verifies client terminal and Next.js bridge never import or touch agentToken", () => {
+    const clientFiles = getAllSourceFiles(join(SRC_DIR, "lib/api"), true);
+    const bridgeFiles = getAllSourceFiles(join(SRC_DIR, "lib/vmsan-manager"), true);
+    const componentFiles = getAllSourceFiles(join(SRC_DIR, "components/vms"), true);
+
+    const allFrontFiles = [...clientFiles, ...bridgeFiles, ...componentFiles];
+
+    for (const file of allFrontFiles) {
+      const content = readFileSync(file, "utf8");
+      assert.equal(
+        content.includes("agentToken"),
+        false,
+        `Forbidden secret reference 'agentToken' found in frontend / bridge file: ${file}`
+      );
     }
   });
 });

@@ -402,11 +402,16 @@ The system SHALL sanitize all VM records returned from lifecycle RPC methods usi
 - **THEN** the returned object contains only allow-listed properties (`id`, `status`, `runtime`, `vcpuCount`, `memSizeMib`, `createdAt`, `snapshot`, `timeoutAt`, `tunnelHostnames`) and omits `agentToken` and host paths
 
 ### Requirement: MicroVM Command Execution RPC Method
-The system SHALL implement a `vm.exec` RPC method on the manager over its Unix domain socket. The method accepts `{ "vmId": string, "command": string, "timeoutMs"?: number, "workingDirectory"?: string }`, validates the target VM is currently in `running` state, dispatches the command to the guest agent inside the microVM via `AgentClient`, and returns a sanitized execution result containing `{ "exitCode": number, "stdout": string, "stderr": string, "durationMs"?: number }`. The method MUST NOT execute any command on the host operating system, MUST NOT spawn host child processes or CLI tools, and MUST NOT expose internal credentials (`agentToken`), ports, or host filesystem paths.
+The system SHALL implement a `vm.exec` RPC method on the manager over its Unix domain socket. The method accepts `{ "vmId": string, "command": string, "timeoutMs"?: number, "workingDirectory"?: string, "sudo"?: boolean }`, validates the target VM is currently in `running` state, dispatches the command to the guest agent inside the microVM via `AgentClient` (passing administrative privileges to the guest agent when `sudo: true`), and returns a sanitized execution result containing `{ "exitCode": number, "stdout": string, "stderr": string, "durationMs"?: number }`. The method MUST NOT execute any command on the host operating system, MUST NOT spawn host child processes or CLI tools, and MUST NOT expose internal credentials (`agentToken`), ports, or host filesystem paths.
 
 #### Scenario: Successful command execution inside running VM
 - **WHEN** a client sends a `vm.exec` request for a running microVM with a valid non-empty command string
 - **THEN** the manager connects to the guest agent inside the microVM, executes the command inside the guest, and returns a success response with `{ "exitCode": number, "stdout": string, "stderr": string, "durationMs": number }`
+
+#### Scenario: Administrative command execution inside running VM
+- **WHEN** a client sends a `vm.exec` request with `sudo: true`
+- **THEN** the manager passes `sudo: true` to `AgentClient.runCommand()` so the guest agent executes the command as root inside the VM
+- **AND** no host-level sudo or privilege escalation is executed on the host
 
 #### Scenario: Command execution on non-existent VM
 - **WHEN** a client sends a `vm.exec` request for a `vmId` that does not exist in the native service inventory
@@ -421,7 +426,7 @@ The system SHALL implement a `vm.exec` RPC method on the manager over its Unix d
 - **THEN** no shell command, `child_process.exec`, `child_process.spawn`, `sudo`, or host process execution occurs on the manager host system
 
 ### Requirement: Command Execution Parameter Validation and Safety Limits
-The system SHALL validate all `vm.exec` parameters before initiating guest execution. `command` MUST be a non-empty string not exceeding 8,192 UTF-8 characters. `timeoutMs`, if provided, MUST be an integer between 1,000 ms and 120,000 ms (defaulting to 30,000 ms when omitted). `workingDirectory`, if provided, MUST be a string interpreted strictly inside the guest microVM filesystem. Requests violating these bounds MUST be rejected immediately with `VALIDATION_ERROR`.
+The system SHALL validate all `vm.exec` parameters before initiating guest execution. `command` MUST be a non-empty string not exceeding 8,192 UTF-8 characters. `timeoutMs`, if provided, MUST be an integer between 1,000 ms and 120,000 ms (defaulting to 30,000 ms when omitted). `workingDirectory`, if provided, MUST be a string interpreted strictly inside the guest microVM filesystem. `sudo`, if provided, MUST be a boolean. Requests violating these bounds MUST be rejected immediately with `VALIDATION_ERROR`.
 
 #### Scenario: Empty or whitespace command rejected
 - **WHEN** a client sends a `vm.exec` request with an empty string or whitespace-only `command`
@@ -439,3 +444,143 @@ The system SHALL validate all `vm.exec` parameters before initiating guest execu
 - **WHEN** a client sends `timeoutMs` less than 1,000 ms or greater than 120,000 ms
 - **THEN** the manager rejects the request with `VALIDATION_ERROR`
 
+#### Scenario: Invalid sudo parameter type rejected
+- **WHEN** a client sends a `vm.exec` request with a non-boolean `sudo` field (e.g. `sudo: "yes"` or `sudo: 1`)
+- **THEN** the manager rejects the request with `VALIDATION_ERROR`
+
+### Requirement: Filesystem Operations Protocol Framing and Validation
+The manager protocol SHALL support filesystem methods `vm.fs.list`, `vm.fs.read`, `vm.fs.write`, `vm.fs.mkdir`, `vm.fs.delete`, and `vm.fs.download`. The manager MUST validate frame parameters, ensure `vmId` matches `^[a-zA-Z0-9_-]{1,128}$`, normalize all filesystem paths, reject traversal attempts (`..` resolving outside `/`), and enforce request size limits before dispatching to guest agents.
+
+#### Scenario: Valid filesystem list request framing
+- **WHEN** a client sends `{ "id": "req-1", "method": "vm.fs.list", "params": { "vmId": "vm-1234", "path": "/home/ubuntu" } }`
+- **THEN** `validateFrame` accepts the frame and dispatches to the filesystem handler
+
+#### Scenario: Malformed path in filesystem request
+- **WHEN** a client sends `{ "id": "req-2", "method": "vm.fs.read", "params": { "vmId": "vm-1234", "path": "../../etc/shadow" } }`
+- **THEN** `validateFrame` or parameter validation rejects the frame with `VALIDATION_ERROR`
+
+### Requirement: Guest Filesystem Directory Listing Execution
+The manager SHALL implement `vm.fs.list` by querying the running microVM through its guest `AgentClient`. The manager MUST return a sanitized list of directory entries conforming to `{ "path": string, "entries": Array<{ name: string, path: string, type: "file" | "directory" | "symlink" | "unknown", size?: number, mode?: string, modifiedAt?: string }> }` without exposing host paths, Firecracker jailer directories, or agent tokens.
+
+#### Scenario: Successful directory listing via agent
+- **WHEN** `vm.fs.list` is invoked for a running VM at path `/`
+- **THEN** the manager uses the VM's `AgentClient` to read the directory contents from the guest and returns the sanitized entry listing
+
+#### Scenario: Listing a missing directory on guest
+- **WHEN** `vm.fs.list` is invoked for a path that does not exist in the microVM
+- **THEN** the manager returns a failure frame with error code `FILE_NOT_FOUND`
+
+### Requirement: Guest Filesystem File Read and Preview Execution
+The manager SHALL implement `vm.fs.read` by reading file contents via `AgentClient.readFile()`. The manager MUST enforce a maximum file preview size of 1 MiB (1,048,576 bytes). If the file exceeds this limit, the manager MUST return a failure frame with error code `FILE_TOO_LARGE`.
+
+#### Scenario: Successful file read within preview limit
+- **WHEN** `vm.fs.read` is invoked for `/etc/hosts` (size 250 bytes) in a running VM
+- **THEN** the manager reads the content via `AgentClient.readFile()`, converts the buffer to UTF-8 text, and returns `{ "path": "/etc/hosts", "content": "<text>", "size": 250 }`
+
+#### Scenario: File read exceeds preview limit
+- **WHEN** `vm.fs.read` is invoked for a file larger than 1 MiB
+- **THEN** the manager aborts reading and returns error code `FILE_TOO_LARGE`
+
+### Requirement: Guest Filesystem File Write and Upload Execution
+The manager SHALL implement `vm.fs.write` by packaging the uploaded file buffer and transmitting it to the microVM via `AgentClient.writeFiles()` with the target extraction directory. The manager MUST enforce a maximum upload payload limit of 50 MiB (52,428,800 bytes). The operation MUST NOT write through any host filesystem paths or temporary host storage.
+
+#### Scenario: Successful file write to guest
+- **WHEN** `vm.fs.write` is invoked with `vmId`, `destDir: "/home/ubuntu"`, `fileName: "script.sh"`, and base64/binary content payload (≤ 50 MiB)
+- **THEN** the manager calls `AgentClient.writeFiles([{ path: "script.sh", content: buffer }], "/home/ubuntu")` and returns `{ "path": "/home/ubuntu/script.sh", "size": <bytes> }`
+
+#### Scenario: Upload exceeding size limit
+- **WHEN** `vm.fs.write` is invoked with a payload exceeding 50 MiB
+- **THEN** the manager rejects the request with error code `FILE_TOO_LARGE`
+
+### Requirement: Guest Filesystem Directory Creation Execution
+The manager SHALL implement `vm.fs.mkdir` by executing directory creation inside the microVM via the guest agent. The target path MUST be normalized and validated.
+
+#### Scenario: Successful directory creation on guest
+- **WHEN** `vm.fs.mkdir` is invoked with `{ "vmId": "vm-1234", "path": "/home/ubuntu/newdir" }`
+- **THEN** the directory is created in the microVM via the guest agent and the manager returns `{ "path": "/home/ubuntu/newdir" }`
+
+### Requirement: Guest Filesystem Non-Recursive Deletion Execution
+The manager SHALL implement `vm.fs.delete` by executing single file or empty directory removal on the microVM filesystem via the guest agent. The manager MUST NOT perform recursive directory deletion. If the target is a directory containing files, the guest deletion failure MUST be returned without attempting recursive deletion.
+
+#### Scenario: Successful deletion of file
+- **WHEN** `vm.fs.delete` is invoked for an existing file `/tmp/sample.txt`
+- **THEN** the file is unlinked on the microVM filesystem and the manager returns `{ "deleted": true, "path": "/tmp/sample.txt" }`
+
+#### Scenario: Deletion of non-empty directory is rejected
+- **WHEN** `vm.fs.delete` is invoked for a non-empty directory `/tmp/somedir`
+- **THEN** the manager returns a failure frame with error code `VM_OPERATION_FAILED` indicating the directory is not empty
+
+### Requirement: Guest Filesystem File Download Execution
+The manager SHALL implement `vm.fs.download` by fetching the raw binary file from the microVM via `AgentClient.readFile()`. The manager MUST enforce a maximum download size of 100 MiB (104,857,600 bytes). The manager MUST NOT store or copy downloaded content onto the host filesystem.
+
+#### Scenario: Successful file download retrieval
+- **WHEN** `vm.fs.download` is invoked for `/var/log/app.log` (size ≤ 100 MiB)
+- **THEN** the manager retrieves the binary payload via `AgentClient.readFile()` and returns base64 content or binary stream conforming to protocol limits
+
+#### Scenario: Download exceeding size limit
+- **WHEN** `vm.fs.download` is invoked for a file exceeding 100 MiB
+- **THEN** the manager returns error code `FILE_TOO_LARGE`
+
+### Requirement: VM Operational State and Security Boundary Isolation for Filesystem
+All filesystem methods (`vm.fs.list`, `vm.fs.read`, `vm.fs.write`, `vm.fs.mkdir`, `vm.fs.delete`, `vm.fs.download`) SHALL verify that the target VM is in the `running` state. If the VM is stopped, starting, or in an error state, the manager MUST return error code `VM_INVALID_STATE`. All manager responses MUST redact internal host paths, Firecracker configurations, jailer paths, and `agentToken`/`agentPort` values.
+
+#### Scenario: Filesystem request rejected on stopped VM
+- **WHEN** any filesystem RPC method is sent targeting a microVM that is not running
+- **THEN** the manager returns a failure frame with error code `VM_INVALID_STATE` without communicating with the guest agent
+
+#### Scenario: Response payload sanitization
+- **WHEN** any filesystem RPC response is generated
+- **THEN** the response object contains only sanitized filesystem properties and never includes `agentToken`, `agentPort`, or host filesystem paths
+
+### Requirement: Interactive Terminal Shell Session Lifecycle RPC Methods
+The system SHALL implement terminal RPC operations on `vmsan-manager` over its Unix domain socket:
+1. `terminal.open`: accepts `{ "vmId": string, "cols"?: number, "rows"?: number, "sudo"?: boolean }`, verifies the microVM is in `running` state, establishes a shell session to the guest microVM agent via native `ShellSession` (connecting as root when `sudo: true`), and returns `{ "sessionId": string, "vmId": string, "createdAt": string }`.
+2. `terminal.input`: accepts `{ "sessionId": string, "data": string }` and forwards the input bytes to the active guest agent shell session.
+3. `terminal.resize`: accepts `{ "sessionId": string, "cols": number, "rows": number }` and forwards the resize dimensions to the guest agent shell session.
+4. `terminal.close`: accepts `{ "sessionId": string }` and terminates the active guest shell session.
+
+#### Scenario: Open terminal session on running VM
+- **WHEN** a client sends `terminal.open` for a running VM
+- **THEN** the manager connects to the guest agent's shell endpoint (`/ws/shell`), allocates a shell session, records the session in memory, and returns `{ "sessionId": <id>, "vmId": <vmId>, "createdAt": <timestamp> }`
+
+#### Scenario: Open terminal session on stopped VM
+- **WHEN** a client sends `terminal.open` for a VM that is not in `running` state
+- **THEN** the manager rejects the request with error code `VM_INVALID_STATE`
+
+#### Scenario: Open terminal session with administrative privileges
+- **WHEN** a client sends `terminal.open` with `sudo: true`
+- **THEN** the manager connects to the guest agent passing `user: "root"` so the shell runs with root privileges inside the microVM without host sudo escalation
+
+#### Scenario: Forward terminal input
+- **WHEN** a client sends `terminal.input` with `{ "sessionId": "sess-1", "data": "ls -la\n" }`
+- **THEN** the manager transmits the data payload to the corresponding active guest shell session
+
+#### Scenario: Forward terminal resize
+- **WHEN** a client sends `terminal.resize` with `{ "sessionId": "sess-1", "cols": 120, "rows": 40 }`
+- **THEN** the manager forwards the terminal window dimensions to the guest shell PTY
+
+#### Scenario: Close terminal session
+- **WHEN** a client sends `terminal.close` with `{ "sessionId": "sess-1" }`
+- **THEN** the manager closes the guest agent connection, destroys the session, and frees in-memory session state
+
+### Requirement: Interactive Terminal Streaming over Manager Socket
+The manager SHALL support continuous streaming of interactive terminal output from the guest agent shell session back to the connected client over the Unix domain socket. When output bytes or ANSI escape sequences arrive from the guest agent, the manager MUST immediately frame and emit the output to the client without buffering full lines or mangling escape sequences.
+
+#### Scenario: Real-time output stream framing
+- **WHEN** the guest shell emits stdout, stderr, or ANSI sequences
+- **THEN** the manager transmits a framed output message `{ "type": "output", "sessionId": <id>, "data": <string> }` over the Unix socket to the web application
+
+#### Scenario: Shell process exit notification
+- **WHEN** the shell process inside the guest microVM exits (e.g. user enters `exit`)
+- **THEN** the manager emits `{ "type": "exit", "sessionId": <id>, "exitCode": <number> }` and cleans up the session
+
+### Requirement: Terminal Session Cleanup on VM Termination and Disconnection
+The manager SHALL monitor VM state changes and client socket connection closures. If a microVM is stopped or removed, or if the client connection drops, all associated active terminal shell sessions MUST be terminated and removed from memory immediately.
+
+#### Scenario: Active sessions destroyed when VM stops
+- **WHEN** a microVM with active terminal sessions transitions to `stopped` or is removed
+- **THEN** all associated terminal shell sessions are closed and removed from in-memory tracking
+
+#### Scenario: Socket disconnection cleans up attached session
+- **WHEN** the Unix socket connection from the client is closed or broken
+- **THEN** the associated guest agent shell session is closed and released
