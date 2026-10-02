@@ -15,14 +15,14 @@ The dashboard SHALL display the current inventory of Firecracker microVMs and an
 - **AND** displays the total count accurately (e.g. "1 VM" or "3 VMs")
 
 ### Requirement: MicroVM Resource Details and Null-Safe Formatting
-The dashboard SHALL display the resource parameters (vCPUs, memory in MiB, runtime name, age) for each microVM and safely format missing, null, or undefined values without displaying literal "null", "undefined", or "NaN".
+The dashboard SHALL display the resource parameters (vCPUs, memory in MiB, allocated storage in GB, runtime name, age) for each microVM and safely format missing, null, or undefined values without displaying literal "null", "undefined", or "NaN".
 
 #### Scenario: Displaying complete VM resource attributes
-- **WHEN** a microVM has defined values for `vcpus`, `memoryMiB`, `runtime`, and `age`
-- **THEN** the card renders the vCPU count, memory value with "MiB" suffix, runtime name, and age string
+- **WHEN** a microVM has defined values for `vcpus`, `memoryMiB`, `diskSizeGb`, `runtime`, and `age`
+- **THEN** the card renders the vCPU count, memory value with "MiB" suffix, storage allocation with "GB" suffix (e.g. "10 GB"), runtime name, and age string
 
 #### Scenario: Handling null or missing resource fields
-- **WHEN** any resource attribute (`vcpus`, `memoryMiB`, `runtime`, `age`) is `null`, `undefined`, or missing
+- **WHEN** any resource attribute (`vcpus`, `memoryMiB`, `diskSizeGb`, `runtime`, `age`) is `null`, `undefined`, or missing
 - **THEN** the dashboard renders an em dash (`—`) placeholder in place of that value
 
 ### Requirement: Accessible Operational Status Indicator
@@ -79,19 +79,19 @@ The dashboard SHALL display a user-safe error message and a Retry action when th
 - **THEN** the dashboard re-initiates the request to `/api/vms` and clears the error state if successful
 
 ### Requirement: Create VM Action and Dialog Trigger
-The dashboard SHALL provide a prominent, accessible "+ Create VM" action in the header that opens a modal configuration dialog for creating new Firecracker microVMs.
+The dashboard SHALL provide a prominent, accessible "+ Create VM" action in the header that opens a modal configuration dialog for creating new Firecracker microVMs with configurable resources including Runtime, CPU, Memory, Storage, Network Policy, and Timeout.
 
 #### Scenario: Opening the Create VM dialog
 - **WHEN** the user clicks the "+ Create VM" button in the dashboard header
-- **THEN** a modal dialog opens with fields for Runtime, vCPUs, and Memory (MiB)
-- **AND** the form fields are initialized with default values (`runtime: "base"`, `vcpus: 1`, `memoryMiB: 128`)
+- **THEN** a modal dialog opens with fields for Runtime, vCPUs, Memory (MiB), Storage (GB), Network Policy, and Timeout
+- **AND** the form fields are initialized with default values (`runtime: "base"`, `vcpus: 1`, `memoryMiB: 128`, `diskSizeGb: 10`, `networkPolicy: "deny-all"`, `timeoutMs: 3600000`)
 
 #### Scenario: Accessible dialog trigger presentation
 - **WHEN** the dashboard renders
 - **THEN** the "+ Create VM" button is clearly positioned in the dashboard header alongside the Refresh button with accessible labels
 
 ### Requirement: Create VM Form Configuration and Client-Side Validation
-The Create VM dialog SHALL provide form inputs for Runtime, vCPUs, and Memory with client-side validation and immediate feedback preventing invalid API requests.
+The Create VM dialog SHALL provide form inputs for Runtime, vCPUs, Memory, and Storage with client-side validation preventing invalid API requests.
 
 #### Scenario: Selecting runtime options
 - **WHEN** the user interacts with the Runtime selector
@@ -108,8 +108,13 @@ The Create VM dialog SHALL provide form inputs for Runtime, vCPUs, and Memory wi
 - **THEN** the dialog displays an inline validation error indicating Memory must be an integer at least 128 MiB
 - **AND** submission is prevented
 
+#### Scenario: Validating Storage input
+- **WHEN** the user enters a storage allocation that is not an integer between 1 and 20 GB (e.g. `0`, `-1`, `21`, or non-numeric)
+- **THEN** the dialog displays an inline validation error indicating Storage must be an integer between 1 and 20 GB
+- **AND** submission is prevented
+
 #### Scenario: Valid form input state
-- **WHEN** all fields have valid values (e.g. runtime `base`, vcpus `2`, memory `256`)
+- **WHEN** all fields have valid values (e.g. runtime `base`, vcpus `1`, memory `128`, storage `10`)
 - **THEN** no validation error messages are displayed and the Create VM submit action is enabled
 
 ### Requirement: VM Creation Submission, Loading State, and Inventory Refresh
@@ -228,13 +233,13 @@ The dashboard SHALL display a user-safe error message and retain the VM card if 
 - **THEN** the dashboard dispatches the lifecycle request again and clears previous error feedback upon success
 
 ### Requirement: MicroVM Card Detail Navigation Action
-The dashboard microVM cards SHALL provide direct navigation links to the VM detail inspection page at `/vms/[id]` via clickable VM identifiers and dedicated detail navigation actions, without interfering with lifecycle action buttons.
+The dashboard microVM cards SHALL provide direct navigation to the VM Management Console at `/vms/[id]` via clickable VM identifiers and a prominent "Open Console" action, without interfering with lifecycle action buttons.
 
 #### Scenario: Navigating to VM detail via card identifier
-- **WHEN** the user clicks on the VM identifier or "View Details" link on a microVM card
+- **WHEN** the user clicks on the VM identifier or "Open Console" button on a microVM card
 - **THEN** the browser navigates to `/vms/:id` for that microVM
 
 #### Scenario: Lifecycle actions do not trigger detail navigation
 - **WHEN** the user clicks a lifecycle action button (Start, Stop, Delete) on a microVM card
-- **THEN** the lifecycle action is executed without triggering navigation to the detail page
+- **THEN** the lifecycle action is executed without triggering navigation to the console or detail page
 
