@@ -116,6 +116,55 @@ describe("POST /api/vms/[id]/terminal route handler", () => {
     });
   });
 
+  it("forwards sudo flag for administrative execution", async () => {
+    let capturedParams: Record<string, unknown> | null = null;
+    await serve((request) => {
+      assert.equal(request.method, "vm.exec");
+      capturedParams = request.params as Record<string, unknown>;
+      return JSON.stringify({
+        id: request.id,
+        ok: true,
+        result: {
+          exitCode: 0,
+          stdout: "apt update complete\n",
+          stderr: "",
+          durationMs: 120,
+        },
+      });
+    });
+
+    const request = new Request("http://localhost/api/vms/vm-1691d65a/terminal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ command: "apt update", sudo: true }),
+    });
+    const context = { params: Promise.resolve({ id: "vm-1691d65a" }) };
+    const response = await POST(request, context);
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(capturedParams, {
+      vmId: "vm-1691d65a",
+      command: "apt update",
+      sudo: true,
+    });
+    const body = (await response.json()) as { data: Record<string, unknown> };
+    assert.equal(body.data.stdout, "apt update complete\n");
+  });
+
+  it("returns 400 when sudo is not a boolean", async () => {
+    const request = new Request("http://localhost/api/vms/vm-1691d65a/terminal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ command: "whoami", sudo: "yes" }),
+    });
+    const context = { params: Promise.resolve({ id: "vm-1691d65a" }) };
+    const response = await POST(request, context);
+
+    assert.equal(response.status, 400);
+    const body = (await response.json()) as { error: { code: string } };
+    assert.equal(body.error.code, "INVALID_REQUEST");
+  });
+
   it("returns 400 when body is not valid JSON", async () => {
     const request = new Request("http://localhost/api/vms/vm-1691d65a/terminal", {
       method: "POST",
