@@ -1,0 +1,4 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - status "Loading virtual machine details..." [ref=e4]
+  - alert [ref=e46]
