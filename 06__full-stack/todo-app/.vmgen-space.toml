@@ -1,0 +1,6 @@
+# vmgen space: the environment for this project. `vmgen space create .` (or open it in the web UI) rebuilds it anywhere.
+[space]
+distro     = "arch"
+tools      = ["node", "go"]
+packages   = []
+extensions = []
